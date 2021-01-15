@@ -1,0 +1,454 @@
+---
+title: "R Notes"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+## Global options
+options(max.print="2000")
+opts_chunk$set(echo=TRUE,
+               eval=FALSE,
+               cache=FALSE,
+               results="asis",
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+eval_fast <- TRUE
+eval_slow <- FALSE
+```
+
+# R Functions
+
+## match.call
+
+eval(expr, parent.frame()) evaluates the expr in the environment specified by envir and returns the computed value. Default envir is parent.frame() the environment where the call to eval was made.
+
+
+
+```{r,eval=eval_fast}
+
+is.call(call)
+cl <- call("round", 10.5)
+is.call(cl)
+cl
+identical(quote(round(10.5)), cl)
+eval(cl)
+
+cl = match.call()
+message("cl")
+print(cl)
+message("as.list(cl)")
+print(as.list(cl))
+message("class(cl)")
+print(class(cl))
+
+identical(quote(A), "A")
+
+cl[[1]] <- quote(FOO)
+print(cl)
+FOO <- function(x) 1000 * x
+FOO(4)
+
+x <- c(rnorm(20), NA)
+foo <- function(...){
+    cl = match.call()
+    cl[[1]] <- quote(summary)
+    eval(cl, parent.frame())
+}
+
+summary(x, digits = 2)
+
+foo(x, digits=5)
+foo(x)
+
+my_sum = function(x, y, z){
+    return(x + y + z)
+}
+fx <- function(x, y){x * y}
+fx(1, 2)
+
+foo <- function(...){
+    args = match.call()
+    print(class(args))
+    ## print(args)
+    ## do.call(fx, args=args)
+    return(args)
+}
+rt <- foo(x=1, y=2)
+
+rt
+class(rt)
+str(rt)
+
+do.call(fx, args=list(x=3, y=4))
+
+sqr_sum = function(...){
+    args = as.list(match.call())[-1]
+    args = lapply(args, function(x) x^2)
+    do.call(my_sum, args)
+}
+sqr_sum(x = 2, y = 3, z = 4)
+
+```
+
+
+# Flow-Chart
+
+## visNetwork
+
+```{r,eval=eval_fast}
+library(Wu)
+dt <- data.table(
+    attrition_1=sample(c("A", "B"), 50, replace=TRUE)
+  , attrition_2=sample(c("Blue", "Red", "Yellow"), 50, replace=TRUE)
+  , attrition_3=sample(c("Female", "Male"), 50, replace=TRUE)
+  , attrition_4=sample(c("Medicaid", "Medcare", "Commercial"), 50, replace=TRUE)
+)
+
+nodes <- get_nodes(dt
+                 , c("attrition_1", "attrition_2", "attrition_3", "attrition_4")
+                 , top = "Total")
+
+
+nodes$size <- sqrt(nodes$size*900)
+nodes$shape <- "dot"
+edges <- get_edges(nodes)
+edges$width <- sqrt(edges$width)
+library(visNetwork)
+visNetwork::visNetwork(nodes, edges, width = "80%", height = 700) %>% visOptions(highlightNearest = TRUE) %>% visNodes(scaling = list(label = list(enabled = T)))
+
+
+plt_fl_net <- function(data, vars){
+    nodes <- get_nodes(data, vars, top = "Total")
+    nodes$size <- sqrt(nodes$size * 900)
+    nodes$shape <- "dot"
+    edges <- get_edges(nodes)
+    edges$width <- sqrt(edges$width)
+    library(visNetwork)
+    visNetwork::visNetwork(nodes, edges, width = "100%", height = 700) %>% visOptions(highlightNearest = TRUE) %>%
+        visNodes(scaling = list(label = list(enabled = T)))
+}
+
+
+plt_fl_net(dt, c("attrition_1", "attrition_2", "attrition_3", "attrition_4"))
+
+
+```
+
+# Logistic Regression
+
+# Ordinal Regression
+
+## rmsb package
+
+[Frank Harrell: rmsb Package Example](https://hbiostat.org/R/rmsb/blrm.html)
+
+
+### Set up
+
+ * setup print options
+ * parallel::detectCores() detect number of cores
+ * simulate a three predictors and one outcome (10 level ranks) data
+ * and run a frequentist logistic regression (ordinal)
+
+
+```{r,results="asis", echo=TRUE}
+require(rmsb)
+options(prType='html')
+## options(mc.cores = parallel::detectCores())   # use max # CPUs
+
+set.seed(1)
+n <- 500
+x1 <- runif(n, -1, 1)
+x2 <- runif(n, -1, 1)
+x3 <- sample(0 : 1, n, TRUE)
+y <- x1 + 0.5 * x2 + x3 + rnorm(n)
+y <- as.integer(cut2(y, g=10))
+dd <- datadist(x1, x2, x3); options(datadist='dd')
+f <- lrm(y ~ x1 + pol(x2, 2) + x3, eps=1e-7) # eps to check against rstan
+f
+## table(y)
+
+summary(f)
+
+
+
+```
+
+### Flat Priors
+
+ * Flat normal priors for the betas
+ * default prior SD for blrm is 100;
+
+```{r}
+
+
+for(psd in c(0.25, 1, 10, 100, 10000)) {
+    cat('\nPrior SD:', psd, '\n')
+    g <- blrm(y ~ x1 + pol(x2, 2) + x3, method='optimizing', priorsd=psd)
+    cat('-2 log likelihood:', g$deviance, '\n')
+    print(g$coefficients)
+}
+
+
+```
+
+### Bayesian Proportional Odds Ordinal Logistic Model
+
+ * Dirichlet priors on intercepts
+ * 0.95 highest posterior density intervals
+ * AUROC and $R^2$ should be estimated with error
+ * The symmetry of a posterior distribution. The value of 1.0 indicates symmetry. The symmetry index is the ratio of distance from mean to 0.95 quantile and the distance from mean to 0.05 quantile.
+ * The proportional odds ordinal (PO) logistic model is a generalization of Wilcoxon/Kruskal-Wallis tests.
+
+
+
+
+```{r}
+bs <- blrm(y ~ x1 + pol(x2, 2) + x3, file='bs.rds')
+bs
+
+```
+
+### Model Performance
+
+ * Stand diagnostic
+
+```{r}
+blrmStats(bs, pl=TRUE)
+stanDxplot(bs)
+stanDx(bs)
+
+```
+
+### Posterior Distribution
+
+ * The posterior distributions are calculated using kernel density estimates from posterior draws
+ * Using rstan::optimizing
+
+
+
+```{r}
+plot(bs)
+# Also show 2-d posterior density contour for two collinear terms
+plot(bs, c('x2', 'x2^2'), bivar=TRUE)   # assumes ellipse
+plot(bs, c('x2', 'x2^2'), bivar=TRUE, bivarmethod='kernel')   # kernel density
+
+# Print frequentist side-by-side with Bayesian posterior mean, median, mode
+
+cbind(MLE=coef(f), t(bs$param))
+
+```
+
+### Contrasts
+
+ * Bayesian contrast's point estimate is the posterior mean and the 0.95 posterior density interval
+ * instead of p-value, the posterior probability that the constrast is positive is computed
+
+
+```{r}
+contrast(f, list(x1=0,x3=1),list(x1=.25,x3=0))
+contrast(bs,list(x1=0:1,x3=1),list(x1=.25,x3=0))
+
+
+```
+
+### Posterior Probability
+
+```{r}
+P <- PostF(bs, pr=TRUE)   # show new short legal R names
+
+P(b3 > 0 & b1 > 1.5)
+P(b3 > 0)
+P(abs(b3) < 0.25)  ## evidence for small nonlinearity
+
+```
+
+
+
+### Contrained Partial PO
+
+ * Use the constrained partial proportional odds model to assess the proportional odds assumption.
+ * Assume departures from proportional odds (constant increments in log odds) are modeled as linear in square root of the outcome level.
+ * Group-stratified empirical CDFs to see visual evidence for this
+ * qlogis is the logit function logit(p)=log(p/(1-p))
+ * Relative explained variation (REV) is the Wald $\chi^2$ statistics divided by the Wald statistics for the whole model.
+
+```{r}
+## bcalp <- blrm(calpro ~ endo, ~ endo, cppo=sqrt)
+## bcalp
+## Ecdf(~ calpro, group=endo, fun=qlogis)
+
+```
+
+### Missing Values
+When possible, full joint Bayesian modeling of possible missing covariates and the outcome variable should be used to get exact inference in the presence of missing covariate values.
+
+Then do posterior inference on the full stacked posterior distribution.
+
+
+# Missing Values
+## Handle Missing Values with brms
+
+[Paul Burkner: Handle Missing Values with brms](https://cran.r-project.org/web/packages/brms/vignettes/brms_missings.html)
+
+
+### Imputation before model fitting
+
+Extract those datasets from mice imputed as a list of data frames, and then pass them to the model fitting. The returned fitted model (from brm_multiple) is an ordinary brmsfit object. Therefore, the post-processing methods are straightforward without having to worry about pooling at all.
+
+
+
+```{r}
+data("nhanes", package="mice")
+head(nhanes)
+
+library(mice)
+library(brms)
+imp <- mice(nhanes, m=5, print=FALSE)
+fit_imp1 <- brm_multiple(bmi ~ age * chl, data=imp, chains=2)
+
+summary(fit_imp1)
+plot(fit_imp1, pars="^b")
+## conditional_effects(fit_imp1, "age:chl")
+
+```
+
+
+### Imputation during model fitting
+
+Which variables contain missing values and how they should be predicted, and which of these imputed variables should be used as predictors.
+
+```{r}
+bform <- bf(bmi | mi() ~ age * mi(chl)) +
+  bf(chl | mi() ~ age) + set_rescor(FALSE)
+fit_imp2 <- brm(bform, data = nhanes)
+
+```
+### Multivariate Models
+
+[brms Multivariate Model](https://cran.r-project.org/web/packages/brms/vignettes/brms_multivariate.html)
+
+The term (1|p|fosternest) indicates a varying intercept over fosternest.
+Compute and store the LOO information criterion of the model for latter use of model comparisons.
+
+```{r}
+fit1 <- brm(
+  mvbind(tarsus, back) ~ sex + hatchdate + (1|p|fosternest) + (1|q|dam),
+  data = BTdata, chains = 2, cores = 2
+)
+
+fit1 <- add_criterion(fit1, "loo")
+summary(fit1)
+
+pp_check(fit1, resp = "tarsus") # posterior-predictive checks
+pp_check(fit1, resp = "back")
+bayes_R2(fit1) # Bayesian generalization of R Squared
+```
+
+
+
+# Bayesian Additive Regression Tree
+
+
+[BART Vignettes](https://cran.r-project.org/web/packages/BART/vignettes/the-BART-R-package.pdf)
+
+
+## wbart on numeric outcome
+```{r}
+library(BART)
+
+##simulate data (example from Friedman MARS paper)
+f = function(x){
+    10*sin(pi*x[,1]*x[,2]) + 20*(x[,3]-.5)^2+10*x[,4]+5*x[,5]
+}
+sigma = 1.0 #y = f(x) + sigma*z , z~N(0,1)
+n = 100 #number of observations
+set.seed(99)
+x=matrix(runif(n*10),n,10) #10 variables, only first 5 matter
+Ey = f(x)
+y=Ey+sigma*rnorm(n)
+lmFit = lm(y~.,data.frame(x,y)) #compare lm fit to BART later
+
+##test BART with token run to ensure installation works
+set.seed(99)
+bartFit = wbart(x,y,nskip=5,ndpost=5)
+## Not run:
+
+##run BART
+set.seed(99)
+bartFit = wbart(x,y)
+
+##compare BART fit to linear matter and truth = Ey
+fitmat = cbind(y,Ey,lmFit$fitted,bartFit$yhat.train.mean)
+colnames(fitmat) = c('y','Ey','lm','bart')
+print(cor(fitmat))
+## End(Not run)
+
+library("MASS")
+## Boston house data
+x = Boston[, c(6, 13)]
+y = Boston$medv
+head(cbind(x, y))
+
+par(mfrow=c(2, 2))
+plot(x[, 1], y, xlab="x1=rm", ylab="y=mdev")
+plot(x[, 2], y, xlab="x2=lstat", ylab="y=mdev")
+plot(x[, 1], x[, 2], xlab="x1=rm", ylab="x2=lstat")
+par(mfrow=c(1, 1))
+
+set.seed(99)
+nd = 200
+burn = 50
+post = wbart(x, y, nskip=burn, ndpost=nd)
+
+names(post)
+
+## 200 draws on predicted y
+dim(post$yhat.train)
+
+post$yhat.train[1:5, 1:5]
+
+## check convergence
+plot(post$sigma, type="l")
+abline(v=burn, lwd=2, col="red")
+
+
+## predicted mean on 506 observations
+length(post$yhat.train.mean)
+
+## uncertainty on prediction
+i = order(post$yhat.train.mean)
+boxplot(post$yhat.train[, i])
+
+## prediction
+yhat = predict(post, x[1:5, ])
+dim(yhat)
+
+
+```
+
+## gbart on
+# Computing Environment
+
+
+```{r}
+sessionInfo()
+```

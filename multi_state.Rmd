@@ -1,0 +1,215 @@
+---
+title: "R Multi-State Models"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+## Global options
+options(max.print="2000")
+opts_chunk$set(echo=TRUE,
+               eval=TRUE,
+               cache=FALSE,
+               results="asis",
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+eval_fast <- TRUE
+eval_slow <- FALSE
+
+```
+
+# Multi-state model with msm package
+
+[Multi-state modelling with R: the msm package](1 "https://cran.r-project.org/web/packages/msm/vignettes/msm-manual.pdf")
+
+## CAV Data
+
+Sharples et al. studied the progression of coronary allograft vasculopathy (CAV), a post-transplant deterioration of the arterial walls, using these data. Risk factors and the accuracy of the screening test were investigated using multi-state Markov and hidden Markov models.
+
+ * 622 patients
+ * Approximately each year after transplant, every patient has an angiograme when CAV could be diagnosed.
+ * age: age at screen
+ * dage: donor's age
+ * sex: 0=male, 1=female
+ * pdiag: primary diagnosis
+ * cumrej: cumulative number of rejection episodes
+ * firstobs: 1 = the first observation (transplant), 0 = later angiogram
+
+L.D. Sharples, C.H. Jackson, J. Parameshwar, J. Wallwork, and S.R. Large. Diagnostic accuracy of coronary angiography and risk factors for post-heart-transplant cardiac allograft vasculopathy. Transplantation, 76(4):679682, 2003.
+
+```{r}
+library(msm)
+cav %>% DT()
+
+```
+
+## Data Summary
+
+
+```{r}
+colnames(cav)
+
+Vars <- c(
+    "age"
+  , "years"
+  , "dage"
+  , "sex"
+  , "pdiag"
+  , "cumrej"
+  , "state"
+)
+
+FactorVars <- c(
+    "sex"
+  , "pdiag"
+  , "cumrej"
+  , "state"
+)
+
+t <- Table1n(obj = cav, Vars = Vars, FactorVars = FactorVars)
+
+t %>% prt()
+
+```
+
+## Simple bidirectional model
+
+ * The day of death is assumed to be recorded exactly. The state 4 is death, deathexact=4
+ * If the data has two death states 4 and 5 with two competing risks, deathexact=c(4,5)
+ * State transition table: from state (in row) to state (in column)
+ * Transition intensity matrix Q: zeros in the matrix
+ * obstype: a vector specifying the observation scheme for each row of the data
+     + =1: a snapthot of the process, the states are unkown between observation times
+	 + =2: an exact transition time, the state at the previous observation retained untile the current observation
+	 + =3: an exact transition time, but the state at the instant before entering this state is unknown.
+	 + exacttime=TRUE: all observations are of obstype 2.
+	 + deathexact=death.states specifies that all observations of death.states are of type 3.
+	 + deathexact=TRUE specifies all observations in the final absorbing state are of type 3.
+
+```{r}
+library(msm)
+
+
+t <- statetable.msm(state, PTNUM, data=cav)
+
+t %>% as.data.frame.matrix() %>% prt(caption="Transition Frequencies")
+
+Q <- rbind ( c(0, 0.25, 0, 0.25),
+            c(0.166, 0, 0.166, 0.166),
+            c(0, 0.25, 0, 0.25),
+            c(0, 0, 0, 0) )
+
+
+Q %>% prt(caption="Initial Transition Intensity")
+
+cav.msm <- msm(state ~ years
+             , subject = PTNUM
+             , data = cav
+             , qmatrix = Q
+             , deathexact = 4)
+
+pv <- summary(cav.msm)$prevalences
+
+pv$Observed %>% prt(caption="Observed Frequencies")
+pv$`Observed percentages` %>% prt(caption="Observed percentages")
+
+pv$Expected %>% prt(caption="Expected Frequencies")
+pv$`Expected percentages` %>% prt(caption="Expected percentages")
+
+
+
+P <- pmatrix.msm(cav.msm, t=1, t1=0, ci="normal")
+
+as.data.frame.matrix(P$estimates) %>% prt(caption="Transition Probabilities from time 0 to time 1")
+
+
+prv <- prevalence.msm(
+    cav.msm
+  , times=5
+  , timezero=NULL
+  , initstates=NULL
+  , covariates="population"
+)
+
+
+prv[["Expected percentages"]] %>% prt(caption="predicted prevalence percentage at time 5")
+
+```
+
+## Model with Covariates
+
+```{r}
+cav.msm.1 <- msm(state ~ years
+             , subject = PTNUM
+             , data = cav
+             , qmatrix = Q
+             , deathexact = 4
+             , covariates = ~ sex
+               )
+
+h1 <- hazard.msm(cav.msm.1)
+
+h1$sex %>% prt(caption="Hazard Ratio of sex 1 against 0")
+
+sj1 <- sojourn.msm(cav.msm.1, covariate=list(sex=1), ci="norm")
+sj0 <- sojourn.msm(cav.msm.1, covariate=list(sex=0), ci="norm")
+
+sj1 %>% prt(caption="Estimated Time for Each State sex=1")
+sj0 %>% prt(caption="Estimated Time for Each State sex=0")
+
+plot(cav.msm)
+plot(cav.msm.1)
+plotprog.msm(state ~ years, subject = PTNUM, data=cav)
+
+```
+
+
+## Model Comparison
+
+
+```{r}
+cav.msm <- msm(state ~ years
+             , subject = PTNUM
+             , data = cav
+             , qmatrix = Q
+             , deathexact = 4)
+
+cav.msm.1 <- msm(state ~ years
+             , subject = PTNUM
+             , data = cav
+             , qmatrix = Q
+             , deathexact = 4
+             , covariates = ~ sex
+               )
+
+t <- lrtest.msm(cav.msm, cav.msm.1)
+
+t %>% prt(caption="Likelihood Ratio Test: Null model vs sex model"
+          , col.names=attr(t, "dimnames")[[2]]
+          )
+
+```
+
+# Computing Environment
+
+
+```{r}
+sessionInfo()
+```

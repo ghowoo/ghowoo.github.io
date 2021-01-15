@@ -1,0 +1,234 @@
+---
+title: "R Data Manipulation with data.table"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+## Global options
+options(max.print="2000")
+opts_chunk$set(echo=TRUE,
+               eval=TRUE,
+               cache=FALSE,
+               results="asis",
+               prompt=FALSE,
+               tidy=FALSE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+eval_fast <- TRUE
+eval_slow <- FALSE
+
+```
+
+# Links
+
+[Index](index.html)
+
+
+
+# Fill Missing Values
+
+## Replace elements in a vector by a specific value
+
+
+```{r}
+x <- 1:10
+list <- c(2, 4, 9)
+value <- 0
+
+replace(x, list, value)
+
+```
+## Index of observations
+
+```{r}
+dt <- data.table(
+    group=c("A", "A", "B", "B", "B", "C", "C", "C", "C")
+  , var1=1:9
+)
+
+dt <- dt[, index_i := .I
+         ][, index_n := 1:.N
+           ][, index_i_group := .I, by = .(group)
+             ][, index_n_group := 1:.N, by = .(group)]
+
+dt %>% prt()
+
+```
+
+
+## Last Observation Carry Forward (LOCF)
+
+* data.table::nafill funtion only works for numeric variables
+* Workaround for character variables by filling indexes of character variables instead <https://github.com/Rdatatable/data.table/issues/3992#issuecomment-546295277>
+* type="nocb": Next Observation Carry Backward
+* type="const": fill with constant
+
+```{r}
+dt <- data.table(
+    n1=c(1, NA, 2, NA, NA, 3, 3, NA)
+  , c1=c("A", "A", "B", NA, "C", NA, NA, NA)
+)
+
+
+dt <- dt[
+  , n1_locf := nafill(n1, type="locf")
+][, c1_locf := c1[nafill(replace(.I, is.na(c1), NA), type="locf")]
+  ][, index := .I]
+
+dt[, .(index, n1, n1_locf, c1, c1_locf)] %>% prt()
+```
+
+# Sum Multiple Columns
+
+
+```{r,eval=FALSE}
+
+is.1 <- function(x){x %in% c(1)}
+sum.1 <- function(x){sum(as.numeric(is.1(x)))}
+dm <- dm[, race_sum := sum(.SD)
+       , .SDcols = paste0("race___", as.character(1:6))
+       , by = 1:nrow(dm)]
+dm <- dm[, conditions_num := sum(is.1(hypertension)
+                               , is.1(diabetes)
+                               , is.1(heart_disease)
+                               , is.1(renal_disease)
+                               , is.1(malignancies)
+                               , is.1(respiratory_disease)
+                                 )
+       , by = 1:nrow(dm)
+         ]
+
+```
+
+# Date and Time
+
+```{r,eval=FALSE}
+
+as.POSIXct(
+    data$guidewire_datetime
+  , format='%Y-%m-%d %H:%M'
+  , tz='GMT')
+
+as.Date(data$diag_ecg_date_time, format='%Y-%m-%d')
+
+get_datetime <- function(text){
+    as.POSIXct(
+        trimws(text)
+      , format = "%Y-%m-%d %H:%M"
+      , tz = "GMT"
+      , origin = '1970-01-01'
+    )
+}
+
+get_ed_arrival <- function(text){
+    as.POSIXct(
+        trimws(text)
+      , format = "%m/%d/%y %H%M"
+      , tz = "GMT"
+      , origin = '1970-01-01'
+    )
+}
+
+tf <- tf[
+  , datetime_ed_arrival := get_ed_arrival(ed_arrival_time_str)
+][, year_ed_arrival := format(datetime_ed_arrival, "%Y")
+  ][, month_ed_arrival := format(datetime_ed_arrival, "%m")
+  ][, yearmonth_ed_arrival := format(datetime_ed_arrival, "%Y%m")
+    ][, weekdays_ed_arrival := weekdays(datetime_ed_arrival)
+      ][, weekdays_ed_arrival := factor(
+              weekdays_ed_arrival
+            , levels = c(
+                  "Sunday"
+                , "Monday"
+                , "Tuesday"
+                , "Wednesday"
+                , "Thursday"
+                , "Friday"
+                , "Saturday"
+              )
+          )
+        ][, weekdays_ed_arrival_n := as.numeric(weekdays_ed_arrival)
+          ][, hour_ed_arrival := data.table::hour(datetime_ed_arrival)
+          ][, minute_ed_arrival := data.table::minute(datetime_ed_arrival)
+            ][, hour_ed_arrival_c := strftime(datetime_ed_arrival, format = "%H", tz = "GMT")
+              ][, minute_ed_arrival_c := strftime(datetime_ed_arrival, format = "%M", tz = "GMT")][, hour_ed_arrival_n := hour_ed_arrival + minute_ed_arrival/60]
+
+
+tf <- tf[, flag_bussiness_hours := case_when(
+               is.na(hour_ed_arrival) ~ as.character(NA)
+             , hour_ed_arrival < 8 ~ "Non-Business Hours"
+             , hour_ed_arrival == 17 & minute_ed_arrival >= 1 ~ "Non-Business Hours"
+             , hour_ed_arrival > 17 ~ "Non-Business Hours"
+             , TRUE ~ "Business Hours"
+           )
+         ][, flag_bussiness_hours := factor(
+                 flag_bussiness_hours
+               , levels = c("Business Hours", "Non-Business Hours")
+             )]
+
+tf <- tf[
+  , flag_weekday := case_when(
+        weekdays_ed_arrival %in% c("Tuesday", "Wednesday", "Thursday") ~ "Weekday"
+      , weekdays_ed_arrival %in% c("Saturday", "Sunday") ~ "Weekend"
+      , weekdays_ed_arrival %in% c("Friday") & hour_ed_arrival == 17 & minute_ed_arrival >= 1  ~ "Weekend"
+      , weekdays_ed_arrival %in% c("Friday") & hour_ed_arrival > 17  ~ "Weekend"
+      , weekdays_ed_arrival %in% c("Friday") ~ "Weekday"
+      , weekdays_ed_arrival %in% c("Monday") & hour_ed_arrival == 7 & minute_ed_arrival <= 59 ~ "Weekend"
+      , weekdays_ed_arrival %in% c("Monday") & hour_ed_arrival < 7 ~ "Weekend"
+      , weekdays_ed_arrival %in% c("Monday") ~ "Weekday"
+      , TRUE ~ as.character(NA)
+    )
+][, flag_weekday := factor(flag_weekday, levels = c("Weekday", "Weekend"))
+  ][]
+
+
+fp <- fp[
+    , datetime_proc_start := get_datetime(proc_start_time_str)
+][, year_proc_start := format(datetime_proc_start, "%Y")
+  ][, yearmonth_proc_start := format(datetime_proc_start, "%Y%m")]
+
+
+vs4 <- vs4[
+  , ed_arrival_to_pas_discharge := as.numeric(difftime(
+        datetime_pas_discharge
+      , datetime_ed_arrival
+      , units = "hours"
+    ))
+]
+
+vs4 <- vs4[
+    , date_ed_arrival := date(datetime_ed_arrival)
+][, age_in_years := as.numeric(date_ed_arrival - dob)/365.25
+  ][, age_group := case_when(
+          age_in_years < 18 ~ "< 18"
+        , age_in_years < 65 ~ "18-64"
+        , age_in_years >= 65 ~ "65 +"
+        , TRUE ~ as.character(NA)
+      )
+    ]
+
+
+```
+
+# Computing Environment
+
+
+```{r}
+sessionInfo()
+```

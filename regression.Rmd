@@ -1,0 +1,321 @@
+---
+title: "Regression in R"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+## Global options
+options(max.print="2000")
+opts_chunk$set(echo=TRUE,
+               eval=TRUE,
+               cache=FALSE,
+               results="asis",
+               prompt=FALSE,
+               tidy=FALSE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+eval_fast <- TRUE
+eval_slow <- FALSE
+
+```
+
+
+# Links
+
+[Index](index.html)
+
+# Package mgcv
+
+## Losgistic Regression
+
+* The chunk is not run, eval=FALSE
+
+```{r, eval=FALSE}
+
+library(mgcv)
+
+m0 <- bam(IRF ~ PTOT_group +
+             age_group +
+             gender +
+             ethnicity +
+             s(icu_los_log, bs="cr", k=10) +
+             ## s(hosplos_log, bs="cr", k=10) +
+             govtpay +
+             wintermonth +
+             ecmo +
+             ventcharge +
+             nmb72h +
+             steroid72h +
+             resp_medical +
+             card_surg +
+             infxn +
+             ccc_composite +
+             s(hospnorecode, bs="re")
+       , data=dt2
+       , family = binomial
+       , cluster = 8
+         )
+
+
+```
+
+## Report Coefficients
+
+```{r}
+fit_s <- summary(m0)
+
+
+prt_coef.gam <- function(obj, exp = FALSE, digits = 2){
+    obj_summary <- summary(obj)
+    rtn <- data.table(
+        coef_name = names(obj_summary$p.coeff)
+      , coef_value = obj_summary$p.coeff
+      , df = sum(obj$edf)
+    )
+    rtn <- merge(
+        x = rtn
+      , y = data.table(coef_name = names(obj_summary$se), se = obj_summary$se)
+      , on = "coef_name"
+      , all.x = TRUE
+      , all.y = FALSE
+    )
+    rtn[, coef_value_lower := coef_value + qt(0.025, df) * se
+        ][, coef_value_upper := coef_value + qt(0.975, df) * se
+          ]
+    if (exp == TRUE){
+        rtn[, coef_value := exp(coef_value)
+            ][, coef_value_lower := exp(coef_value_lower)
+              ][, coef_value_upper := exp(coef_value_upper)]
+    }
+    rtn[, ci := paste0(
+              format(round(coef_value, digits), nsmall = digits)
+            , "("
+            , format(round(coef_value_lower, digits), nsmall = digits)
+            , ","
+            , format(round(coef_value_upper, digits), nsmall = digits)
+            , ")")
+        ]
+    ## print(rtn)
+    if (obj$family$family == "multinom"){
+        ## print(obj$family$family)
+    }
+    return(rtn)
+}
+
+
+
+fit_coefs <- prt_coef.gam(m0, exp = TRUE, digits = 2)
+fit_coefs <- fit_coefs[order(coef_name)][-1,]
+
+
+coef_names <- get_coef_name(dt2[, c(
+     "PTOT_group"
+  , "age_group"
+  , "gender"
+  , "ethnicity"
+  , "govtpay"
+  , "wintermonth"
+  , "ecmo"
+  , "ventcharge"
+  , "nmb72h"
+  , "steroid72h"
+  , "resp_medical"
+  , "card_surg"
+  , "infxn"
+  , "ccc_composite"
+)])
+
+prt_m1_coef2 <- merge(
+    x = coef_names
+  , y = fit_coefs
+  , by.x = "coef.name"
+  , by.y = "coef_name"
+  , all.x = TRUE
+  , all.y = FALSE
+)
+
+knitr::kable(
+           prt_m1_coef2[order(order.level), list(label, level, ci)]
+         , caption = "Logistic Regression"
+         , col.names = c("Variable", "Level", "OR")
+         , align = c("l","r","r","r","r")
+       ) %>%
+    styling()
+
+
+```
+
+
+# Package BART
+
+
+## Continuous Outcome
+
+```{r, eval=FALSE}
+##simulate training data
+sigma = .1
+f = function(x) {x^3}
+
+set.seed(17)
+n = 200
+x = sort(2*runif(n)-1)
+
+y = f(x) + sigma*rnorm(n)
+
+#xtest: values we want to estimate f(x) at
+#  this is also our prediction for y.
+xtest = seq(-1,1,by=.2)
+
+plot(x,y,cex=.5)
+points(xtest,rep(0,length(xtest)),col="red",pch=16,cex=.8)
+
+library(BART)
+set.seed(14) #it is MCMC, set the seed!!
+rb = wbart(x,y,xtest,nskip=500,ndpost=2000)
+
+qm = apply(rb$yhat.test,2,quantile,probs=c(.025,.975)) # post quantiles
+
+```
+
+## Binary Outcome
+
+```{r}
+library(BART)
+
+data(ACTG175)
+## exclude those who do not have CD4 count at 96 weeks
+ex <- is.na(ACTG175$cd496)
+table(ex)
+
+summary(ACTG175$cd40)
+## inclusion criteria are CD4 counts between 200 and 500
+ACTG175$cd40 <- pmin(500, pmax(250, ACTG175$cd40))
+summary(ACTG175$cd40)
+
+## calculate relative CD4 decline
+y <- ((ACTG175$cd496-ACTG175$cd40)/ACTG175$cd40)[!ex]
+summary(y)
+
+## 0=failure, 1=success
+y <- 1*(y > -0.5)
+table(y)
+
+## summarize CD4 outcomes
+table(y, ACTG175$arms[!ex])
+table(y, ACTG175$arms[!ex])
+matrix(table(ACTG175$arms[!ex]), nrow=2, ncol=4, byrow=TRUE)
+
+train <- as.matrix(ACTG175)[!ex, -c(1, 14:15, 17, 18, 20:22, 24:27)]
+train <- cbind(1*(ACTG175$strat[!ex]==1), 1*(ACTG175$strat[!ex]==2),
+1*(ACTG175$strat[!ex]==3), train)
+dimnames(train)[[2]][1:3] <- paste0('strat', 1:3)
+train <- cbind(1*(ACTG175$arms[!ex]==0), 1*(ACTG175$arms[!ex]==1),
+1*(ACTG175$arms[!ex]==2), 1*(ACTG175$arms[!ex]==3), train)
+dimnames(train)[[2]][1:4] <- paste0('arm', 0:3)
+N <- nrow(train)
+test0 <- train; test0[ , 1:4] <- 0; test0[ , 1] <- 1
+test1 <- train; test1[ , 1:4] <- 0; test1[ , 2] <- 1
+test2 <- train; test2[ , 1:4] <- 0; test2[ , 3] <- 1
+test3 <- train; test3[ , 1:4] <- 0; test3[ , 4] <- 1
+test <- rbind(test0, test1, test2, test3)
+
+
+##test BART with token run to ensure installation works
+set.seed(21)
+post <- pbart(train, y, test, nskip=5, ndpost=5)
+
+
+## Not run:
+set.seed(21)
+post <- pbart(train, y, test)
+
+## turn z-scores into probabilities
+post$prob.test <- pnorm(post$yhat.test)
+
+
+
+```
+
+### BART on Binary outcome
+
+
+```{r}
+p0 <- .3
+odds0 <- p0 / (1 - p0)
+or <- 1.2
+odds1 <- odds0 * or
+p1 <- odds1/(1 + odds1)
+
+c(p0, p1)
+
+n <- 50
+set.seed(12345)
+y0 <- rbinom(n, 1, p0)
+mean(y0)
+y1 <- rbinom(n, 1, p1)
+mean(y1)
+
+df <- data.frame(
+    y=c(y0, y1)
+  , treatment=rep(c(0, 1), each=n)
+  , noise=rnorm(2 * n)
+)
+
+library(BART)
+y <- df$y
+train <- df[, c("treatment", "noise")]
+
+test1 <- train
+test1$treatment <- 1
+test0 <- train
+test0$treatment <- 0
+test <- rbind(test0, test1)
+dim(test)
+## 200 2
+
+pt <- pbart(x.train=train
+          , y.train=y
+          , x.test=test
+          , ndpost=2500
+          , nskip=1000
+            )
+
+str(pt)
+
+ps <- pt$yhat.test
+dim(ps)
+## 250 rows of draws, and 200 columns of post z-scores
+summary(ps[1, 1:100])
+## average treatment effect
+summary(as.vector(pnorm(ps[1:2500, 1:100])))
+summary(as.vector(pnorm(ps[1:2500, 101:200])))
+
+## average treatment effect on the treated
+summary(as.vector(pnorm(ps[1:2500, 1:50])))
+summary(as.vector(pnorm(ps[1:2500, 151:200])))
+
+
+```
+
+# Computing Environment
+
+
+```{r}
+sessionInfo()
+```

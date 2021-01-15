@@ -1,0 +1,47 @@
+---
+title: "R Notes Index"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+## Global options
+options(max.print="2000")
+opts_chunk$set(echo=TRUE,
+               eval=TRUE,
+               cache=FALSE,
+               results="asis",
+               prompt=FALSE,
+               tidy=FALSE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+eval_fast <- TRUE
+eval_slow <- FALSE
+
+```
+
+# Links
+
+* [Cluster Analysis](clustering.html)
+* [Data Manipulation](data_manipulation.html)
+* [Multi-State Process](multi_state.html)
+* [Regression Method](regression.html)
+* [Power Analysis](power_analysis.html)
+* [Restricted Cubic Spline](restricted_cubic_spline.html)
+* [R Notes](r_notes.html)
+* [Time to Event](time_to_event.html)

@@ -1,0 +1,178 @@
+---
+title: "Clustering"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+## Global options
+options(max.print="2000")
+opts_chunk$set(echo=TRUE,
+               eval=TRUE,
+               cache=FALSE,
+               results="asis",
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+eval_fast <- TRUE
+eval_slow <- FALSE
+
+```
+
+
+
+# Clustering with R
+
+[Clustering with R](https://www.datanovia.com/en/blog/types-of-clustering-methods-overview-and-quick-start-r-code/)
+
+
+## Data
+
+
+```{r}
+## install.packages("NbClust")
+## install.packages("reshape2")
+## install.packages("viridis")
+## install.packages("factoextra")
+## install.packages("cluster")
+## install.packages("magrittr")
+
+library(factoextra)
+library(cluster)
+library(magrittr)
+library(Wu)
+
+# Load  and prepare the data
+data("USArrests")
+
+my_data <- USArrests %>%
+  na.omit() %>%          # Remove missing values (NA)
+    scale() %>%               # Scale variables
+    as.data.table()
+
+my_data %>% DT()
+
+```
+
+
+## Data Summary
+
+
+```{r}
+## colnames(my_data)
+
+Vars <- colnames(my_data)
+
+FactorVars <- NULL
+
+t <- Table1n(obj = my_data, Vars = Vars, FactorVars = FactorVars)
+
+t %>% prt()
+
+```
+
+## Distance
+
+ * Distance by four continuous variables
+ * Distance method: manhattan
+
+```{r}
+res.dist <- get_dist(USArrests, stand = TRUE, method = "manhattan")
+
+fviz_dist(res.dist,
+   gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+
+```
+
+## Kmeans Clustering
+
+
+```{r}
+
+library("factoextra")
+
+set.seed(123)
+fviz_nbclust(my_data, kmeans, nstart = 10,  method = "gap_stat", nboot = 500)+
+  labs(subtitle = "Gap statistic method")
+
+```
+
+## Plot Kmeans Clusters
+
+```{r}
+set.seed(123)
+km.res <- kmeans(my_data, 3, nstart = 25)
+# Visualize
+library("factoextra")
+fviz_cluster(km.res, data = my_data,
+             ellipse.type = "convex",
+             palette = "jco",
+             ggtheme = theme_minimal())
+
+```
+
+## Hierarchical Clustering
+
+
+```{r}
+# Compute hierarchical clustering
+res.hc <- USArrests %>%
+  scale() %>%                    # Scale the data
+  dist(method = "euclidean") %>% # Compute dissimilarity matrix
+  hclust(method = "ward.D2")     # Compute hierachical clustering
+
+# Visualize using factoextra
+# Cut in 4 groups and color by groups
+fviz_dend(res.hc, k = 4, # Cut in four groups
+          cex = 0.5, # label size
+          k_colors = c("#2E9FDF", "#00AFBB", "#E7B800", "#FC4E07"),
+          color_labels_by_k = TRUE, # color labels by groups
+          rect = TRUE # Add rectangle around groups
+          )
+
+```
+
+## Determine the Optimal Number of Clusters
+
+```{r}
+set.seed(123)
+
+# Compute
+library("NbClust")
+
+res.nbclust <- USArrests %>%
+  scale() %>%
+  NbClust(distance = "euclidean",
+          min.nc = 2, max.nc = 10,
+          method = "complete", index ="all")
+
+# Visualize
+library(factoextra)
+fviz_nbclust(res.nbclust, ggtheme = theme_minimal())
+
+```
+
+
+
+# Computing Environment
+
+
+```{r}
+sessionInfo()
+```

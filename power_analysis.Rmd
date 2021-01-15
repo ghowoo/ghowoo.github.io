@@ -1,0 +1,80 @@
+---
+title: "Power Analysis"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+## Global options
+options(max.print="2000")
+opts_chunk$set(echo=TRUE,
+               eval=TRUE,
+               cache=FALSE,
+               results="asis",
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+eval_fast <- TRUE
+eval_slow <- FALSE
+
+```
+
+
+
+# Non-inferiority Cluster Randomised Trial
+
+Richard J. Hayes & Lawrence H. Moulton. Cluster Randomised Trials, Second Edition, 2017, P. 156
+
+* This formula uses alpha value of 0.05 not 0.025, to ensure a standard 95% confidence interval on delta would excluded the -0.05 margin with 80% probability.
+* C: number of clusters
+* m: number of subjects per cluster
+* delta = pi_1 - pi_0: true difference between two arms
+* pi_1: proportion on the treatment arm
+* pi_0: proportion on the control arm
+* beta:
+* alpha:
+* k: coefficient of variance
+
+```{r}
+
+C <- 104 / 3
+m <- 30
+delta <- -0.05
+pi_0 <- 0.15
+k <- 0.25
+alpha <- 0.025
+z_alpha <- qnorm(1 - alpha)
+
+c <- 1 + (z_alpha + z_beta) ^ 2 * (2 * pi_0 * (1 - pi_0) / m + 2 * k ^ 2 * pi_0 ^ 2) / (delta ^ 2)
+
+xx <- (2 * pi_0 * (1 - pi_0) / m + 2 * (k ^ 2) * (pi_0 ^ 2)) / (delta ^ 2)
+z_beta <- sqrt((C - 1) / xx) - z_alpha
+
+pnorm(z_beta)
+
+```
+
+
+
+# Computing Environment
+
+
+```{r}
+sessionInfo()
+```

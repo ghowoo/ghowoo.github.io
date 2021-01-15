@@ -1,0 +1,117 @@
+---
+title: "Restricted Cubic Spline"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+## Global options
+options(max.print="2000")
+opts_chunk$set(echo=TRUE,
+               eval=TRUE,
+               cache=FALSE,
+               results="asis",
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+eval_fast <- TRUE
+eval_slow <- FALSE
+
+```
+
+
+# Cubic Spline Function
+
+Suppose a continuous variable x is divided into three intervals at cutpoints a and b, a model can be built between y and x by assuming piecewise linear in which there is a linear relationship for each of three intervals but with different slope.
+
+A cubic spline curve is a piecewise cubic curve with continuous second derivative. Instead of a linear line, a cubic polynomial has a good ability to model a non-linear relationship by fitting a curve. Meanwhile, a piecewise cubic spline is smooth on the joint points (cutpoints) by forcing the first and second derivatives to be same on the joint points.
+
+
+A piecewise cubic spline with two cutpoints a and b on the x variable has 5 regression coefficients in the model related to the variable x.
+
+$$Y = \beta_0 + \beta_1X_1 + \beta_2X_2 + \beta_3X_3 + \beta_4X_4 + \beta_5X_5 + \cdots \beta_{\cdots}X_{\cdots}$$
+
+* $X_1 = X$
+* $X_2 = X^2$
+* $X_3 = X^3$
+* $X_4 = (X-a)^3_+$, any value of X less than a is set as zero.
+* $X_5 = (X-b)^3_+$, any value of X less than b is set as zero.
+* Notation
+    + $U_+ = 0$, if $U <= 0$
+    + $U_+ = U$, if $U > 0$
+
+# Restricted Cubic Spline
+
+The restricted cubic spline restrains the functions to be linear before the first knot and after the last knot. It has only $k - 1$ parameters must be estimated as opposed to $k + 3$ parameters with unrestricted cubic spline where $k$ is the number of knots.
+
+$$f(X) = \beta_0 + \beta_1X_1 + \beta_2X_2 + ... + \beta_{[k-1]}X_{k-1}$$
+where $X_1 = X$ and for $j = 1,...,k-2$,
+$$X_{j+1} = (X-t_j)_+^3 - (X-t_{k-1})_+^3(t_k - t_j)/(t_k - t_{k-1}) + (X - t_k)_+^3(t_{k-1} - t_j)/(t_k - t_{k-1})$$
+
+In case of four knots $t_1, t_2, t_3, t_4$ which means that there are four cutpoints with five intervals on a line, then $k = 4$, there should be $k - 1 = 3$ variables $X_1, X_2, X_3$ being generated and put into the model, and three corresponding parameters need to be estimated with the restricted cubic spline.
+
+* $X_1 = X$
+* For $j = 1,...,k-2$, when $k = 4$, $j$ has values of $1$ and $2$.
+    + When $j = 1, k = 4$: $X_2 = (X - t_1)_+^3 - (X - t_3)_+^3(t_4 - t_1)/(t_4 - t_3) + (X - t_4)_+^3(t_3 - t_1)/(t_4 - t_3)$
+    + When $j = 2, k = 4$: $X_3 = (X - t_2)_+^3 - (X - t_3)_+^3(t_4 - t_2)/(t_4 - t_3) + (X - t_4)_+^3(t_3 - t_2)/(t_4 - t_3)$
+
+
+```{r}
+library(Hmisc)
+x <- seq(0,100,by=1)
+
+knots <- quantile(x,c(0.05,0.35,0.65,0.95))
+t <- quantile(x,c(0.05,0.35,0.65,0.95))
+
+y <- rcspline.eval(x,nk=4,inclx = TRUE)
+y <- as.data.frame(y)
+str(y)
+dim(y)
+
+y$y2 <- (x >= t[1])*(x - t[1])^3 - (x >= t[3])*(x - t[3])^3*(t[4]-t[1])/(t[4]-t[3]) + (x >= t[4])*(x-t[4])^3*(t[3]-t[1])/(t[4]-t[3])
+y$y3 <- (x >= t[2])*(x - t[2])^3 - (x >= t[3])*(x - t[3])^3*(t[4]-t[2])/(t[4]-t[3]) + (x >= t[4])*(x-t[4])^3*(t[3]-t[2])/(t[4]-t[3])
+
+
+tau <- (t[4] - t[1])^2
+y$V2b <- y$V2*tau
+y$V3b <- y$V3*tau
+# View(y)
+
+sum(y$V3b - y$y3)
+sum(y$V2b - y$y2)
+
+plot(y$x, y$V2)
+plot(y$x, y$V3)
+
+```
+
+
+# Reference
+
+[Frank Harrel, Hmisc Package, "rscpline.eval" Function](https://cran.r-project.org/web/packages/Hmisc/Hmisc.pdf)
+
+
+
+
+# Computing Environment
+
+
+```{r}
+sessionInfo()
+```
