@@ -41,6 +41,23 @@ eval_slow <- FALSE
 
 
 
+
+# Rename Variables
+
+```{r}
+dt <- data.table(A=1:3, B=2:4)
+colnames(dt)
+
+lst <- list("A"="Variable_A")
+names(lst)
+unlist(lst)
+
+colnames(dt)[colnames(dt) %in% names(lst)] <- unlist(lst)[colnames(dt)[colnames(dt) %in% names(lst)]]
+
+colnames(dt)
+
+
+```
 # Fill Missing Values
 
 ## Replace elements in a vector by a specific value
