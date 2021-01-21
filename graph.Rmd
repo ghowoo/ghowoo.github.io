@@ -1,0 +1,176 @@
+---
+title: "R Graph"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+## Global options
+options(max.print="2000")
+opts_chunk$set(echo=TRUE,
+               eval=FALSE,
+               cache=FALSE,
+               results="asis",
+               prompt=FALSE,
+               tidy=FALSE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+eval_fast <- TRUE
+eval_slow <- FALSE
+
+```
+
+
+
+# plot
+
+
+## Flowchart
+
+
+```{r}
+library(Wu)
+library(tgsify)
+readRDS(file="df.RDS") %>%
+    mutate(consort = case_when(
+               iculos7d !=  "ICULOS 7d or more" ~ "2 2 ICU LOS less than 7 days"
+             , is.na(inptrehabdc) ~ "3 2 Missing Values on Discharge Destination"
+             , TRUE ~ "4 1 Study population"
+           )) %>%
+    le("consort") %>%
+    two_column_consort("Total Records")
+
+```
+
+# ggplot
+
+## Forest Plot
+
+```{r,eval=FALSE}
+
+dt <- readRDS(file= "cis_irf.RDS")
+dt <- dt[order(order.level)][!is.na(coef_value)]
+
+## rename variables
+
+dt$name <- c(
+    "High Rehabilitation Service Ctr" ## "topquartileTop quartile"
+  , "Female:Male" ## , "genderFemale"
+  , "Age Child:Adolesent" ## , "age_groupChild"
+  , "Age Infant:Adolesent" ## , "age_groupInfant"
+  , "Age Neonate:Adolesent" ## , "age_groupNeonate"
+  , "Ethnicity Hispanic/Latino:None" ## , "ethnicityHispanic or Latino"
+  , "Ethnicity Other:None" ## , "ethnicityother"
+  , "Payor Commercial:Government/Other" ## , "payor_classCommercial"
+  , "Respiratory Season Oct-March" ## , "wintermonthOct thru March"
+  , "Complex Chronic Conditions 1:0" ## , "ccc_composite1"
+  , "Complex Chronic Conditions 2+:0" ## , "ccc_composite2+"
+  , "Complex Chronic Condition Neuro" ## , "neuroYes"
+  , "ICU LOS per Week" ## , "icu_los_in_weeks"
+  , "CardSurg" ## , "card_surgCardSurg SVC"
+  , "Respiratory Medical" ## , "resp_medicalRespMedical"
+  , "Infection" ## , "infxnYes"
+  , "ECMO Support" ## , "ecmoYes"
+  , "Ventilation" ## , "ventYes"
+  , "Prolonged Neruromuscular Blockage" ## , "nmb72hNMB charges for 3d or more"
+  , "Prolonged Steroid Use" ## , "steroid72hSteroids for 72h or more"
+)
+
+dt <- dt[, num_rep := 22 - nchar(ci)
+         ][, name_label := paste0(name, "    ", ci)
+           ## ][, name_label := paste0(name, "    [", ci, "]")
+]
+
+
+dt$name <- factor(dt$name, levels = rev(dt$name))
+dt$name_label <- factor(dt$name_label, levels = rev(dt$name_label))
+
+dt[, .N, by = nchar(as.character(name_label))]
+
+
+png(file="forestplot_irf.png", width = 2400, height = 1200, res = 300)
+p <- ggplot(dt
+          , aes(y = name_label
+              , x = coef_value
+              , xmin = coef_value_lower
+              , xmax = coef_value_upper
+                ))
+p <- p + geom_vline(xintercept=1, color='grey', linetype='dashed',size=0.7)
+p <- p + geom_errorbarh(height=0.2,color="#333333",size=0.8)
+p <- p + geom_point(color = "#666666",size=1,shape=15)
+
+p <- p + scale_x_continuous(limits=c(0,43), breaks=c(0,1,2,5), name='Adjusted Odds Ratio (IPR)')
+## p <- p + scale_y_discrete(labels = "Y AXIS", sec.axis = dup.axis())
+p <- p + ylab("")
+p <- p + theme_bw()
+p <- p + theme(axis.ticks = element_blank()
+              , panel.grid.major = element_blank(),
+               panel.grid.minor = element_blank()
+               )
+p <- p + coord_cartesian(xlim=c(0, 8))
+p
+dev.off()
+
+
+
+```
+
+## Forest Plot Log Scale
+
+
+```{r,eval=FALSE}
+
+
+png(file="forestplot_irf.png", width = 2400, height = 1200, res = 300)
+p <- ggplot(dt
+          , aes(y = name_label
+              , x = coef_value
+              , xmin = coef_value_lower
+              , xmax = coef_value_upper
+                ))
+p <- p + geom_vline(xintercept=1, color='grey', linetype='dashed',size=0.7)
+p <- p + geom_errorbarh(height=0.2,color="#333333",size=0.8)
+p <- p + geom_point(color = "#666666",size=1,shape=15)
+
+p <- p + scale_x_continuous(limits=c(0.1,4), breaks=c(0.1, 0.2, 0.5,1,2,3, 4), name='Adjusted Odds Ratio (IPR)')
+## p <- p + scale_y_discrete(labels = "Y AXIS", sec.axis = dup.axis())
+p <- p + ylab("")
+p <- p + theme_bw()
+p <- p + theme(axis.ticks = element_blank()
+              , panel.grid.major = element_blank(),
+               panel.grid.minor = element_blank()
+               )
+p <- p + coord_cartesian(xlim=c(0, 4)) +  coord_trans(x="log")
+p
+dev.off()
+
+
+include_graphics("forestplot_irf.png")
+
+
+```
+
+
+# plotly
+
+# Computing Environment
+
+
+```{r}
+sessionInfo()
+```

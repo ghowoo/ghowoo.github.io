@@ -1,0 +1,195 @@
+---
+title: "Support Vector Machine"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+## Global options
+options(max.print="2000")
+opts_chunk$set(echo=TRUE,
+               eval=TRUE,
+               cache=FALSE,
+               results="asis",
+               prompt=FALSE,
+               tidy=FALSE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+eval_fast <- TRUE
+eval_slow <- FALSE
+
+```
+
+
+# Links
+
+[Index](index.html)
+
+
+
+
+# Support Vector Machine
+
+* [Zulaikha Lateef: Support Vector Machine in R: Using SVM to Predict Heart Disease](https://www.edureka.co/blog/support-vector-machine-in-r/)
+* SVM is a supervised machine learning algorithm to classify data into different classes.
+* It uses a hyperplane to act as a decision boundary between two classes.
+* It can generate multiple separating hyperplanes to divide data into multiple segments.
+* SVR (support vector regression) is used for regression problems.
+* SVM can classify non-linear data using kernel trick which transforms data into another dimension that has a clear dividing margin between classes of data.
+* The closest data points to the hyperplane are known as support vectors.
+* The optimum hyperplane will have a maximum distance from each of the support vectors. And this distance between the hyperplane and the support vectors is known as the margin.
+* Non-linear support vector machine uses a kernal to transform data into another dimension that has a clear dividing margin.
+
+
+* [Tom Sharp: An Introduction to Support Vector Regression (SVR)](https://towardsdatascience.com/an-introduction-to-support-vector-regression-svr-a3ebc1672c2)
+* The objective function of SVR is to minimize the coefficients, l2-norm of the coefficient vector.
+$$MIN \frac{1}{2} ||w||^2$$
+* Constrain: to set a absolute error less than or equal to a specified margin
+$$|y_i - w_i x_i| \le \epsilon$$
+* Another hyperparameter: slack variable ($\xi$) denotes the deviation from the margin for some data points fall outside of $\epsilon$
+* Minimize
+$$MIN \frac{1}{2} ||w||^2 + C\sum_{i=1}^{n}|\xi_i|$$
+* Constrain
+$$|y_i - w_i x_i| \le \epsilon + |\xi|$$
+
+
+* [Kevin Swersky: Support Vector Machines vs Logistic Regression](http://www.cs.toronto.edu/~kswersky/wp-content/uploads/svm_vs_lr.pdf)
+* Logistic regression focuses on maximumizing the probability of the data. The farther the data points lie from the separating hyperplance, the happier LR is.
+* SVM tries to find the a seprarating hyperplance that maximizes the distance of the closest points to the margin (the support vectors). If a point is not a support vector, it doesn't really matter.
+* We don't care about getting the right probability, but just want to make the right decision
+* For LR, we express this as a constrain on the likelyhood ratio
+$$\frac{P(y=1|x)}{P(y=0|x)} \ge C ; C \ge 1$$
+* Put a quadratic penalty on the weights to make the solution unique on LR, gives SVM. SVM is derived by asking LR to make a right decision.
+
+
+
+
+
+
+# R CARET package
+
+
+* [SVM with CARET](https://rpubs.com/uky994/593668)
+* Support Vector Machine with linear kernel
+* Cost of C is a tuning parameter that determines the possible misclassification. It imposes a penalty to the model for making an error. The higher the value of C, the less likely the SVM algorithm to misclassify a point.
+
+
+## Linear Kernel
+
+
+### Preprocess data, center and scale
+
+```{r}
+library(tidyverse)
+library(caret)
+
+data("PimaIndiansDiabetes2", package = "mlbench")
+pima.data <- na.omit(PimaIndiansDiabetes2)
+# Inspect the data
+sample_n(pima.data, 3)
+
+# Set up Repeated k-fold Cross Validation
+train_control <- trainControl(method="repeatedcv", number=10, repeats=3)
+
+# Fit the model
+svm1 <- train(diabetes ~.
+            , data = pima.data
+            , method = "svmLinear"
+            , trControl = train_control
+           ,  preProcess = c("center","scale"))
+#View the model
+svm1
+
+
+
+
+
+```
+
+### Tune on Cost
+
+```{r}
+
+# Fit the model
+svm2 <- train(diabetes ~., data = pima.data, method = "svmLinear", trControl = train_control,  preProcess = c("center","scale"), tuneGrid = expand.grid(C = seq(0, 2, length = 20)))
+#View the model
+svm2
+# Plot model accuracy vs different values of Cost
+plot(svm2)
+
+# Print the best tuning parameter C that
+# maximizes model accuracy
+svm2$bestTune
+
+res2<-as_tibble(svm2$results[which.min(svm2$results[,2]),])
+res2
+
+```
+
+
+## Non-Linear Kernel
+
+```{r}
+# Fit the model
+svm3 <- train(diabetes ~., data = pima.data, method = "svmRadial", trControl = train_control, preProcess = c("center","scale"), tuneLength = 10)
+# Print the best tuning parameter sigma and C that maximizes model accuracy
+svm3$bestTune
+
+svm3
+
+#save the results for later
+res3<-as_tibble(svm3$results[which.min(svm3$results[,2]),])
+res3
+
+```
+
+
+# R e1071 package
+
+[TechVidvan: SVM in R for Data Classification using e1071 Package](https://techvidvan.com/tutorials/svm-in-r/)
+
+## Generate a two-dimension data
+
+```{r}
+set.seed(100)
+x <- matrix(rnorm(40),20,2)
+y <- rep(c(-1,1),c(10,10))
+x[y == 1,] = x[y == 1,] + 1
+plot(x, col = y + 3, pch = 19)
+
+
+library(e1071)
+data = data.frame(x, y = as.factor(y))
+
+```
+
+## Linear Kernel
+
+```{r}
+data.svm = svm(y ~ ., data = data, kernel = "linear", cost = 10, scale = FALSE)
+print(data.svm)
+plot(data.svm, data)
+```
+
+
+# Computing Environment
+
+
+```{r}
+sessionInfo()
+```

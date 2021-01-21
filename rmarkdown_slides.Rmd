@@ -1,0 +1,158 @@
+---
+title: "Notes on Xaringan Presentation"
+subtitle: "Try Slides with RMarkdown"
+author: "Wu Gong<br /> <br /> <br /> Department of Biostatistics"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    css: ["default", "gds.css", "gds-fonts.css"]
+    seal: false
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+class: title-slide, middle
+
+.bold[Wu Gong]
+
+Biostatistician
+
+Department of Biostatistics
+
+Vanderbilt Univeristy Medical Center
+
+---
+
+# Set up
+
+```{r}
+## knitr::opts_chunk$set(
+##   fig.showtext = TRUE,
+##   fig.width = 16,
+##   fig.height = 8,
+##   dpi = 300
+##   )
+
+## devtools::install_github("yihui/xaringan")
+## devtools::install_github("gadenbuie/xaringanthemer@dev")
+library(xaringanthemer)
+library(Wu)
+style_duo_accent(
+  primary_color = "#1b9aaa",
+  secondary_color = "#ffc43d",
+  text_font_google = google_font("Coming Soon"),  #<< this is crazy but okay
+  header_font_google = google_font("Trade Winds") #<< very on brand for Tampa
+)
+
+
+```
+
+---
+
+
+# Plotly Heatmap
+
+```{r,echo = FALSE, message=FALSE,warning=FALSE}
+## plot(1:10, 1:10)
+## library(Wu)
+
+## plt_hist(rnorm(100))
+
+library(plotly)
+p <- plot_ly(z = volcano, type = "heatmap")
+p
+
+## htmlwidgets::saveWidget(plt_hist(rnorm(100)), "plotly_histogram.html")
+## htmltools::includeHTML("plotly_histogram.html")
+
+## cat(plotly:::plotly_iframe("plotly_histogram.html"))
+
+## htmltools::tags$iframe(
+##     src="plotly_histogram.html",
+##     width="100%",
+##     height="400",
+##     scrolling="no",
+##     seamless="seamless",
+##     frameBorder="0"
+##     )
+
+```
+
+
+---
+
+# Plotly Histogram
+
+```{r,echo = FALSE, message=FALSE,warning=FALSE}
+plt_hist(rnorm(100))
+
+```
+
+---
+
+.blue[Bullets]
+
+
+$$\bar{X}=\frac{1}{n}\sum_{i=1}^nX_i$$
+
+* Item I
+* Item II
+    - Point A
+	- Point B
+* Item III
+
+
+---
+
+# Regression
+
+```{r}
+# a boring regression
+fit = lm(dist ~ 1 + speed, data = cars)
+coef(summary(fit))
+
+```
+
+---
+
+# Table
+
+```{r}
+knitr::kable(head(iris), format = 'html')
+
+```
+---
+
+# data.table
+
+```{r,echo = FALSE, message=FALSE,warning=FALSE}
+DT::datatable(
+  head(iris, 10),
+  fillContainer = TRUE
+, options = list(pageLength = 8)
+)
+
+```
+---
+
+# htmltools::tags$iframe
+
+```{r,echo = FALSE, message=FALSE,warning=FALSE}
+for(i in 1:1){
+  pi <- plot_ly(z = volcano, type = "heatmap")
+  f <- paste0("p.",i,".html")
+  htmlwidgets::saveWidget(pi, f)
+  htmltools::tags$iframe(
+    src=f,
+    width="100%",
+    height="400",
+    scrolling="no",
+    seamless="seamless",
+    frameBorder="0"
+  )
+}
+
+```

@@ -44,6 +44,9 @@ eval_slow <- FALSE
 
 ## Losgistic Regression
 
+
+### Model
+
 * The chunk is not run, eval=FALSE
 
 ```{r, eval=FALSE}
@@ -75,7 +78,7 @@ m0 <- bam(IRF ~ PTOT_group +
 
 ```
 
-## Report Coefficients
+### Report Coefficients
 
 ```{r}
 fit_s <- summary(m0)
@@ -154,6 +157,199 @@ knitr::kable(
            prt_m1_coef2[order(order.level), list(label, level, ci)]
          , caption = "Logistic Regression"
          , col.names = c("Variable", "Level", "OR")
+         , align = c("l","r","r","r","r")
+       ) %>%
+    styling()
+
+
+```
+
+
+
+## Multinomial Logistic Regression
+
+### Model
+
+```{r, eval=FALSE}
+library('mgcv')
+
+Outcome <- "outcome2"
+Predictors <- c(
+    "topquartile"
+  , "gender"
+  , "age_group"
+  , "ethnicity"
+  , "payor_class"
+  , "wintermonth"
+  , "ccc_composite"
+  , "neuro"
+  , "icu_los_in_weeks"
+  , "card_surg"
+  , "resp_medical"
+  , "infxn"
+  , "ecmo"
+  , "vent"
+  , "nmb72h"
+  , "steroid72h"
+  , "s(hospital_id, bs=\"re\")"
+)
+
+
+ts1 <- Sys.time()
+fit <- mgcv::gam(
+    list(
+        wu_formula(Outcome, Predictors)
+     ,  wu_formula("", Predictors)
+    )
+  , family = multinom(K = 2)
+  , data = df7
+  , method = "REML"
+  ## , trace = FALSE
+    )
+ts2 <- Sys.time()
+
+
+
+```
+
+### Report Coefficient
+
+```{r,eval=FALSE}
+saveRDS(fit, "fit_aim1.RDS")
+fit <- readRDS("fit_aim1.RDS")
+fit_s <- summary(fit)
+
+prt_coef.gam <- function(obj, exp = FALSE, digits = 2){
+    obj_summary <- summary(obj)
+    rtn <- data.table(
+        coef_name = names(obj_summary$p.coeff)
+      , coef_value = obj_summary$p.coeff
+      , df = sum(obj$edf)
+    )
+    rtn <- merge(
+        x = rtn
+      , y = data.table(coef_name = names(obj_summary$se), se = obj_summary$se)
+      , on = "coef_name"
+      , all.x = TRUE
+      , all.y = FALSE
+    )
+    rtn[, coef_value_lower := coef_value + qt(0.025, df) * se
+        ][, coef_value_upper := coef_value + qt(0.975, df) * se
+          ]
+    if (exp == TRUE){
+        rtn[, coef_value := exp(coef_value)
+            ][, coef_value_lower := exp(coef_value_lower)
+              ][, coef_value_upper := exp(coef_value_upper)]
+    }
+    rtn[, ci := paste0(
+              format(round(coef_value, digits), nsmall = digits)
+            , "("
+            , format(round(coef_value_lower, digits), nsmall = digits)
+            , ","
+            , format(round(coef_value_upper, digits), nsmall = digits)
+            , ")")
+        ]
+    ## print(rtn)
+
+    if (obj$family$family == "multinom"){
+        ## print(obj$family$family)
+    }
+    return(rtn)
+}
+
+fit_coefs <- prt_coef.gam(fit, exp = TRUE, digits = 2)
+fit_coefs <- fit_coefs[order(coef_name)]
+cf_l <- fit_coefs[seq(3, 42, by = 2),][, ci_l := ci][, list(coef_name, ci_l)]
+cf_r <- fit_coefs[seq(4, 32, by = 2),][, ci_r := ci][, list(ci_r)]
+
+prt_m1_coef <- cbind(cf_l, cf_r)
+
+coef_names <- get_coef_name(df7[, c(
+    "topquartile"
+  , "gender"
+  , "age_group"
+  , "ethnicity"
+  , "payor_class"
+  , "wintermonth"
+  , "ccc_composite"
+  , "neuro"
+  , "icu_los_in_weeks"
+  , "card_surg"
+  , "resp_medical"
+  , "infxn"
+  , "ecmo"
+  , "vent"
+  , "nmb72h"
+  , "steroid72h"
+)])
+
+prt_m1_coef2 <- merge(
+    x = coef_names
+  , y = prt_m1_coef
+  , by.x = "coef.name"
+  , by.y = "coef_name"
+  , all.x = TRUE
+  , all.y = FALSE
+)
+
+prt_m1_coef2 <- prt_m1_coef2[order(order.level), list(label, level, ci_l, ci_r)]
+knitr::kable(
+          prt_m1_coef2
+         , caption = "Multinomial Logistic Regression"
+         , col.names = c("Variable", "Level", "OR(IRF:Other)", "OR(Death:Other)")
+         , align = c("l","r","r","r","r")
+       ) %>%
+    styling()
+
+
+```
+
+## Report p-values
+
+```{r}
+fv <- anova(fit)
+
+fv1 <- as.data.table(fv$pTerms.table)
+fv1$coef_name <- rownames(fv$pTerms.table)
+
+fv1 <- fv1[
+    order(coef_name)
+][, p_value := as.numeric(`p-value`)
+  ][, p_str := case_when(
+          p_value < 0.0001 ~  "<0.0001"
+        , TRUE ~ format(round(p_value, 4), nsmall = 4)
+  )
+    ][]
+
+fv1_l <- fv1[seq(1, 32, 2),][,df_l := df][, pvalue_l := p_str][,list(coef_name, df_l, pvalue_l)]
+fv1_r <- fv1[seq(2, 32, 2),][,df_r := df][, pvalue_r := p_str][,list(df_r, pvalue_r)]
+fv1p <- cbind(fv1_l, fv1_r)
+
+fv2 <- as.data.table(fv$s.table)
+fv2$coef_name_str <- rownames(fv$s.table)
+fv2 <- fv2[
+    , coef_name := gsub("([^\\(]+)(\\()([^\\)]+)(\\))", "\\3", coef_name_str)
+][
+    order(coef_name, coef_name_str)
+][, p_value := as.numeric(`p-value`)
+  ][, p_str := case_when(
+          p_value < 0.0001 ~  "<0.0001"
+        , TRUE ~ format(round(p_value, 4), nsmall = 4)
+  )
+  ][, df := edf
+    ][, list(coef_name, df, p_str)]
+
+fv2_l <- fv2[seq(1, 5, 2),][,df_l := df][, pvalue_l := p_str][,list(coef_name, df_l, pvalue_l)]
+fv2_r <- fv2[seq(2, 6, 2),][,df_r := df][, pvalue_r := p_str][,list(df_r, pvalue_r)]
+fv2p <- cbind(fv2_l, fv2_r)
+
+p_prt <- rbind(fv1p, fv2p)
+
+knitr::kable(
+           fv1p
+         , caption = "Chisq Test"
+         , col.names = c("Variable", "Df(Other-IPR)", "p-value(Other-IPR)", "Df(Other-Death)", "p-value(Other-Death)")
+           , digits = c(0, 1, 0, 1, 0)
          , align = c("l","r","r","r","r")
        ) %>%
     styling()
