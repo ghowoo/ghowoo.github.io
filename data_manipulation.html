@@ -10,7 +10,7 @@
 
 <meta name="author" content="Wu Gong" />
 
-<meta name="date" content="2021-01-19" />
+<meta name="date" content="2021-01-25" />
 
 <title>R Data Manipulation with data.table</title>
 
@@ -112,11 +112,13 @@ $(document).ready(function () {
     <div id="table-of-contents">
       <ul>
       <li><a href="#links">Links</a></li>
+      <li><a href="#general-data-description">General Data Description</a></li>
       <li><a href="#rename-variables">Rename Variables</a><ul>
       <li><a href="#replace-elements-in-a-vector-by-a-specific-value">Replace elements in a vector by a specific value</a></li>
       <li><a href="#last-observation-carry-forward-locf">Last Observation Carry Forward (LOCF)</a></li>
       </ul></li>
       <li><a href="#sum-multiple-columns">Sum Multiple Columns</a></li>
+      <li><a href="#concatenate-multiple-rows-by-group">Concatenate Multiple Rows by Group</a></li>
       <li><a href="#date-and-time">Date and Time</a></li>
       <li><a href="#computing-environment">Computing Environment</a></li>
       </ul>
@@ -124,7 +126,7 @@ $(document).ready(function () {
     
     <div id="postamble" data-toggle="wy-nav-shift" class="status">
               <p class="author"><span class="glyphicon glyphicon-user"></span> Wu Gong</p>
-                  <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2021-01-19</p>
+                  <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2021-01-25</p>
         </div>
 </div>
 
@@ -132,6 +134,10 @@ $(document).ready(function () {
 <div id="links" class="section level1">
 <h1>Links</h1>
 <p><a href="index.html">Index</a></p>
+</div>
+<div id="general-data-description" class="section level1">
+<h1>General Data Description</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">Wu<span class="op">::</span><span class="kw">sv_desc</span>(dt, <span class="dt">file_name =</span> <span class="st">&quot;dt_variables.html&quot;</span>)</code></pre></div>
 </div>
 <div id="rename-variables" class="section level1">
 <h1>Rename Variables</h1>
@@ -573,6 +579,17 @@ dm &lt;-<span class="st"> </span>dm[, conditions_num <span class="op">:</span><s
        , by =<span class="st"> </span><span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(dm)
          ]</code></pre></div>
 </div>
+<div id="concatenate-multiple-rows-by-group" class="section level1">
+<h1>Concatenate Multiple Rows by Group</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt &lt;-<span class="st"> </span><span class="kw">data.table</span>(<span class="dt">a=</span>letters[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>],<span class="dt">b=</span>LETTERS[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>],<span class="dt">ID=</span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">3</span>,<span class="dv">3</span>))
+
+dt</code></pre></div>
+<pre><code>a b ID</code></pre>
+<p>1: a A 1 2: b B 1 3: c C 1 4: d D 2 5: e E 2 6: f F 2 7: g G 2 8: h H 3 9: i I 3 10: j J 3</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt[, <span class="kw">lapply</span>(.SD, paste0, <span class="dt">collapse=</span><span class="st">&quot; &quot;</span>), by =<span class="st"> </span>ID, .SD =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>)]</code></pre></div>
+<p>ID a 1: 1 a b c 2: 2 d e f g 3: 3 h i j</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt[, a2 <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">paste0</span>(a, <span class="dt">collapse =</span> <span class="st">&quot;-&quot;</span>), by =<span class="st"> </span>ID]</code></pre></div>
+</div>
 <div id="date-and-time" class="section level1">
 <h1>Date and Time</h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">as.POSIXct</span>(
@@ -690,27 +707,26 @@ vs4 &lt;-<span class="st"> </span>vs4[
 [9] LC_ADDRESS=C LC_TELEPHONE=C<br />
 [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C</p>
 <p>attached base packages: [1] stats graphics grDevices utils datasets methods base</p>
-<p>other attached packages: [1] Wu_0.0.0.9000 flexdashboard_0.5.2 lme4_1.1-25<br />
+<p>other attached packages: [1] Wu_0.0.0.9000 flexdashboard_0.5.2 lme4_1.1-26<br />
 [4] Matrix_1.2-18 mgcv_1.8-33 nlme_3.1-149<br />
 [7] png_0.1-7 scales_1.1.1 nnet_7.3-14<br />
-[10] labelled_2.7.0 kableExtra_1.3.1 plotly_4.9.2.1<br />
-[13] gridExtra_2.3 ggplot2_3.3.2 DT_0.16<br />
-[16] tableone_0.12.0 magrittr_2.0.1 lubridate_1.7.9<br />
-[19] dplyr_1.0.2 plyr_1.8.6 data.table_1.13.2<br />
+[10] labelled_2.7.0 kableExtra_1.3.1 plotly_4.9.3<br />
+[13] gridExtra_2.3 ggplot2_3.3.3 DT_0.17<br />
+[16] tableone_0.12.0 magrittr_2.0.1 lubridate_1.7.9.2<br />
+[19] dplyr_1.0.3 plyr_1.8.6 data.table_1.13.6<br />
 [22] rmdformats_0.3.7 knitr_1.30</p>
-<p>loaded via a namespace (and not attached): [1] Rcpp_1.0.6 lattice_0.20-41 tidyr_1.1.2 digest_0.6.27<br />
-[5] R6_2.5.0 survey_4.0 evaluate_0.14 highr_0.8<br />
-[9] httr_1.4.2 pillar_1.4.7 rlang_0.4.10 lazyeval_0.2.2<br />
-[13] rstudioapi_0.11 minqa_1.2.4 nloptr_1.2.2.2 rmarkdown_2.6<br />
-[17] splines_4.0.3 webshot_0.5.2 statmod_1.4.35 stringr_1.4.0<br />
-[21] htmlwidgets_1.5.2 munsell_0.5.0 compiler_4.0.3 xfun_0.20<br />
-[25] pkgconfig_2.0.3 htmltools_0.5.1 mitools_2.4 tidyselect_1.1.0 [29] tibble_3.0.5 bookdown_0.21 viridisLite_0.3.0 crayon_1.3.4<br />
-[33] withr_2.3.0 MASS_7.3-53 grid_4.0.3 jsonlite_1.7.2<br />
-[37] gtable_0.3.0 lifecycle_0.2.0 DBI_1.1.0 stringi_1.5.3<br />
-[41] xml2_1.3.2 ellipsis_0.3.1 generics_0.1.0 vctrs_0.3.6<br />
-[45] boot_1.3-25 tools_4.0.3 forcats_0.5.0 glue_1.4.2<br />
-[49] purrr_0.3.4 hms_0.5.3 survival_3.2-7 yaml_2.2.1<br />
-[53] colorspace_2.0-0 rvest_0.3.6 haven_2.3.1</p>
+<p>loaded via a namespace (and not attached): [1] Rcpp_1.0.6 lattice_0.20-41 tidyr_1.1.2 assertthat_0.2.1 [5] digest_0.6.27 R6_2.5.0 survey_4.0 evaluate_0.14<br />
+[9] highr_0.8 httr_1.4.2 pillar_1.4.7 rlang_0.4.10<br />
+[13] lazyeval_0.2.2 rstudioapi_0.13 minqa_1.2.4 nloptr_1.2.2.2<br />
+[17] rmarkdown_2.6 splines_4.0.3 webshot_0.5.2 statmod_1.4.35<br />
+[21] stringr_1.4.0 htmlwidgets_1.5.3 munsell_0.5.0 compiler_4.0.3<br />
+[25] xfun_0.20 pkgconfig_2.0.3 htmltools_0.5.1 mitools_2.4<br />
+[29] tidyselect_1.1.0 tibble_3.0.5 bookdown_0.21 viridisLite_0.3.0 [33] crayon_1.3.4 withr_2.4.0 MASS_7.3-53 grid_4.0.3<br />
+[37] jsonlite_1.7.2 gtable_0.3.0 lifecycle_0.2.0 DBI_1.1.1<br />
+[41] stringi_1.5.3 xml2_1.3.2 ellipsis_0.3.1 generics_0.1.0<br />
+[45] vctrs_0.3.6 boot_1.3-25 tools_4.0.3 forcats_0.5.0<br />
+[49] glue_1.4.2 purrr_0.3.4 hms_1.0.0 survival_3.2-7<br />
+[53] yaml_2.2.1 colorspace_2.0-0 rvest_0.3.6 haven_2.3.1</p>
 </div>
 </div>
 

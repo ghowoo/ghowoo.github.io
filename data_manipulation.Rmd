@@ -42,6 +42,13 @@ eval_slow <- FALSE
 
 
 
+# General Data Description
+
+```{r, eval=FALSE}
+Wu::sv_desc(dt, file_name = "dt_variables.html")
+
+```
+
 # Rename Variables
 
 ```{r}
@@ -133,6 +140,20 @@ dm <- dm[, conditions_num := sum(is.1(hypertension)
 
 ```
 
+# Concatenate Multiple Rows by Group
+
+```{r}
+
+dt <- data.table(a=letters[1:10],b=LETTERS[1:10],ID=c(1,1,1,2,2,2,2,3,3,3))
+
+dt
+
+dt[, lapply(.SD, paste0, collapse=" "), by = ID, .SD = c("a")]
+
+dt[, a2 := paste0(a, collapse = "-"), by = ID]
+
+
+```
 # Date and Time
 
 ```{r,eval=FALSE}
