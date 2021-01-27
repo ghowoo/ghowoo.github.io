@@ -10,7 +10,7 @@
 
 <meta name="author" content="Wu Gong" />
 
-<meta name="date" content="2021-01-25" />
+<meta name="date" content="2021-01-27" />
 
 <title>R Data Manipulation with data.table</title>
 
@@ -113,12 +113,19 @@ $(document).ready(function () {
       <ul>
       <li><a href="#links">Links</a></li>
       <li><a href="#general-data-description">General Data Description</a></li>
-      <li><a href="#rename-variables">Rename Variables</a><ul>
+      <li><a href="#rename-variables">Rename Variables</a></li>
+      <li><a href="#regular-expression">Regular Expression</a><ul>
+      <li><a href="#find-pattern">Find Pattern</a></li>
+      </ul></li>
+      <li><a href="#fill-missing-values">Fill Missing Values</a><ul>
       <li><a href="#replace-elements-in-a-vector-by-a-specific-value">Replace elements in a vector by a specific value</a></li>
       <li><a href="#last-observation-carry-forward-locf">Last Observation Carry Forward (LOCF)</a></li>
       </ul></li>
       <li><a href="#sum-multiple-columns">Sum Multiple Columns</a></li>
       <li><a href="#concatenate-multiple-rows-by-group">Concatenate Multiple Rows by Group</a></li>
+      <li><a href="#reshape">Reshape</a><ul>
+      <li><a href="#reshape-wide-to-long">Reshape Wide to Long</a></li>
+      </ul></li>
       <li><a href="#date-and-time">Date and Time</a></li>
       <li><a href="#computing-environment">Computing Environment</a></li>
       </ul>
@@ -126,7 +133,7 @@ $(document).ready(function () {
     
     <div id="postamble" data-toggle="wy-nav-shift" class="status">
               <p class="author"><span class="glyphicon glyphicon-user"></span> Wu Gong</p>
-                  <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2021-01-25</p>
+                  <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2021-01-27</p>
         </div>
 </div>
 
@@ -153,8 +160,18 @@ $(document).ready(function () {
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">colnames</span>(dt)[<span class="kw">colnames</span>(dt) <span class="op">%in%</span><span class="st"> </span><span class="kw">names</span>(lst)] &lt;-<span class="st"> </span><span class="kw">unlist</span>(lst)[<span class="kw">colnames</span>(dt)[<span class="kw">colnames</span>(dt) <span class="op">%in%</span><span class="st"> </span><span class="kw">names</span>(lst)]]
 
 <span class="kw">colnames</span>(dt)</code></pre></div>
-<p>[1] &quot;Variable_A&quot; &quot;B&quot;<br />
-# Fill Missing Values</p>
+<p>[1] &quot;Variable_A&quot; &quot;B&quot;</p>
+</div>
+<div id="regular-expression" class="section level1">
+<h1>Regular Expression</h1>
+<div id="find-pattern" class="section level2">
+<h2>Find Pattern</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">grepl</span>(<span class="st">&quot;FiO2|High&quot;</span>, <span class="kw">c</span>(<span class="st">&quot;Deliverd FiO2&quot;</span>, <span class="st">&quot;High FLow&quot;</span>, <span class="st">&quot;Low Flow&quot;</span>), <span class="dt">fixed=</span><span class="ot">FALSE</span>)</code></pre></div>
+<p>[1] TRUE TRUE FALSE</p>
+</div>
+</div>
+<div id="fill-missing-values" class="section level1">
+<h1>Fill Missing Values</h1>
 <div id="replace-elements-in-a-vector-by-a-specific-value" class="section level2">
 <h2>Replace elements in a vector by a specific value</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">:</span><span class="dv">10</span>
@@ -589,6 +606,26 @@ dt</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt[, <span class="kw">lapply</span>(.SD, paste0, <span class="dt">collapse=</span><span class="st">&quot; &quot;</span>), by =<span class="st"> </span>ID, .SD =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>)]</code></pre></div>
 <p>ID a 1: 1 a b c 2: 2 d e f g 3: 3 h i j</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt[, a2 <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">paste0</span>(a, <span class="dt">collapse =</span> <span class="st">&quot;-&quot;</span>), by =<span class="st"> </span>ID]</code></pre></div>
+</div>
+<div id="reshape" class="section level1">
+<h1>Reshape</h1>
+<div id="reshape-wide-to-long" class="section level2">
+<h2>Reshape Wide to Long</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt &lt;-<span class="st"> </span><span class="kw">data.table</span>(
+    <span class="dt">id=</span><span class="dv">1</span><span class="op">:</span><span class="dv">5</span>
+  , <span class="dt">var_1=</span><span class="dv">10</span><span class="op">:</span><span class="dv">15</span>
+  , <span class="dt">var_2=</span><span class="dv">21</span><span class="op">:</span><span class="dv">25</span>
+  , <span class="dt">var_3=</span><span class="dv">31</span><span class="op">:</span><span class="dv">35</span>
+)
+
+dt</code></pre></div>
+<p>id var_1 var_2 var_3 1: 1 10 21 31 2: 2 11 22 32 3: 3 12 23 33 4: 4 13 24 34 5: 5 14 25 35 6: 1 15 21 31</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vars &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;var_&quot;</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">3</span>)
+
+<span class="kw">melt</span>(dt, <span class="dt">id.vars=</span><span class="st">&quot;id&quot;</span>, <span class="dt">measure.vars =</span> vars)</code></pre></div>
+<pre><code>id variable value</code></pre>
+<p>1: 1 var_1 10 2: 2 var_1 11 3: 3 var_1 12 4: 4 var_1 13 5: 5 var_1 14 6: 1 var_1 15 7: 1 var_2 21 8: 2 var_2 22 9: 3 var_2 23 10: 4 var_2 24 11: 5 var_2 25 12: 1 var_2 21 13: 1 var_3 31 14: 2 var_3 32 15: 3 var_3 33 16: 4 var_3 34 17: 5 var_3 35 18: 1 var_3 31</p>
+</div>
 </div>
 <div id="date-and-time" class="section level1">
 <h1>Date and Time</h1>

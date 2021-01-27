@@ -40,10 +40,24 @@ eval_slow <- FALSE
 # plot
 
 
+## Accumulative Distribution
+
+```{r, eval=FALSE}
+ggplot(dt, aes(status_day5_num)) + stat_ecdf(geom = "step") +
+    scale_x_continuous(limits=c(0.8, 8.8)
+                       , breaks=1:8
+                       , labels=levels(dt$status_day5)
+                     , name="Numerical Day 5 Status")
+
+
+
+```
+
+
 ## Flowchart
 
 
-```{r}
+```{r,eval=FALSE}
 library(Wu)
 library(tgsify)
 readRDS(file="df.RDS") %>%
