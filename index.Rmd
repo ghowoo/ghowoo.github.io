@@ -41,6 +41,7 @@ eval_slow <- FALSE
 * [Data Manipulation](data_manipulation.html)
 * [Multi-State Process](multi_state.html)
 * [Regression Method](regression.html)
+* [Clustering](clustering.html)
 * [Power Analysis](power_analysis.html)
 * [Restricted Cubic Spline](restricted_cubic_spline.html)
 * [R Notes](r_notes.html)
