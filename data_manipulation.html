@@ -10,7 +10,7 @@
 
 <meta name="author" content="Wu Gong" />
 
-<meta name="date" content="2021-01-27" />
+<meta name="date" content="2021-01-29" />
 
 <title>R Data Manipulation with data.table</title>
 
@@ -119,10 +119,12 @@ $(document).ready(function () {
       </ul></li>
       <li><a href="#fill-missing-values">Fill Missing Values</a><ul>
       <li><a href="#replace-elements-in-a-vector-by-a-specific-value">Replace elements in a vector by a specific value</a></li>
+      <li><a href="#index-of-observations">Index of observations</a></li>
       <li><a href="#last-observation-carry-forward-locf">Last Observation Carry Forward (LOCF)</a></li>
       </ul></li>
       <li><a href="#sum-multiple-columns">Sum Multiple Columns</a></li>
       <li><a href="#concatenate-multiple-rows-by-group">Concatenate Multiple Rows by Group</a></li>
+      <li><a href="#shift-column">Shift Column</a></li>
       <li><a href="#reshape">Reshape</a><ul>
       <li><a href="#reshape-wide-to-long">Reshape Wide to Long</a></li>
       </ul></li>
@@ -133,7 +135,7 @@ $(document).ready(function () {
     
     <div id="postamble" data-toggle="wy-nav-shift" class="status">
               <p class="author"><span class="glyphicon glyphicon-user"></span> Wu Gong</p>
-                  <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2021-01-27</p>
+                  <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2021-01-29</p>
         </div>
 </div>
 
@@ -179,7 +181,10 @@ list &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">2<
 value &lt;-<span class="st"> </span><span class="dv">0</span>
 
 <span class="kw">replace</span>(x, list, value)</code></pre></div>
-<p>[1] 1 0 3 0 5 6 7 8 0 10 ## Index of observations</p>
+<p>[1] 1 0 3 0 5 6 7 8 0 10</p>
+</div>
+<div id="index-of-observations" class="section level2">
+<h2>Index of observations</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt &lt;-<span class="st"> </span><span class="kw">data.table</span>(
     <span class="dt">group=</span><span class="kw">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="st">&quot;C&quot;</span>)
   , <span class="dt">var1=</span><span class="dv">1</span><span class="op">:</span><span class="dv">9</span>
@@ -606,6 +611,15 @@ dt</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt[, <span class="kw">lapply</span>(.SD, paste0, <span class="dt">collapse=</span><span class="st">&quot; &quot;</span>), by =<span class="st"> </span>ID, .SD =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>)]</code></pre></div>
 <p>ID a 1: 1 a b c 2: 2 d e f g 3: 3 h i j</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt[, a2 <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">paste0</span>(a, <span class="dt">collapse =</span> <span class="st">&quot;-&quot;</span>), by =<span class="st"> </span>ID]</code></pre></div>
+</div>
+<div id="shift-column" class="section level1">
+<h1>Shift Column</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cf &lt;-<span class="st"> </span>cf[
+][, status_row_n_int <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">nafill</span>(status_row_n, <span class="dt">type =</span> <span class="st">&quot;locf&quot;</span>), by =<span class="st"> </span><span class="kw">list</span>(mrn)
+  ][, fio2_int <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">nafill</span>(fio2_row_filled, <span class="dt">type =</span> <span class="st">&quot;locf&quot;</span>), by =<span class="st"> </span><span class="kw">list</span>(mrn)
+    ][,  datetime_record_nx1 <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">shift</span>(datetime_record, <span class="dt">type=</span><span class="st">&quot;lead&quot;</span>), by =<span class="st"> </span><span class="kw">list</span>(mrn)
+      ][, time_int <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">difftime</span>(datetime_record_nx1, datetime_record, <span class="dt">units =</span> <span class="st">&quot;hours&quot;</span>))
+        ]</code></pre></div>
 </div>
 <div id="reshape" class="section level1">
 <h1>Reshape</h1>

@@ -10,7 +10,7 @@
 
 <meta name="author" content="Wu Gong" />
 
-<meta name="date" content="2021-01-27" />
+<meta name="date" content="2021-02-02" />
 
 <title>R Graph</title>
 
@@ -114,6 +114,7 @@ $(document).ready(function () {
       <li><a href="#flowchart">Flowchart</a></li>
       </ul></li>
       <li><a href="#ggplot">ggplot</a><ul>
+      <li><a href="#stacked-bar-charts">Stacked Bar Charts</a></li>
       <li><a href="#forest-plot">Forest Plot</a></li>
       <li><a href="#forest-plot-log-scale">Forest Plot Log Scale</a></li>
       </ul></li>
@@ -124,7 +125,7 @@ $(document).ready(function () {
     
     <div id="postamble" data-toggle="wy-nav-shift" class="status">
               <p class="author"><span class="glyphicon glyphicon-user"></span> Wu Gong</p>
-                  <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2021-01-27</p>
+                  <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2021-02-02</p>
         </div>
 </div>
 
@@ -137,7 +138,7 @@ $(document).ready(function () {
 <span class="st">    </span><span class="kw">scale_x_continuous</span>(<span class="dt">limits=</span><span class="kw">c</span>(<span class="fl">0.8</span>, <span class="fl">8.8</span>)
                        , <span class="dt">breaks=</span><span class="dv">1</span><span class="op">:</span><span class="dv">8</span>
                        , <span class="dt">labels=</span><span class="kw">levels</span>(dt<span class="op">$</span>status_day5)
-                       , <span class="dt">name=</span><span class="st">&quot;Numerical Day 5 Status&quot;</span>)</code></pre></div>
+                     , <span class="dt">name=</span><span class="st">&quot;Numerical Day 5 Status&quot;</span>)</code></pre></div>
 </div>
 <div id="flowchart" class="section level2">
 <h2>Flowchart</h2>
@@ -155,6 +156,13 @@ $(document).ready(function () {
 </div>
 <div id="ggplot" class="section level1">
 <h1>ggplot</h1>
+<div id="stacked-bar-charts" class="section level2">
+<h2>Stacked Bar Charts</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(fdt2, <span class="kw">aes</span>(day_assessment_icu)) <span class="op">+</span>
+<span class="st">    </span><span class="kw">geom_bar</span>() <span class="op">+</span>
+<span class="st">    </span><span class="kw">geom_bar</span>(<span class="kw">aes</span>(<span class="dt">fill =</span> state_daily4_locf))
+p</code></pre></div>
+</div>
 <div id="forest-plot" class="section level2">
 <h2>Forest Plot</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="dt">file=</span> <span class="st">&quot;cis_irf.RDS&quot;</span>)

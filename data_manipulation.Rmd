@@ -77,6 +77,7 @@ grepl("FiO2|High", c("Deliverd FiO2", "High FLow", "Low Flow"), fixed=FALSE)
 
 # Fill Missing Values
 
+
 ## Replace elements in a vector by a specific value
 
 
@@ -88,6 +89,7 @@ value <- 0
 replace(x, list, value)
 
 ```
+
 ## Index of observations
 
 ```{r}
@@ -104,6 +106,7 @@ dt <- dt[, index_i := .I
 dt %>% prt()
 
 ```
+
 
 
 ## Last Observation Carry Forward (LOCF)
@@ -127,6 +130,18 @@ dt <- dt[
 
 dt[, .(index, n1, n1_locf, c1, c1_locf)] %>% prt()
 ```
+
+* More detailed process for character variables
+
+```{r,eval=FALSE}
+fdt2 <- fdt2[, i := .I
+             ][is.na(state_daily4), i := NA
+               ][, i_fill := nafill(i, type="locf"), by = .(record_id)
+               ][, state_daily4_locf := state_daily4[i_fill]]
+
+```
+
+
 
 # Sum Multiple Columns
 
@@ -164,6 +179,19 @@ dt[, a2 := paste0(a, collapse = "-"), by = ID]
 
 
 ```
+
+# Shift Column
+
+```{r, eval=FALSE}
+cf <- cf[
+][, status_row_n_int := nafill(status_row_n, type = "locf"), by = list(mrn)
+  ][, fio2_int := nafill(fio2_row_filled, type = "locf"), by = list(mrn)
+    ][,  datetime_record_nx1 := shift(datetime_record, type="lead"), by = list(mrn)
+      ][, time_int := as.numeric(difftime(datetime_record_nx1, datetime_record, units = "hours"))
+        ]
+
+```
+
 # Reshape
 
 ## Reshape Wide to Long

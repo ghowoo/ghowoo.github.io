@@ -5,7 +5,7 @@ date: "`r Sys.Date()`"
 output:
   rmdformats::readthedown:
     self_contained: true
-    thumbnails: true
+    thumbnails: false
     code_folding: hide
     toc_depth: 6
     lightbox: true
@@ -90,13 +90,68 @@ t %>% prt()
 ## Distance
 
  * Distance by four continuous variables
- * Distance method: manhattan
+ * [Methods for Measuring Distance](https://www.datanovia.com/en/lessons/clustering-distance-measures/)
+ * [Fred Szabo: Manhattan Distance](https://www-sciencedirect-com.ezp-prod1.hul.harvard.edu/topics/mathematics/manhattan-distance)
+ * Euclidean Distance
+ $$d_{euc}(x,y)=\sqrt{\sum_{i=1}^n(x_i - y_i)^2}$$
+ * Manhattan Distance is the distance a car would drive in a city (Manhattan). It is the sum of absolute differences. It is also known as $L^1$ norm.
+ $$d_{man}(x,y)=\sum_{i=1}^n|(x_i - y_i)|$$
+ * Pearson correlation distance: it measures the degree of a linear relationship between two profiles. It is another type of dissimilarity measuremeants called correlation-based distance. r values from -1 to 1. It could be converted to range of 0 to 1.
+$$d_{cor}(x,y) = 1- \frac{\sum_{i=1}^n(x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum_{i=1}^n(x_i - \bar{x})^2}\sum_{i=1}^n(y_i - \bar{y})^2}$$
+$$d = (1 - r)/2$$
+ * Spearman correlation distance: computes the correlation between the rank of x and y.
+ * Kendall Correlation Distance.
+ $$d_{kend}(x,y) = 1 - \frac{n_c - c_d}{n(n-1)/2}$$
+ $$n_c : total\ number\ of\ concordant\ pairs$$
+ $$n_d:\ total\  number\  of\  discordant\  pairs$$
+$$n(n-1)/2 = total\ number\ of\ possible\ pairings$$
 
 ```{r}
+library(factoextra)
 res.dist <- get_dist(USArrests, stand = TRUE, method = "manhattan")
 
 fviz_dist(res.dist,
    gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+
+```
+
+## Gower Dissimilarity
+
+ * [Gower's dissimilarity measure for mixed numeric/categorical data](https://rstudio-pubs-static.s3.amazonaws.com/423873_adfdb38bce8d47579f6dc916dd67ae75.html)
+ * The overall similarity score is the sum of all the individual variable similarity divided by the total possible comparisons.
+
+
+```{r}
+library(cluster)
+
+Dist <- daisy(iris, metric = c("gower"))
+library(factoextra)
+fviz_dist(Dist)
+
+## hclust(Dist)
+
+
+
+```
+
+## Silhouette
+
+ * Silhouette measures the consistency within clusters of data
+ * Its value ranges from -1 to +1, high value indicates the object is well matched to its own cluster and poorly matched to nerighoring clusters.
+ * a: Mean distance within cluster for i and all other data points.
+ * b: smallest mean distance of i to all points in any other cluster. The cluster with this smallest mean dissimilarity is said to be the neighboring cluster.
+ * silhouette values is $\frac{b - a}{max(a,b}$
+ * score is zero if cluster size = 1
+ * pam: partition around medoids function
+ * Medoids are representative object within a cluster. It is similar in concept to means or centroids, but medoids are always restricted to be members of the cluster.
+
+
+```{r}
+
+## silhouette plot
+pamx <- pam(Dist, 3)
+sil = silhouette (pamx$clustering, Dist)
+plot(sil)
 
 ```
 
@@ -115,6 +170,8 @@ fviz_nbclust(my_data, kmeans, nstart = 10,  method = "gap_stat", nboot = 500)+
 
 ## Plot Kmeans Clusters
 
+
+
 ```{r}
 set.seed(123)
 km.res <- kmeans(my_data, 3, nstart = 25)
@@ -126,12 +183,40 @@ fviz_cluster(km.res, data = my_data,
              ggtheme = theme_minimal())
 
 ```
+## GAP Statistic
+
+
+* [[https://statweb.stanford.edu/~gwalther/gap][GAP Statist]]
+
+
+To estimate the optimal number of clusters.
+Provide a statistical procedure to formalize that heuristics.
+
+D: sum of the pairwise distances for all points in cluster r
+W: Sum of cluster mean of D. If D is the squared Euclidean distance, then W is the pooled within-cluster sum of squared around the cluster means.
+
+* [[https://www.datanovia.com/en/lessons/determining-the-optimal-number-of-clusters-3-must-know-methods/#:~:text=The%2520gap%2520statistic%2520compares%2520the,yields%2520the%2520largest%2520gap%2520statistic).][Gap Statistic Method]]
+
+The gap statistic compares the total within intra-cluster variation for different values of k with their expected values under null reference distribution of the data.
+The estimate of the optiomal clusters will be valued that maximize the gap statistics (that yields the largest gap statistic).
+This means that the clustering structure is far away from the random uniform distribution of points.
+
+1, calculate within-cluster variation W (observed)
+2, Generate B reference data sets with a random uniform distribution. calculate W (expected)
+3, Compute the estimate gap statistic as the deviation of the observed W from expected W
+4, Choose the smallest value of cluster number k, and the gap statistic is within one standard deviation of the gap at k+1
+
 
 ## Hierarchical Clustering
+
+ * Cluster Dendrogram
+ * A dendrogram is a diagram that shows the hierarchical relationship between objects.
+
 
 
 ```{r}
 # Compute hierarchical clustering
+library(Wu)
 res.hc <- USArrests %>%
   scale() %>%                    # Scale the data
   dist(method = "euclidean") %>% # Compute dissimilarity matrix

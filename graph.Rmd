@@ -73,6 +73,16 @@ readRDS(file="df.RDS") %>%
 
 # ggplot
 
+## Stacked Bar Charts
+
+```{r,eval=FALSE}
+p <- ggplot(fdt2, aes(day_assessment_icu)) +
+    geom_bar() +
+    geom_bar(aes(fill = state_daily4_locf))
+p
+
+```
+
 ## Forest Plot
 
 ```{r,eval=FALSE}

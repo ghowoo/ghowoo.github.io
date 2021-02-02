@@ -300,7 +300,7 @@ exp(fixef(m))
 
 ## Bayesian Longitudinal Mixed-Effect Model R::brms
 
-```{r}
+```{r,eval=FALSE}
 library(brms)
 dt <- copy(rtn)
 dt <- dt[!is.na(event)]
@@ -320,7 +320,114 @@ ranef(m)
 
 ```
 
+```{r,eval=FALSE}
 
+library(rmsb)
+
+n_iter <- 8000
+n_warmup <- n_iter / 2
+t1 <- Sys.time()
+library(rmsb)
+dd <- datadist(dt)
+options(datadist='dd')
+file.remove("discrete_death_blrm.RDS")
+m <- blrm(daily_death ~ age_group +
+              rcs(day_assessment_icu, 5) +
+              days_admit2icu3 +
+              sex_2.factor +
+              race_ethnicity +
+              com_astha +
+              com_coronary +
+              com_immunosuppresion +
+              com_diabetes +
+              com_hypertension +
+              com_stroke +
+              com_renal +
+              com_copd +
+              com_heartfailure +
+              com_obesity +
+              cluster(record_id) +
+              redcap_data_access_group
+        , data=dt
+        , iter=n_iter
+        , warmup=n_warmup
+        , refresh = 500
+        , progress = "discrete_death_blrm_progess.log"
+        , chain=4
+        , cores=4
+        , show_messages=TRUE
+        , file="discrete_death_blrm.RDS"
+          )
+t2 <- Sys.time()
+print(t2 - t1)
+st <- blrmStats(m, ns=n_iter * 4 / 2)
+## get concordance probabiilty etc.
+saveRDS(st, file="discrete_death_blrmStats.RDS")
+
+
+
+
+m <- readRDS(file="discrete_death_blrm.RDS")
+smry <- summary(m)
+rNames <- attr(smry, "dimnames")[[1]]
+cNames <- attr(smry, "dimnames")[[2]]
+smry <- as.data.table(smry)
+colnames(smry) <- cNames
+smry$coef_name <- rNames
+
+smry[, c(9, 1, 2, 4, 6, 7)] %>%
+    kable(caption="Coefficients of the Model (Odds Ratios)"
+      , digits=2
+      , align="rrrrrrrrrrrrrrrr"
+        ) %>% styling()
+
+```
+
+
+## Bayesian Longitudinal Mixed-Effect Logistic R::rmsb
+
+```{r, eval=FALSE}
+
+t1 <- Sys.time()
+library(rmsb)
+dd <- datadist(dt)
+options(datadist='dd')
+file.remove("discrete_death_blrm.RDS")
+m <- blrm(event_death ~ age_group +
+              rcs(day_assessment_icu, 5) +
+              days_admit2icu3 +
+              sex_2.factor +
+              race_ethnicity +
+              com_astha +
+              com_coronary +
+              com_immunosuppresion +
+              com_diabetes +
+              com_hypertension +
+              com_stroke +
+              com_renal +
+              com_copd +
+              com_heartfailure +
+              com_obesity +
+              cluster(record_id) +
+              redcap_data_access_group
+        , data=dt
+        , iter=2000
+        , warmup=1000
+        , refresh = 500
+        , progress = "discrete_death_blrm_progess.log"
+        , chain=4
+        , cores=4
+        , show_messages=TRUE
+        , file="discrete_death_blrm.RDS"
+          )
+t2 <- Sys.time()
+print(t2 - t1)
+st <- blrmStats(m, ns=4000)
+## get concordance probabiilty etc.
+saveRDS(st, file="discrete_death_blrmStats.RDS")
+
+
+```
 # Computing Environment
 
 
