@@ -1,0 +1,65 @@
+---
+title: "Style"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+
+```{r setup, include=FALSE}
+library(knitr)
+library(rmdformats)
+## Global options
+## options(max.print="95")
+opts_chunk$set(echo=FALSE,
+	             cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE,
+               out.width = '80%')
+## opts_knit$set(width=90)
+```
+
+
+
+
+# Level One
+
+* Reference Link: https://www.dfhcc.harvard.edu/events/?month=2&year=2021
+
+## Level II A
+
+This is a very long sentence to see how wide the paragraph could be the HTML file holds. And also to see if there is way to limit the text wide shown in HTML file.
+
+```{r}
+plot(1:10)
+
+```
+
+
+## Level II B
+
+```{r}
+hist(rnorm(100))
+
+```
+
+# Level Two
+
+
+# Level Three
+
+
+# Level Four

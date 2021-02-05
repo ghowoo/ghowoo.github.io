@@ -37,6 +37,8 @@ eval_slow <- FALSE
 
 # Links
 
+
+* [HTML Output Style](style.html)
 * [Cluster Analysis](clustering.html)
 * [Data Manipulation](data_manipulation.html)
 * [Multi-State Process](multi_state.html)
