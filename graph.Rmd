@@ -5,12 +5,13 @@ date: "`r Sys.Date()`"
 output:
   rmdformats::readthedown:
     self_contained: true
-    thumbnails: true
+    thumbnails: false
     code_folding: hide
     toc_depth: 6
     lightbox: true
     gallery: false
-    highlight: tango
+    highlight: monochrome
+    css: Wu.css
 ---
 
 
@@ -18,18 +19,14 @@ output:
 library(knitr)
 library(rmdformats)
 library(Wu)
-## Global options
-options(max.print="2000")
-opts_chunk$set(echo=TRUE,
-               eval=FALSE,
-               cache=FALSE,
-               results="asis",
+opts_chunk$set(echo=FALSE,
+	             cache=TRUE,
                prompt=FALSE,
-               tidy=FALSE,
+               tidy=TRUE,
                comment=NA,
                message=FALSE,
-               warning=FALSE)
-opts_knit$set(width=75)
+               warning=FALSE,
+               out.width = '80%')
 eval_fast <- TRUE
 eval_slow <- FALSE
 
@@ -82,6 +79,16 @@ p <- ggplot(fdt2, aes(day_assessment_icu)) +
 p
 
 ```
+## Stacked Bar Charts by Percentage
+
+```{r, eval=FALSE}
+ggplot(fdt3, aes(x = factor(day_assessment_icu)
+               , fill = state_daily4_locf)) +
+    geom_bar(position="fill") +
+    facet_wrap( ~ race_ethnicity, ncol=2)
+
+```
+
 
 ## Forest Plot
 
@@ -190,8 +197,67 @@ include_graphics("forestplot_irf.png")
 ```
 
 
+
 # plotly
 
+## Radar Chart
+
+```{r, eval=FALSE}
+dt <- readRDS(file="moral_distress.RDS")
+
+rl <- dt[, .(m_mmdhp=median(sqrt(mmdhp_score_imp), na.rm = TRUE)
+           , m_js=median(edmcq_js_score_imp, na.rm = TRUE)
+           , ms_clt=median(edmcq_js_score_imp, na.rm = TRUE)
+           , ms_ldr=median(edmcq_ldr_score_imp, na.rm = TRUE)
+           , m_eol=median(edmcq_eol_score_imp, na.rm = TRUE)
+             )
+       , by = list(gender_q3.factor)
+         ][order(gender_q3.factor)]
+
+rl$m_mmdhp2 <- rl$m_mmdhp
+
+
+dms <- c("MMD-HP", "Job Strain"
+       , "Safety Culture"
+       , "Leadership Culture"
+       , "End of Life"
+       , "MMD-HP"
+         )
+
+opc <- 0.5
+fig <- plot_ly(
+    type = 'scatterpolar',
+    fill = 'toself'
+  )
+fig <- fig %>%
+  add_trace(
+    r = t(rl[1, 2:7, drop = TRUE])
+    , theta = dms
+  , name = rl$gender_q3.factor[1]
+  , opacity = opc
+  )
+
+fig <- fig %>%
+  add_trace(
+    r = t(rl[2, 2:7, drop = TRUE])
+  , theta = dms
+  , name = rl$gender_q3.factor[2]
+  , opacity = opc
+  )
+fig <- fig %>%
+  layout(
+    polar = list(
+      radialaxis = list(
+        visible = T,
+        range = c(0, 4)
+      )
+    )
+  )
+
+fig
+
+
+```
 # Computing Environment
 
 

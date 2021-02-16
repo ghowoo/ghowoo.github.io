@@ -5,35 +5,35 @@ date: "`r Sys.Date()`"
 output:
   rmdformats::readthedown:
     self_contained: true
-    thumbnails: true
+    thumbnails: false
     code_folding: hide
     toc_depth: 6
     lightbox: true
     gallery: false
-    highlight: tango
+    highlight: monochrome
+    css: Wu.css
 ---
 
 
+
 ```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
-library(knitr)
-library(rmdformats)
 library(Wu)
-## Global options
-options(max.print="2000")
-opts_chunk$set(echo=TRUE,
+library(rmdformats)
+opts_chunk$set(echo=FALSE,
                eval=TRUE,
-               cache=FALSE,
-               results="asis",
+	             cache=TRUE,
                prompt=FALSE,
                tidy=FALSE,
                comment=NA,
                message=FALSE,
-               warning=FALSE)
-opts_knit$set(width=75)
+               warning=FALSE,
+               out.width = '80%')
 eval_fast <- TRUE
 eval_slow <- FALSE
-
 ```
+
+
+
 
 # Links
 

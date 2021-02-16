@@ -1,0 +1,196 @@
+---
+title: "Oridnal Regression"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(Wu)
+library(rmdformats)
+opts_chunk$set(echo=FALSE,
+               eval=TRUE,
+	             cache=TRUE,
+               prompt=FALSE,
+               tidy=FALSE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE,
+               out.width = '80%')
+eval_fast <- TRUE
+eval_slow <- FALSE
+```
+
+
+# Index
+
+[Index](index.html)
+
+
+# Reference
+
+# Data
+
+* American Community Survey (ACS) data of Nashville, TN, 2018
+* Data Dictionary: https://www2.census.gov/programs-surveys/acs/tech_docs/pums/data_dict/PUMS_Data_Dictionary_2014-2018.pdf
+
+
+```{r}
+
+## data(package = "Wu")
+library(Wu)
+dt <- acs2018_nashville
+
+hist(dt$agep)
+
+## dt[, .N, by = .(schl)][order(schl)]
+
+dt <- dt[, education_level3 := case_when(
+               is.na(as.numeric(schl)) ~ "High School or Less"
+             , as.numeric(schl) <= 17 ~ "High School or Less"
+             , as.numeric(schl) <= 21 ~ "Undergraduate or Less"
+             , TRUE ~ "Graduate")
+         ][, education_level3 := factor(education_level3
+                                      , levels = c("High School or Less"
+                                                 , "Undergraduate or Less"
+                                                 , "Graduate")
+                                        , ordered = TRUE)
+           ][, gender := case_when(
+                   sex %in% 1 ~ "Male"
+                 , sex %in% 2 ~ "Female"
+                 , TRUE ~ as.character(NA))
+             ][, gender := factor(gender, levels=c("Male", "Female"))
+               ][, wagp_log := log(wagp)]
+dt[, .N, by = .(education_level3)][order(education_level3)] %>% prt()
+
+dt[, .N, by = .(sex, gender)][order(gender)]
+
+hist(dt$wagp)
+## summary(dt$wagp)
+dt <- dt[!is.na(wagp) & wagp > 0 & !is.na(wagp_log)]
+hist(dt$wagp_log)
+```
+
+# Ordinal with MASS package
+
+```{r}
+library(MASS)
+m <- polr(education_level3 ~ gender + wagp_log
+        , data = dt
+        , Hess = TRUE)
+
+coef(m)
+summary(m)
+
+```
+
+# ordinal package
+
+
+```{r}
+library(ordinal)
+m_ordinal <- clm(education_level3 ~ gender + wagp_log
+        , data = dt
+        , link = "logit")
+
+summary(m_ordinal)
+coef(m_ordinal)
+```
+
+# rms package
+
+```{r}
+library(rms)
+dd <- datadist(dt); options(datadist='dd')
+m_lrm <- lrm(education_level3 ~ gender + wagp_log
+        , data = dt
+        )
+summary(m_lrm)
+coef(m_lrm)
+vcov(m_lrm)
+
+```
+
+# glm package
+
+* Re-code education level into three variables
+
+
+```{r}
+dt <- dt[, education_ge_undergraduate := as.numeric(education_level3 %in% c("Undergraduate or Less", "Graduate"))
+         ][, education_ge_graduate := as.numeric(education_level3 %in% c("Graduate"))]
+
+dt1 <- copy(dt)[, y := 1-education_ge_undergraduate
+                ][, lvl1 := 1
+                  ]
+
+dt2 <- copy(dt)[][, y := 1-education_ge_graduate
+          ][, lvl1 := 0]
+dtb <- rbind(dt1, dt2)
+
+dtb[, .N, by = .(lvl1)]
+dtb[, .N, by = .(y)]
+
+m_glm <- glm(y ~ 0 + factor(lvl1) + gender + wagp_log
+           , data=dtb
+           , family = binomial
+             , epsilon=1e-19
+           ## , glm.control(epsilon = 1e-8, maxit = 25, trace = FALSE)
+             )
+summary(m_glm)
+
+library(rms)
+dd <- datadist(dtb); options(datadist='dd')
+m_lrm <- lrm(y ~ lvl1 + gender + wagp_log
+           , data=dtb
+          )
+coef(m_lrm)
+summary(m_lrm)
+coef(m_lrm)
+
+
+m_glm <- glm(y ~ lvl1 + gender + wagp_log
+           , data=dtb
+           , family = binomial
+             )
+summary(m_glm)
+
+m_glm <- glm(y ~ gender + wagp_log + education_ge_undergraduate + education_ge_graduate
+           , data=dtb
+           , family = binomial
+             )
+
+summary(m_glm)
+
+```
+
+
+# brms package
+
+```{r}
+library(brms)
+
+m_brm <- brm(education_level3 ~ gender + wagp_log
+, data=dt
+, family = cumulative(link = "logit", threshold = "flexible")
+  )
+summary(m_brm)
+
+m_brm_recoded <- brm(y ~ lvl1 + gender + wagp_log
+           , data=dtb
+           , family = binomial
+             )
+summary(m_brm_recoded)
+
+```
