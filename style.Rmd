@@ -16,18 +16,25 @@ output:
 
 
 
-```{r setup, include=FALSE, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
 library(knitr)
 library(rmdformats)
-opts_chunk$set(echo=FALSE,
-	             cache=TRUE,
+library(Wu)
+opts_chunk$set(echo=TRUE,
+               cache=FALSE,
+               eval=TRUE,
+               cache=FALSE,
                prompt=FALSE,
-               tidy=TRUE,
+               results="asis",
+               tidy=FALSE,
                comment=NA,
                message=FALSE,
                warning=FALSE,
                out.width = '80%')
+eval_fast <- TRUE
+eval_slow <- FALSE
 ```
+
 
 
 # Index

@@ -15,23 +15,25 @@ output:
 ---
 
 
+
 ```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
 library(knitr)
 library(rmdformats)
 library(Wu)
-opts_chunk$set(echo=FALSE,
-	             cache=TRUE,
+opts_chunk$set(echo=TRUE,
+               cache=FALSE,
+               eval=TRUE,
+               cache=FALSE,
                prompt=FALSE,
-               tidy=TRUE,
+               results="asis",
+               tidy=FALSE,
                comment=NA,
                message=FALSE,
                warning=FALSE,
                out.width = '80%')
 eval_fast <- TRUE
 eval_slow <- FALSE
-
 ```
-
 
 
 # plot
@@ -50,6 +52,14 @@ ggplot(dt, aes(status_day5_num)) + stat_ecdf(geom = "step") +
 
 ```
 
+## Histogram by Group
+
+```{r, eval=FALSE}
+ggplot(dt, aes(x=avg_daily_prone, fill=treatment)) +
+    geom_histogram( color="#e9ecef", alpha=0.3, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080"))
+
+```
 
 ## Flowchart
 
@@ -94,7 +104,7 @@ ggplot(fdt3, aes(x = factor(day_assessment_icu)
 
 ```{r,eval=FALSE}
 
-dt <- readRDS(file= "cis_irf.RDS")
+dt <- readRDS(file= "df.RDS")
 dt <- dt[order(order.level)][!is.na(coef_value)]
 
 ## rename variables
@@ -203,7 +213,7 @@ include_graphics("forestplot_irf.png")
 ## Radar Chart
 
 ```{r, eval=FALSE}
-dt <- readRDS(file="moral_distress.RDS")
+dt <- readRDS(file="df.RDS")
 
 rl <- dt[, .(m_mmdhp=median(sqrt(mmdhp_score_imp), na.rm = TRUE)
            , m_js=median(edmcq_js_score_imp, na.rm = TRUE)
