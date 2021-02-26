@@ -10,7 +10,7 @@
 
 <meta name="author" content="Wu Gong" />
 
-<meta name="date" content="2021-02-23" />
+<meta name="date" content="2021-02-26" />
 
 <title>R Data Manipulation with data.table</title>
 
@@ -106,12 +106,17 @@ $(document).ready(function () {
       <li><a href="#index-of-observations">Index of observations</a></li>
       <li><a href="#last-observation-carry-forward-locf">Last Observation Carry Forward (LOCF)</a></li>
       </ul></li>
+      <li><a href="#data-functions">Data Functions</a><ul>
       <li><a href="#sum-multiple-columns">Sum Multiple Columns</a></li>
       <li><a href="#concatenate-multiple-rows-by-group">Concatenate Multiple Rows by Group</a></li>
       <li><a href="#shift-column">Shift Column</a></li>
+      <li><a href="#permutate-combination">Permutate &amp; combination</a></li>
+      <li><a href="#split-data.frame">Split data.frame</a></li>
+      </ul></li>
       <li><a href="#reshape">Reshape</a><ul>
       <li><a href="#reshape-wide-to-long">Reshape Wide to Long</a></li>
       </ul></li>
+      <li><a href="#merge-multiple-tables">Merge Multiple Tables</a></li>
       <li><a href="#date-and-time">Date and Time</a></li>
       <li><a href="#computing-environment">Computing Environment</a></li>
       </ul>
@@ -119,7 +124,7 @@ $(document).ready(function () {
     
     <div id="postamble" data-toggle="wy-nav-shift" class="status">
               <p class="author"><span class="glyphicon glyphicon-user"></span> Wu Gong</p>
-                  <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2021-02-23</p>
+                  <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2021-02-26</p>
         </div>
 </div>
 
@@ -599,8 +604,10 @@ C
                ][, state_daily4_locf <span class="op">:</span><span class="er">=</span><span class="st"> </span>state_daily4[i_fill]]</code></pre></div>
 </div>
 </div>
-<div id="sum-multiple-columns" class="section level1">
-<h1>Sum Multiple Columns</h1>
+<div id="data-functions" class="section level1">
+<h1>Data Functions</h1>
+<div id="sum-multiple-columns" class="section level2">
+<h2>Sum Multiple Columns</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">is<span class="fl">.1</span> &lt;-<span class="st"> </span><span class="cf">function</span>(x){x <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span>)}
 sum<span class="fl">.1</span> &lt;-<span class="st"> </span><span class="cf">function</span>(x){<span class="kw">sum</span>(<span class="kw">as.numeric</span>(<span class="kw">is.1</span>(x)))}
 dm &lt;-<span class="st"> </span>dm[, race_sum <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">sum</span>(.SD)
@@ -616,8 +623,8 @@ dm &lt;-<span class="st"> </span>dm[, conditions_num <span class="op">:</span><s
        , by =<span class="st"> </span><span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(dm)
          ]</code></pre></div>
 </div>
-<div id="concatenate-multiple-rows-by-group" class="section level1">
-<h1>Concatenate Multiple Rows by Group</h1>
+<div id="concatenate-multiple-rows-by-group" class="section level2">
+<h2>Concatenate Multiple Rows by Group</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt &lt;-<span class="st"> </span><span class="kw">data.table</span>(<span class="dt">a=</span>letters[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>],<span class="dt">b=</span>LETTERS[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>],<span class="dt">ID=</span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">3</span>,<span class="dv">3</span>))
 
 dt</code></pre></div>
@@ -627,14 +634,31 @@ dt</code></pre></div>
 <p>ID a 1: 1 a b c 2: 2 d e f g 3: 3 h i j</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt[, a2 <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">paste0</span>(a, <span class="dt">collapse =</span> <span class="st">&quot;-&quot;</span>), by =<span class="st"> </span>ID]</code></pre></div>
 </div>
-<div id="shift-column" class="section level1">
-<h1>Shift Column</h1>
+<div id="shift-column" class="section level2">
+<h2>Shift Column</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cf &lt;-<span class="st"> </span>cf[
 ][, status_row_n_int <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">nafill</span>(status_row_n, <span class="dt">type =</span> <span class="st">&quot;locf&quot;</span>), by =<span class="st"> </span><span class="kw">list</span>(mrn)
   ][, fio2_int <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">nafill</span>(fio2_row_filled, <span class="dt">type =</span> <span class="st">&quot;locf&quot;</span>), by =<span class="st"> </span><span class="kw">list</span>(mrn)
     ][,  datetime_record_nx1 <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">shift</span>(datetime_record, <span class="dt">type=</span><span class="st">&quot;lead&quot;</span>), by =<span class="st"> </span><span class="kw">list</span>(mrn)
       ][, time_int <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">difftime</span>(datetime_record_nx1, datetime_record, <span class="dt">units =</span> <span class="st">&quot;hours&quot;</span>))
         ]</code></pre></div>
+</div>
+<div id="permutate-combination" class="section level2">
+<h2>Permutate &amp; combination</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">expand.grid</span>(<span class="kw">levels</span>(dt<span class="op">$</span>sex_<span class="fl">2.</span>factor)
+               , <span class="kw">levels</span>(dt<span class="op">$</span>age_group)
+               , <span class="kw">levels</span>(dt<span class="op">$</span>race_ethnicity)
+               , <span class="kw">levels</span>(dt<span class="op">$</span>com_obesity)
+                 )
+
+<span class="kw">combn</span>(letters[<span class="dv">1</span><span class="op">:</span><span class="dv">4</span>], <span class="dv">2</span>)</code></pre></div>
+</div>
+<div id="split-data.frame" class="section level2">
+<h2>Split data.frame</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">split</span>(t, <span class="kw">seq</span>(<span class="kw">nrow</span>(t)))
+
+<span class="kw">split</span>(df, df<span class="op">$</span>gender)</code></pre></div>
+</div>
 </div>
 <div id="reshape" class="section level1">
 <h1>Reshape</h1>
@@ -655,6 +679,13 @@ dt</code></pre></div>
 <pre><code>id variable value</code></pre>
 <p>1: 1 var_1 10 2: 2 var_1 11 3: 3 var_1 12 4: 4 var_1 13 5: 5 var_1 14 6: 1 var_1 15 7: 1 var_2 21 8: 2 var_2 22 9: 3 var_2 23 10: 4 var_2 24 11: 5 var_2 25 12: 1 var_2 21 13: 1 var_3 31 14: 2 var_3 32 15: 3 var_3 33 16: 4 var_3 34 17: 5 var_3 35 18: 1 var_3 31</p>
 </div>
+</div>
+<div id="merge-multiple-tables" class="section level1">
+<h1>Merge Multiple Tables</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">setkey</span>(t1, key1, key2)
+
+t &lt;-<span class="st"> </span><span class="kw">Reduce</span>(<span class="cf">function</span>(...) <span class="kw">merge</span>(..., <span class="dt">all =</span> <span class="ot">TRUE</span>)
+            , <span class="kw">list</span>(t1, t2, t3))</code></pre></div>
 </div>
 <div id="date-and-time" class="section level1">
 <h1>Date and Time</h1>

@@ -167,7 +167,9 @@ fdt2 <- fdt2[, i := .I
 
 
 
-# Sum Multiple Columns
+
+# Data Functions
+## Sum Multiple Columns
 
 
 ```{r,eval=FALSE}
@@ -189,7 +191,7 @@ dm <- dm[, conditions_num := sum(is.1(hypertension)
 
 ```
 
-# Concatenate Multiple Rows by Group
+## Concatenate Multiple Rows by Group
 
 ```{r}
 
@@ -204,7 +206,7 @@ dt[, a2 := paste0(a, collapse = "-"), by = ID]
 
 ```
 
-# Shift Column
+## Shift Column
 
 ```{r, eval=FALSE}
 cf <- cf[
@@ -213,6 +215,27 @@ cf <- cf[
     ][,  datetime_record_nx1 := shift(datetime_record, type="lead"), by = list(mrn)
       ][, time_int := as.numeric(difftime(datetime_record_nx1, datetime_record, units = "hours"))
         ]
+
+```
+
+## Permutate & combination
+
+```{r,eval=FALSE}
+expand.grid(levels(dt$sex_2.factor)
+               , levels(dt$age_group)
+               , levels(dt$race_ethnicity)
+               , levels(dt$com_obesity)
+                 )
+
+combn(letters[1:4], 2)
+
+```
+## Split data.frame
+
+```{r,eval=FALSE}
+split(t, seq(nrow(t)))
+
+split(df, df$gender)
 
 ```
 
@@ -236,6 +259,17 @@ melt(dt, id.vars="id", measure.vars = vars)
 
 ```
 
+# Merge Multiple Tables
+
+```{r, eval=FALSE}
+
+setkey(t1, key1, key2)
+
+t <- Reduce(function(...) merge(..., all = TRUE)
+            , list(t1, t2, t3))
+
+
+```
 # Date and Time
 
 ```{r,eval=FALSE}
