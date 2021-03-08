@@ -55,3 +55,4 @@ eval_slow <- FALSE
 * [Support Vector Machine (SVM)](support_vector_machine.html)
 * [R Graph](graph.html)
 * [RMarkdown Slides](rmarkdown_slides.html)
+* [Neural Network](neural_network.html)

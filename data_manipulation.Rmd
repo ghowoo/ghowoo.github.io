@@ -50,6 +50,7 @@ Wu::sv_desc(dt, file_name = "dt_variables.html")
 # Rename Variables & Revalue A Vector
 
  * match function matches the first vector to the second vector, gives the indexes of elements from vector one that matched in vector two
+ * dplyr::rename function renames variable names
 
 ```{r}
 match(1:5, c(4, 2))
@@ -60,7 +61,7 @@ colnames(dt) <- plyr::revalue(colnames(dt), c("A"="Variable_A"))
 colnames(dt)
 
 
-
+dplyr::rename(dt, var_b=B)
 
 
 lst <- list("A"="Variable_A")

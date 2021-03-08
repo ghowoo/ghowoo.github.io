@@ -23,7 +23,6 @@ library(Wu)
 opts_chunk$set(echo=TRUE,
                cache=FALSE,
                eval=TRUE,
-               cache=FALSE,
                prompt=FALSE,
                results="asis",
                tidy=FALSE,
