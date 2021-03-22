@@ -211,22 +211,26 @@ include_graphics("forestplot_irf.png")
 
 # Color
 
-## Hue Chroma Luminance (HSL)
+## Hue Saturation Luminance (HSL)
 
-```{r}
+ * fig.width=7 inch
+ * fig.height=14 inch
+ * dpi=300
+
+```{r,fig.width=7,fig.height=14, dpi=300}
 library(ggplot2)
 
-dt <- expand.grid(seq(0, 320, 40), seq(10, 90, 10), seq(0, 100, 10))
+dt <- expand.grid(seq(0, 340, 20), seq(0, 100, 10), seq(0, 100, 10))
 dt <- as.data.table(dt)
-colnames(dt) <- c("Hue", "Chroma", "Luminance")
-dt <- dt[, clr := hcl(Hue, Chroma, Luminance)]
-
-ggplot(dt, aes(y=Chroma, x=Luminance, colour=clr)) +
+colnames(dt) <- c("Hue", "Saturation", "Luminance")
+## dt <- dt[, clr := hcl(Hue, Chroma, Luminance)]
+dt <- dt[, clr := hsv(Hue / 360, Saturation / 100, Luminance / 100)]
+ggplot(dt, aes(x=Saturation, y=Luminance, colour=clr)) +
     geom_point(size=3) +
     scale_color_identity() +
-    scale_y_continuous(breaks=seq(10, 90, 10)) +
     scale_x_continuous(breaks=seq(0, 100, 10)) +
-    facet_wrap( ~ Hue, nrow=3)
+    scale_y_continuous(breaks=seq(0, 100, 10)) +
+    facet_wrap( ~ Hue, nrow=6)
 
 
 
