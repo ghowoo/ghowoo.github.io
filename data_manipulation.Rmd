@@ -273,6 +273,8 @@ t <- Reduce(function(...) merge(..., all = TRUE)
 ```
 # Date and Time
 
+## General
+
 ```{r,eval=FALSE}
 
 as.POSIXct(
@@ -378,6 +380,139 @@ vs4 <- vs4[
       )
     ]
 
+
+```
+
+
+## Sequential Date
+
+```{r}
+sq <- seq.Date(from = as.Date('2019-07-01')
+       , to = as.Date('2019-07-10')
+       , by = 'days'
+         )
+print(sq)
+
+sqt <- paste0(as.character(sq), " 00:00:00")
+print(sqt)
+
+sqt <- as.POSIXct(sqt, "%Y-%m-%d %H:%M:%S")
+class(sqt)
+print(sqt)
+hour(sqt)
+
+```
+
+
+# Scale/One-hot encoding/Dummy Variable
+
+## Scale and Unscale
+
+```{r}
+unscale <- function(x){
+    x * attr(x, "scaled:scale") + attr(x, "scaled:center")
+}
+
+v <- c(1:10, NA)
+vs <- scale(v)
+vs2 <- (v - mean(v)) / sd(v)
+v2 <- unscale(vs)
+print(cbind(v, vs, vs2, v2))
+str(vs)
+attr(vs, "scaled:center")
+attr(vs, "scaled:scale")
+
+```
+
+## One-Hot Encoding
+
+### mltools::one_hot
+
+ * Only work on factors, not characters;
+ * DEFAULT = "auto" encodes all unordered factor columns
+
+```{r}
+library(data.table)
+t <- data.table(var1=factor(sample(c("A", "B", "C", NA), 10, replace=TRUE), levels=c("A", "B", "C"))
+              , var2=1:10
+                , var3=factor(rep(c("Red", "Green"), each=5), levels=c("Red", "Green", "Yellow"))
+                )
+print(t)
+mltools::one_hot(t)
+mltools::one_hot(t, sparsifyNAs = TRUE, naCols = TRUE)
+mltools::one_hot(t, sparsifyNAs = TRUE, naCols = TRUE, dropCols = FALSE)
+mltools::one_hot(t, sparsifyNAs = TRUE, naCols = TRUE, dropCols = FALSE, dropUnusedLevels=TRUE)
+
+
+```
+
+### caret::dummyVars
+
+ * It converts all factor and character variables
+ * fullRank remove referral level
+ * Cannot drop unused levels
+
+```{r}
+library(caret)
+
+t <- data.table(var1=factor(sample(c("A", "B", "C", NA), 10, replace=TRUE), levels=c("A", "B", "C"))
+              , var2=1:10
+              , var3=factor(rep(c("Red", "Green"), each=5), levels=c("Red", "Green", "Yellow"))
+              , var4=rep(c("Low", "High"), 5)
+                )
+
+dummy <- dummyVars(" ~ .", data=t)
+class(dummy)
+str(dummy)
+print(dummy)
+newdata <- data.frame(predict(dummy, t))
+print(newdata)
+
+dummy <- dummyVars(" ~ .", data=t, , fullRank=TRUE)
+predict(dummy, t)
+
+```
+
+## model.matrix
+
+```{r}
+model.matrix(~0 + ., t)
+
+```
+
+# Missing Values
+
+ * Hot Deck method: a missing value was imputed from a randomly selected from similar record. Cards that are "hot" is currently being processed. Last observation carried forward (LOCF) is a kind of hot-desk imputation.
+ * Cold-deck: impute data from donors from another dataset.
+
+
+## mice package
+
+```{r}
+library(mice)
+data <- airquality
+data[4:10,3] <- rep(NA,7)
+data[1:5,4] <- NA
+
+
+md.pattern(data, plot=FALSE)
+
+md.pattern(data)
+
+```
+
+## VIM package
+
+```{r}
+library(VIM)
+t <- data.table(id=1:10
+                , var1=factor(sample(c("A", "B", "C", NA), 10, replace=TRUE), levels=c("A", "B", "C"))
+              , var2=sample(c(1:10, NA), 10, replace = TRUE)
+              , var3=factor(rep(c("Red", "Green"), each=5), levels=c("Red", "Green", "Yellow"))
+              , var4=rep(c("Low", "High"), 5)
+                )
+
+matrixplot(t, sortby = c('id'))
 
 ```
 

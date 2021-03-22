@@ -41,6 +41,38 @@ eval_slow <- FALSE
 [Index](index.html)
 
 
+# Some Concepts
+
+## Cross Entropy
+
+
+https://machinelearningmastery.com/cross-entropy-for-machine-learning/
+
+ * Information: it quantifies the number of bits required to encode and transmit an event. Lower probability events have more information, higher have less. Skewed probability distribution has low entropy (unsurprising, predictable), and balanced probability distribution (surprising) has high entropy.
+ * Calculation of information: h(x) = -log(P(x))
+ * Entropy: is the number of bits required to transmit a randomly selected event from a probability distribution.
+ * Calculation of Entropy: H(X) = - sum(P(x) * log(P(x))
+ * Cross-entropy: the average number of bits needed to encode data coming from one distribution p when we use model q
+ * Calculation of Entropy: H(P,Q) = - sum(P(x) * log(Q(x)); log is the base-2 logarithm, meaning that the results are in bits. If base-e, then the units called nats. P may be the target distribution and Q is the approximation of the target dsitribution. The result is a positive number measured in bits and will be equal to the entropy of the distribution if the two probability distributions are identical.
+ * Cross-entropy is same as negative log-likelihood for logistic regression for Bernoulli distribution.
+ * Cross-entropy is same as the maximum likelihood estimation framework assuming Gaussian continuous probability distribution and minimizing mean squared error.
+
+```{r}
+events = c('red', 'green', 'blue')
+p = c(0.10, 0.40, 0.50)
+q = c(0.80, 0.15, 0.05)
+
+cross_entropy <- function(p, q){
+    -sum(p * log2(q))
+}
+
+cross_entropy(p, q)
+cross_entropy(p, p)
+cross_entropy(q, p)
+
+```
+
+
 # Recurrent Neural Network
 
 
@@ -247,3 +279,22 @@ for (j in 1:training_data_size) {
 
 
 ```
+
+
+
+## RNN-SURV package
+
+http://medianetlab.ee.ucla.edu/papers/RNN_SURV.pdf
+
+A deep recurrent model for survival analysis
+
+ * Jointly minimize two loss functions
+ * The modified cross-entropy function taking into account of the censored data
+ * The second one is an upper bound of the negative C-index
+
+https://jamanetwork.com/journals/jama/fullarticle/372568
+
+ * C-index estimates the probability that, of two randomly choose patients, the patient with the higher prognostic score will outlive the patient with the lower prognostic score. Values of C near 0.5 indicate that the proganostic score is no better than a coin-flip.
+ * Draw a pair of patients and determine which patient lived longer. If not comparable, e.g., don't who will live longer, then not used in the comparison.
+ * Draw all possible pairs for which the ordering of survival times could be inferred.
+ * C is the fraction of pairs that patients with higher prognostic score had longer survival time.

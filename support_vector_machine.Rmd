@@ -219,6 +219,8 @@ plot(m)
 
 summary(refit(m))
 
+round(posterior(m), 3)
+
 ```
 
 # Computing Environment
