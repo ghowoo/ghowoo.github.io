@@ -240,6 +240,17 @@ split(df, df$gender)
 
 ```
 
+
+## Replicate Rows
+
+```{r}
+library(data.table)
+dt <- data.table(name=letters[1:4])
+print(dt)
+dt <- dt[rep(1:.N, 3)][order(name)][, index := 1:.N, by = name]
+print(dt)
+```
+
 # Reshape
 
 ## Reshape Wide to Long
