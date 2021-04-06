@@ -53,7 +53,9 @@ W has the extreme value distribution.
 * The same reasoning can also be applied at a component level, if the component failure occurs when the first of many similar competing failure processes reaches a critical level.
 
 
+
 $$ \gamma = 1 / \sigma $$
+
 $$ \lambda =  exp(-\mu/\sigma)$$
 $$ \beta = -\alpha/\sigma $$
 
