@@ -80,6 +80,43 @@ readRDS(file="df.RDS") %>%
 
 # ggplot
 
+## Pass Column Names to ggplot inside a function
+
+ * sym() function turn text into a symbol, like as.name() or as.symbol
+ * !! function is to unquote
+ * Use color from a column
+
+```{r}
+library(data.table)
+library(ggplot2)
+dt <- data.table(A=1:10
+               , B=1:10
+               , C=rep(1:5, each=2)
+               , sex=factor(rep(c("M", "F"), each=5))
+                 )
+
+clrs <- c("#FF0000", "#00FF00")
+dt[["varcolor"]] <- clrs[as.numeric(dt$sex)]
+
+plt <- function(x, y, group){
+    x <- sym(x)
+    y <- sym(y)
+    ggplot(dt, aes(x=!!x, y=!!y)) +
+        geom_point() +
+        facet_wrap( as.formula(paste0("~", group)), nrow = 1)
+}
+
+plt("A", "B", "sex")
+
+
+ggplot(dt, aes(A, B, colour=varcolor)) + geom_point() +
+    scale_colour_identity()
+
+ggplot(dt, aes(x=C, group=sex, colour=varcolor, fill=varcolor)) +
+    geom_bar() + scale_colour_identity() + scale_fill_identity()
+
+```
+
 ## Stacked Bar Charts
 
 ```{r,eval=FALSE}
@@ -269,6 +306,91 @@ ggplot(dt, aes(y=id,x=day)) +
     guides(fill = guide_legend(nrow = 1))
 
 
+
+
+```
+
+## Progression Bar Plot
+
+```{r}
+rm(list=ls())
+library(ggplot2)
+library(data.table)
+dt <- data.table(
+    id=rep(1:100, each=28)
+  , day=rep(1:28, 100)
+  , state=sample(c("A", "B", "C", "D", "E"), 28 * 100, replace = TRUE)
+    , treatment=rep(c("Case", "Control"), each=28 * 100 / 2)
+)
+
+dt <- dt[, state := factor(state, levels=c("A", "B", "C", "D", "E"), ordered = TRUE)]
+
+
+clrs <- c("#2EAEE6"
+        ## , "#2EE6CA"
+        ## , "#2EE677"
+        , "#37E62E"
+        ## , "#8AE62E"
+        , "#DCE62E"
+        , "#E69C2E"
+        , "#E6492E"
+          ## , "#aaaaaa"
+          )
+
+
+ggplot(dt, aes(x = factor(day), fill = state)) + geom_bar(position = "fill") +
+    facet_wrap(~treatment) + scale_fill_manual(values = clrs) +
+    xlab("Day State by Treatment") +
+    ylab("Proportions")
+
+
+ggplot(dt, aes(x=day, fill = state)) + geom_bar() +
+    facet_wrap(~treatment) + scale_fill_manual(values = clrs) +
+    labs(x="Day State by Treatment"
+       , y="Count"
+       , title="Progression by Treatment"
+         ) +
+    scale_x_continuous(breaks=c(7, 14, 21, 28)) +
+    scale_y_continuous(breaks=c(10, 20, 30, 40, 50)) +
+    theme(panel.background = element_rect(fill = "transparent")
+        , plot.background = element_rect(fill = "transparent", color = NA)
+        , panel.grid.major = element_blank()
+        , panel.grid.minor = element_blank()
+        , legend.background = element_rect(fill = "transparent")
+        , legend.box.background = element_rect(fill = "transparent")
+        , legend.position = 'top'
+        , plot.margin=unit(c(1,2,1,2),"cm")
+          ) +
+    coord_fixed(ratio = 3 / 2
+              ## , xlim = c(0.5, 28.5)
+              ## , ylim = c(0.5, 10.5)
+              , expand = FALSE) +
+    guides(fill = guide_legend(nrow = 1))
+
+
+
+ggplot(dt, aes(x = factor(treatment), fill = state)) + geom_bar() +
+    facet_wrap(~factor(day), nrow=1) + scale_fill_manual(values = clrs) +
+    labs(x="Day State by Treatment"
+       , y="Count"
+       , title="Progression by Day"
+         ) +
+    ## scale_x_continuous(breaks=c(7, 14, 21, 28)) +
+    ## scale_y_continuous(breaks=c(10, 20, 30, 40, 50)) +
+    theme(panel.background = element_rect(fill = "transparent")
+        , plot.background = element_rect(fill = "transparent", color = NA)
+        , panel.grid.major = element_blank()
+        , panel.grid.minor = element_blank()
+        , legend.background = element_rect(fill = "transparent")
+        , legend.box.background = element_rect(fill = "transparent")
+        , legend.position = 'top'
+        , plot.margin=unit(c(1,2,1,2),"cm")
+          ) +
+    ## coord_fixed(ratio = 3 / 2
+              ## , xlim = c(0.5, 28.5)
+              ## , ylim = c(0.5, 10.5)
+              ## , expand = FALSE) +
+    guides(fill = guide_legend(nrow = 1))
 
 
 ```

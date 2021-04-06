@@ -5,12 +5,13 @@ date: "`r Sys.Date()`"
 output:
   rmdformats::readthedown:
     self_contained: true
-    thumbnails: true
+    thumbnails: false
     code_folding: hide
     toc_depth: 6
     lightbox: true
     gallery: false
-    highlight: tango
+    highlight: monochrome
+    css: Wu.css
 ---
 
 
@@ -18,18 +19,16 @@ output:
 library(knitr)
 library(rmdformats)
 library(Wu)
-## Global options
-options(max.print="2000")
 opts_chunk$set(echo=TRUE,
-               eval=TRUE,
                cache=FALSE,
-               results="asis",
+               eval=TRUE,
                prompt=FALSE,
-               tidy=TRUE,
+               results="asis",
+               tidy=FALSE,
                comment=NA,
                message=FALSE,
-               warning=FALSE)
-opts_knit$set(width=75)
+               warning=FALSE,
+               out.width = '80%')
 eval_fast <- TRUE
 eval_slow <- FALSE
 
@@ -428,6 +427,81 @@ saveRDS(st, file="discrete_death_blrmStats.RDS")
 
 
 ```
+# Multi-state Transition Model
+
+Christopher Jackcon: Multi-state modelling with R: the msm package
+https://cran.r-project.org/web/packages/msm/vignettes/msm-manual.pdf
+
+
+## Basic Setting
+
+```{r}
+library(msm)
+
+cav[1:21, ] %>% prt()
+
+statetable.msm(state, PTNUM, data=cav) %>% prt()
+
+Q <- rbind ( c(0, 0.25, 0, 0.25),
+            c(0.166, 0, 0.166, 0.166),
+            c(0, 0.25, 0, 0.25),
+            c(0, 0, 0, 0) )
+
+Q.crude <- crudeinits.msm(state ~ years, PTNUM, data=cav,
+                            qmatrix=Q)
+```
+
+## Simple bidirectional model
+
+ * The sizes of the confidence intervals for some of the hazard ratios suggest there is no information in the data about the corresponding covariate effects.
+
+
+```{r}
+cav.msm <- msm( state ~ years, subject=PTNUM, data = cav, qmatrix = Q, deathexact = 4)
+t <- qmatrix.msm(cav.msm)
+
+t$estimates %>% prt()
+
+cavsex.msm <- msm( state ~ years, subject=PTNUM, data = cav, qmatrix = Q, deathexact = 4, covariates = ~ sex)
+
+qmatrix.msm(cavsex.msm)$estimates %>% prt()
+
+qmatrix.msm(cavsex.msm, covariates=list(sex=0))$estimates %>% prt()
+
+```
+
+## Transition-specific covariate
+
+ * The transition rate from state 1 to state 2, and the rate from state 1 to state 4 are each modelled on sex as a covariate, but no other intensities have covariates on them.
+
+
+```{r}
+
+cavsex2.msm <- msm( state ~ years
+                , subject=PTNUM
+                , data = cav
+                , qmatrix = Q
+                , deathexact = 4
+                , covariates = list("1-2" = ~ sex, "1-4" = ~sex)
+                  )
+qmatrix.msm(cavsex2.msm)$estimates %>% prt()
+
+```
+
+## Constrained covariate effects
+
+ * This contrains the effect of sex to be equal for the progression rates q12, q23, and recovery rates q21, q32.
+ * The index on the transition intensities, ordered by rows, could be used as constraint indicators. There are totally 7 intensities and 7 hazard ratios for covariate sex. list(sex=c(1,2,3,4,5,6,7)) means all hazard ratios are distinct, and list(sex=c(1,2,3,4,5,6,1) means the first and 7th hazard ratios are same.
+
+
+```{r}
+cav3.msm <- msm( state ~ years, subject=PTNUM
+              , data = cav, qmatrix = Q, deathexact = 4
+              , covariates = ~ sex
+              , constraint = list(sex=c(1,2,3,4, 5, 6, 1)) )
+qmatrix.msm(cav3.msm)$estimates %>% prt()
+```
+
 # Computing Environment
 
 

@@ -38,7 +38,27 @@ eval_slow <- FALSE
 [Index](index.html)
 
 
+# Pull Data
 
+## REDCapstatsge
+
+```{r,eval=FALSE,echo=TRUE}
+
+api_token       <- '1245456abcdef'
+api_url         <- 'https://redcap_url/api/'
+
+
+csv_file <- RCurl::postForm(
+  api_url,
+  token=api_token,
+  content='record',
+  format='csv',
+  type='flat'
+  ,.opts=curlOptions(ssl.verifypeer=FALSE)
+)
+write(csv_file,file='../csv/filename.csv')
+
+```
 
 # General Data Description
 
@@ -230,6 +250,16 @@ expand.grid(levels(dt$sex_2.factor)
 
 combn(letters[1:4], 2)
 
+perm_without_replacement <- function(n, r){
+  return(factorial(n)/factorial(n - r)/ factorial(r))
+}
+
+factorial(4)
+# 9 choose 3
+perm_without_replacement(9, 3) * perm_without_replacement(6, 3)
+
+6 * 5 * 4 / (3 * 2)
+
 ```
 ## Split data.frame
 
@@ -251,6 +281,39 @@ dt <- dt[rep(1:.N, 3)][order(name)][, index := 1:.N, by = name]
 print(dt)
 ```
 
+## Pass Column Name to data.table within Function
+
+```{r}
+library(data.table)
+dt <- data.table(var1=1:10, var2=rep(LETTERS[1:5], each=2))
+knitr::kable(dt)
+
+varName <- "var2"
+
+
+
+knitr::kable(dt[, ..varName])
+
+knitr::kable(dt[, varName, with = FALSE])
+
+knitr::kable(dt[, .N, by = .(get(varName))])
+
+knitr::kable(dt[, (varName) := paste0(get(varName), "+")])
+
+
+
+
+
+
+pass_col <- function(clname){
+    ## clname <- sym(clname)
+    print(dt[, .N, by = clname])
+}
+
+pass_col(c("var1", "var2"))
+
+
+```
 # Reshape
 
 ## Reshape Wide to Long
