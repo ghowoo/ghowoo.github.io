@@ -57,9 +57,10 @@ W has the extreme value distribution.
 $$ \gamma = 1 / \sigma $$
 
 $$ \lambda =  exp(-\mu/\sigma)$$
+
 $$ \beta = -\alpha/\sigma $$
 
-The Hazard function of the Weibull model, the first part is the baseline hazard.
+The Hazard function of the Weibull model, its first part is the baseline hazard.
 
 $$ h(x|z) = (\gamma \lambda t^{\gamma - 1} ) exp(\beta^{T} z) $$
 
