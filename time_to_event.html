@@ -167,8 +167,10 @@ $(document).ready(function () {
 <li>Extreme value theory says that, independent of the choice of component model, the system model will approach a Weibull as n becomes large.</li>
 <li>The same reasoning can also be applied at a component level, if the component failure occurs when the first of many similar competing failure processes reaches a critical level.</li>
 </ul>
-<p><span class="math display">\[ \gamma = 1 / \sigma \]</span> <span class="math display">\[ \lambda =  exp(-\mu/\sigma)\]</span> <span class="math display">\[ \beta = -\alpha/\sigma \]</span></p>
-<p>The Hazard function of the Weibull model, the first part is the baseline hazard.</p>
+<p><span class="math display">\[ \gamma = 1 / \sigma \]</span></p>
+<p><span class="math display">\[ \lambda =  exp(-\mu/\sigma)\]</span></p>
+<p><span class="math display">\[ \beta = -\alpha/\sigma \]</span></p>
+<p>The Hazard function of the Weibull model, its first part is the baseline hazard.</p>
 <p><span class="math display">\[ h(x|z) = (\gamma \lambda t^{\gamma - 1} ) exp(\beta^{T} z) \]</span></p>
 <p><a href="https://stat.ethz.ch/education/semesters/ss2011/seminar/contents/handout_9.pdf">Weibull</a></p>
 <ul>
@@ -3401,6 +3403,7 @@ State 4
 <h2>Transition-specific covariate</h2>
 <ul>
 <li>The transition rate from state 1 to state 2, and the rate from state 1 to state 4 are each modelled on sex as a covariate, but no other intensities have covariates on them.</li>
+<li>The covariate will not apply hazard ratio on the specified transition.</li>
 </ul>
 <div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>cavsex2.msm <span class="ot">&lt;-</span> <span class="fu">msm</span>( state <span class="sc">~</span> years</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>                , <span class="at">subject=</span>PTNUM</span>

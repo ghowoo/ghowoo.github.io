@@ -476,6 +476,7 @@ qmatrix.msm(cavsex.msm, covariates=list(sex=0))$estimates %>% prt()
 ## Transition-specific covariate
 
  * The transition rate from state 1 to state 2, and the rate from state 1 to state 4 are each modelled on sex as a covariate, but no other intensities have covariates on them.
+ * The covariate will not apply hazard ratio on the specified transition.
 
 
 ```{r}
