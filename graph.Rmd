@@ -36,6 +36,8 @@ eval_slow <- FALSE
 ```
 
 
+# [R Notes](index.html)
+
 # plot
 
 
@@ -75,6 +77,9 @@ readRDS(file="df.RDS") %>%
            )) %>%
     le("consort") %>%
     two_column_consort("Total Records")
+
+
+
 
 ```
 
@@ -178,6 +183,17 @@ p
 ## dev.off()
 
 
+
+```
+
+
+## Export Plot
+
+```{r, eval = FALSE}
+png(file = "filname.png", width = 2400, height = 1200, res = 300)
+
+p
+dev.off()
 
 ```
 
@@ -407,6 +423,7 @@ ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
 
 ```
 
+
 # Color
 
 ## Hue Saturation Luminance (HSL)
@@ -496,6 +513,33 @@ fig
 
 
 ```
+
+## Overlay Histogram
+
+```{r, eval=FALSE}
+library(plotly)
+p1 <- dt[mg_tp0.factor == "Yes"]$pred
+p0 <- dt[mg_tp0.factor == "No"]$pred
+
+plot_ly(alpha = 0.5, xbins = list(start = 0, end = 1, size = 0.02)) %>%
+  add_histogram(x = ~ p1
+              , name = "Magnesium"
+              , inherit = TRUE
+              ## , xbins = seq(0, 1, 0.05)
+                ) %>%
+  add_histogram(x = ~ p0
+              , name = "No"
+              , inherit = TRUE
+              ## , xbins = seq(0, 1, 0.05)
+                ) %>%
+    layout(barmode = "overlay"
+         , xaxis = list(title = paste0("Predicted Probabilities of Being Treated with Magnesium (AUC = ",format(r$auc,digits = 3), ")"),
+                      zeroline = FALSE),
+         yaxis = list(title = "Count",
+                      zeroline = FALSE))
+
+```
+
 # Computing Environment
 
 

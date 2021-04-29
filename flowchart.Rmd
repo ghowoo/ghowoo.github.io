@@ -1,0 +1,320 @@
+---
+title: "Flowchart"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE,
+               cache=FALSE,
+               eval=TRUE,
+               cache=FALSE,
+               prompt=FALSE,
+               results="asis",
+               tidy=FALSE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE,
+               out.width = '80%')
+eval_fast <- TRUE
+eval_slow <- FALSE
+```
+
+
+
+# [R Notes](index.html)
+
+# ggplot2
+
+
+```{r}
+
+library(ggplot2)
+
+data <- data.frame(x= 1:100, y= 1:100)
+
+data %>% 
+  ggplot(aes(x, y)) +
+  scale_x_continuous(minor_breaks = seq(10, 100, 10)) +
+  scale_y_continuous(minor_breaks = seq(10, 100, 10)) +
+  theme_linedraw() -> p
+
+
+
+xm1 <- 20
+xm2 <- 65
+w1 <- 10
+w2 <- 25
+y1 <- 100
+ht <- 15
+height_box <- 15
+num_vertical_arrow <- 3
+num_vertical_box <- num_vertical_arrow + 1
+height_arrow <- (100 - height_box * num_vertical_box) / num_vertical_arrow
+ytop <- seq(100, 0, -((100 - height_box * num_vertical_box)/num_vertical_arrow + height_box))
+
+bw <- 0.25
+width_border <- 0.25
+size_font <- 2
+width_arrow <- 0.8
+
+
+
+label1 <- "Step I \n Enrollment \n Records \n (N = 2,045)"
+label2 <- "Exclusion \n Records \n (N = 762)"
+label3 <- "Study Population \n (N = 599)"
+label4 <- "Outcome Analysis \n Population \n (N = 576)"
+
+
+
+p <- p + geom_rect(
+             xmin = xm1 - w1
+           , xmax = xm1 + w1
+           , ymin = y1 - ht
+           , ymax = ytop[1]
+           , color = 'black'
+           , fill = 'white'
+           , size = bw
+         )
+p <- p + annotate(
+             'text'
+           , x = xm1
+           , y = ytop[1] - ht / 2
+           , label = label1
+           ## , parse = TRUE
+           , size = size_font
+         )
+
+
+p <- p + geom_rect(
+             xmin = xm1 - w1
+           , xmax = xm1 + w1
+           , ymin = ytop[2] - ht
+           , ymax = ytop[2]
+           , color = 'black'
+           , fill = 'white'
+           , size = bw
+         )
+p <- p + annotate(
+             'text'
+           , x = xm1
+           , y = ytop[2] -  ht / 2
+           , label = label2
+           , size = size_font
+         )
+
+p <- p + geom_segment(
+        x = xm1
+      , xend = xm1
+      , y = ytop[1] - ht - bw
+      , yend = ytop[2] + bw
+      , size = width_arrow
+      , linejoin = "round"
+      , lineend = "round"
+      , arrow = arrow(length = unit(2, "mm"), type= "open"))
+
+
+## row 3
+p <- p + geom_rect(
+             xmin = xm1 - w1
+           , xmax = xm1 + w1
+           , ymin = ytop[3] - ht
+           , ymax = ytop[3]
+           , color = 'black'
+           , fill = 'white'
+           , size = bw
+         )
+p <- p + annotate(
+             'text'
+           , x = xm1
+           , y = ytop[3] -  ht / 2
+           , label = label3
+           , size = size_font
+         )
+
+p <- p + geom_segment(
+        x = xm1
+      , xend = xm1
+      , y = ytop[2] - ht - bw
+      , yend = ytop[3] + bw
+      , size = width_arrow
+      , linejoin = "round"
+      , lineend = "round"
+      , arrow = arrow(length = unit(2, "mm"), type= "open"))
+
+## row 4
+p <- p + geom_rect(
+             xmin = xm1 - w1
+           , xmax = xm1 + w1
+           , ymin = ytop[4] - ht
+           , ymax = ytop[4]
+           , color = 'black'
+           , fill = 'white'
+           , size = bw
+         )
+p <- p + annotate(
+             'text'
+           , x = xm1
+           , y = ytop[4] -  ht / 2
+           , label = label4
+           , size = size_font
+         )
+
+p <- p + geom_segment(
+        x = xm1
+      , xend = xm1
+      , y = ytop[3] - ht - width_border
+      , yend = ytop[4] + width_border
+      , size = width_arrow
+      , linejoin = "round"
+      , lineend = "round"
+      , arrow = arrow(length = unit(2, "mm"), type= "open"))
+
+
+
+## column b1
+labelb1 <- "Excluded (n = 17)"
+labelb2 <- "Excluded (n=78)"
+labelb3 <- "Excluded (n = 2)"
+
+p <- p + geom_rect(
+             xmin = xm2 - w2
+           , xmax = xm2 + w2
+           , ymin = ytop[1] - height_box - height_arrow / 2 - ht / 2 * 1.6
+           , ymax = ytop[1] - height_box - height_arrow / 2 + ht / 2 * 1.6
+           , color = 'black'
+           , fill = 'white'
+           , size = bw
+         )
+p <- p + annotate(
+             'text'
+           , x = xm2
+           , y = ytop[1] - height_box - height_arrow / 2
+           , label = labelb1
+           , size = size_font
+         )
+
+p <- p + geom_segment(
+        x = xm1 + width_border
+      , xend = xm2 - w2 - width_border
+      , y = ytop[1] - height_box - height_arrow / 2  
+      , yend = ytop[1] - height_box - height_arrow / 2 
+      , size = width_arrow
+      , linejoin = "round"
+      , lineend = "round"
+      , arrow = arrow(length = unit(2, "mm"), type= "open"))
+
+## column b2
+p <- p + geom_rect(
+             xmin = xm2 - w2
+           , xmax = xm2 + w2
+           , ymin = ytop[2] - height_box - height_arrow / 2 - ht / 2
+           , ymax = ytop[2] - height_box - height_arrow / 2 + ht / 2
+           , color = 'black'
+           , fill = 'white'
+           , size = bw
+         )
+p <- p + annotate(
+             'text'
+           , x = xm2
+           , y = ytop[2] - height_box - height_arrow / 2
+           , label = labelb2
+           , size = size_font
+         )
+
+p <- p + geom_segment(
+        x = xm1 + width_border
+      , xend = xm2 - w2 - width_border
+      , y = ytop[2] - height_box - height_arrow / 2
+      , yend = ytop[2] - height_box - height_arrow / 2
+      , size = width_arrow
+      , linejoin = "round"
+      , lineend = "round"
+      , arrow = arrow(length = unit(2, "mm"), type= "open"))
+
+
+## column b3
+
+p <- p + geom_rect(
+             xmin = xm2 - w2
+           , xmax = xm2 + w2
+           , ymin = ytop[3] - height_box - height_arrow / 2 - ht / 2
+           , ymax = ytop[3] - height_box - height_arrow / 2 + ht / 2
+           , color = 'black'
+           , fill = 'white'
+           , size = bw
+         )
+p <- p + annotate(
+             'text'
+           , x = xm2
+           , y = ytop[3] - height_box - height_arrow / 2
+           , label = labelb3
+           , size = size_font
+         )
+
+p <- p + geom_segment(
+        x = xm1 + width_border
+      , xend = xm2 - w2 - width_border
+      , y = ytop[3] - height_box - height_arrow / 2
+      , yend = ytop[3] - height_box - height_arrow / 2
+      , size = width_arrow
+      , linejoin = "round"
+      , lineend = "round"
+      , arrow = arrow(length = unit(2, "mm"), type= "open"))
+
+p <- p + theme_void()
+
+
+p
+
+
+
+```
+
+
+
+# Flowchart Using tgsify Package
+
+
+```{r, eval = FALSE}
+library(tgsify)
+
+df <- data.frame(age = 1:10, sex = rep(c("M", "F"), each = 5))
+
+df %>%
+    mutate(consort = case_when(
+               age >= 3 ~ "2 2 Age >= 3 "
+             , sex == "M" ~ "3 2 Male"
+             , TRUE ~ "4 2 Study Population"
+           )) %>%
+    le("consort") %>%
+    two_column_consort("Total Records")
+
+
+
+
+```
+
+
+
+# Computing Environment
+
+
+```{r}
+sessionInfo()
+```
