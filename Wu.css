@@ -181,14 +181,14 @@ body{
 }
 
 p {
-    font-size:16px;
+    font-size:20px;
     line-height:24px;
     margin:0px 0px 24px 0px;
 }
 
 #content ul,
 #content ol {
-  font-size: 16px;
+  font-size: 20px;
 }
 
 
@@ -850,7 +850,7 @@ hr{
     height:100%;
     background:#255B99;
     z-index:200;
-    font-size: 16px;
+    font-size: 20px;
 }
 
 
@@ -1119,4 +1119,25 @@ div.sourceCode .row div {
 #main .nav-tabs li.active a {
     color: #2F3750;
     border-bottom: 1px solid #fcfcfc;
+}
+
+
+/* hover strip effects of kableextra, sticky doesn't work*/
+
+.table tbody tr:hover {
+  background-color: #EEE;
+}
+
+#main .table-wrapper table th,
+#main .table-wrapper table td {
+  border-left: none;
+  border-right: none;
+}
+
+#main .table-wrapper {
+  overflow-x: visible;
+}
+
+.table {
+    overflow-x: visible;
 }

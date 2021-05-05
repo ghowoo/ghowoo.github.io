@@ -40,6 +40,7 @@ eval_slow <- FALSE
 
 # plot
 
+ * Add image to the rmarkdown:
 
 ## Accumulative Distribution
 
