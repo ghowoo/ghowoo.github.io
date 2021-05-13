@@ -500,6 +500,37 @@ attr(vs, "scaled:scale")
 
 ## One-Hot Encoding
 
+
+
+
+### Wu::one_hot
+
+ * Single impute numeric variables as median and add a column indicating missing values
+ * Add NA level to categorical variables
+
+```{r}
+
+library(Wu)
+set.seed(1234)
+t <- data.table(var1=factor(sample(c("A", "B", "C", NA), 10, replace=TRUE), levels=c("A", "B", "C"))
+              , var2=sample(c(1:10, rep(NA, 5)), 10)
+              , var3=factor(rep(c("Red", "Green"), each=5), levels=c("Red", "Green", "Yellow"))
+                )
+t %>% prt()
+
+
+ti <- Wu::one_hot(t
+                , vars_numeric = c("var2")
+                , vars_factor = c("var1", "var3")
+                  )
+
+ti %>% prt()
+
+
+
+```
+
+
 ### mltools::one_hot
 
  * Only work on factors, not characters;
@@ -529,21 +560,21 @@ mltools::one_hot(t, sparsifyNAs = TRUE, naCols = TRUE, dropCols = FALSE, dropUnu
 ```{r}
 library(caret)
 
+set.seed(1234)
 t <- data.table(var1=factor(sample(c("A", "B", "C", NA), 10, replace=TRUE), levels=c("A", "B", "C"))
               , var2=1:10
               , var3=factor(rep(c("Red", "Green"), each=5), levels=c("Red", "Green", "Yellow"))
               , var4=rep(c("Low", "High"), 5)
                 )
 
-dummy <- dummyVars(" ~ .", data=t)
-class(dummy)
-str(dummy)
-print(dummy)
-newdata <- data.frame(predict(dummy, t))
-print(newdata)
+t %>% prt()
 
-dummy <- dummyVars(" ~ .", data=t, , fullRank=TRUE)
-predict(dummy, t)
+dummy <- dummyVars(" ~ .", data=t, fullRank = TRUE)
+tdummy <- data.frame(predict(dummy, t))
+
+tdummy %>% prt()
+
+
 
 ```
 
@@ -558,6 +589,7 @@ model.matrix(~0 + ., t)
 
  * Hot Deck method: a missing value was imputed from a randomly selected from similar record. Cards that are "hot" is currently being processed. Last observation carried forward (LOCF) is a kind of hot-desk imputation.
  * Cold-deck: impute data from donors from another dataset.
+ * pmm: predictive mean matching
 
 
 ## mice package
@@ -568,12 +600,47 @@ data <- airquality
 data[4:10,3] <- rep(NA,7)
 data[1:5,4] <- NA
 
+data %>% prt()
 
 md.pattern(data, plot=FALSE)
 
 md.pattern(data)
 
+
+
 ```
+
+## Multiple-Imputation
+
+```{r}
+
+library(mice)
+set.seed(1234)
+t <- data.table(id=1:10
+              , var1=factor(sample(c("A", "B", "C", NA), 10, replace=TRUE), levels=c("A", "B", "C"))
+              , var2=sample(c(1:10, rep(NA, 5)), 10, replace = TRUE)
+              , var3=factor(rep(c("Red", "Green"), each=5), levels=c("Red", "Green", "Yellow"))
+              , var4=rep(c("Low", "High"), 5)
+                )
+
+t %>% prt()
+
+ti <- mice(t
+         , m=5
+         , maxit = 50
+         , method = 'pmm'
+         , seed = 500
+         , printFlag = FALSE
+           )
+
+tic <- complete(ti, action = "all", include = TRUE)
+##tic <- complete(ti, action = 2L, include = TRUE)
+
+
+tic[[2]] %>% prt()
+
+```
+
 
 ## VIM package
 

@@ -16,6 +16,17 @@ output:
 
 
 
+# [Index](index.html)
+
+
+# Setup
+
+ * Create virtual evironment "rmd" using default python python3.7
+ * Automatically install pip, wheel, setuptools, numpy
+ * install python packages: py_install("package-name", envname = "rmd")
+ * use_virtualenv("rmd")
+ * set knitr_engines using reticulate
+
 ```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
 library(knitr)
 library(rmdformats)
@@ -32,12 +43,15 @@ opts_chunk$set(echo=TRUE,
                out.width = '80%')
 eval_fast <- TRUE
 eval_slow <- FALSE
+library(reticulate)
+## reticulate::install_miniconda()
+## virtualenv_create("rmd")
+## py_install("seaborn", envname = "rmd")
+use_virtualenv("rmd")
+## py_config()
+## py_available()
 knitr::knit_engines$set(python = reticulate::eng_python)
-## knitr::opts_chunk$set(engine.path = list(python = '/home/gongw/.virtualenvs/pybert/bin/python3.9'))
 ```
-
-
-# [Index](index.html)
 
 
 
@@ -51,7 +65,10 @@ knitr::knit_engines$set(python = reticulate::eng_python)
  * py_config() to see version
  
  
-```{r, eval = TRUE}
+ 
+```{r, eval = FALSE}
+
+
 ## library(reticulate)
 
 
@@ -65,7 +82,7 @@ library(reticulate)
 use_python("/usr/bin/python3")
 py_config()
 py_discover_config()
-
+py_install()
 
 
 
@@ -86,6 +103,32 @@ os$listdir(".")
 
 ## py_install("pandas")
 #py_install("pandas", method = "auto", conda = "auto")
+
+```
+
+# python matplotlib
+
+```{python}
+
+
+import seaborn as sns
+pr = sns.load_dataset("fmri")
+import matplotlib as mpl
+sns.lmplot("timepoint", "signal", data = pr)
+mpl.pyplot.show()
+# print(pr)
+
+```
+
+```{r}
+f1 <- subset(py$fmri, region = "parietal")
+
+```
+
+```{python}
+import matplotlib as mpl
+sns.lmplot("timepoint", "signal", data = r.f1)
+mpl.pyplot.show()
 
 ```
 
