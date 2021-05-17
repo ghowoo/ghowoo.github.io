@@ -5,40 +5,38 @@ date: "`r Sys.Date()`"
 output:
   rmdformats::readthedown:
     self_contained: true
-    thumbnails: true
+    thumbnails: false
     code_folding: hide
     toc_depth: 6
     lightbox: true
     gallery: false
-    highlight: tango
+    highlight: monochrome
+    css: Wu.css
 ---
+
 
 
 ```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
 library(knitr)
 library(rmdformats)
 library(Wu)
-## Global options
-options(max.print="2000")
 opts_chunk$set(echo=TRUE,
-               eval=TRUE,
                cache=FALSE,
-               results="asis",
+               eval=TRUE,
                prompt=FALSE,
+               results="asis",
                tidy=FALSE,
                comment=NA,
                message=FALSE,
-               warning=FALSE)
-opts_knit$set(width=75)
+               warning=FALSE,
+               out.width = '80%')
 eval_fast <- TRUE
 eval_slow <- FALSE
-
 ```
 
 
-# Links
 
-[Index](index.html)
+# [Index](index.html)
 
 # Package mgcv
 
@@ -80,7 +78,7 @@ m0 <- bam(IRF ~ PTOT_group +
 
 ### Report Coefficients
 
-```{r}
+```{r, eval = FALSE}
 fit_s <- summary(m0)
 
 
@@ -317,7 +315,7 @@ knitr::kable(
 
 ## Report p-values
 
-```{r}
+```{r, eval = FALSE}
 fv <- anova(fit)
 
 fv1 <- as.data.table(fv$pTerms.table)
@@ -599,6 +597,36 @@ t2 <- bt$results[,, 2][, c(3)]
 t <- cbind(t1, t2)
 t %>% prt(digits=4, col.names=c("Mean of Mono", "Mean of Combo", "Difference", "Difference after Matching"))
 ## dim(t)
+
+```
+
+
+# Leave One Out Cross Validation
+
+## caret
+
+ * https://machinelearningmastery.com/how-to-estimate-model-accuracy-in-r-using-the-caret-package/
+ * 
+
+```{r}
+library(data.table)
+library(caret)
+data(iris)
+setDT(iris)
+iris <- iris[, flag_setosa := factor(Species %in% c("setosa"))
+             ][, Species := NULL]
+train_control <- trainControl(method = "LOOCV")
+model <- train(flag_setosa ~ .
+             , data = iris
+             , trControl = train_control
+             , method = "glm"
+             , family = "binomial")
+print(model)
+class(model)
+methods(class = "train")
+
+
+
 
 ```
 
