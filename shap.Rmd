@@ -1,0 +1,234 @@
+---
+title: "SHAP: SHapley Additive exPlanations"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE,
+               cache=FALSE,
+               eval=TRUE,
+               prompt=FALSE,
+               results="asis",
+               tidy=FALSE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE,
+               out.width = '80%')
+eval_fast <- TRUE
+eval_slow <- FALSE
+```
+
+
+
+# [Index](index.html)
+
+
+
+# Reference
+
+ * https://github.com/slundberg/shap
+ * https://cran.r-project.org/web/packages/shapper/shapper.pdf
+
+
+# R shapper Package
+
+https://cran.r-project.org/web/packages/shapper/vignettes/shapper_regression.html
+
+
+## Load Data
+
+```{r}
+library("DALEX")
+titanic_train <- titanic[,c("survived", "class", "gender", "age", "sibsp", "parch", "fare", "embarked")]
+titanic_train$survived <- factor(titanic_train$survived)
+titanic_train$gender <- factor(titanic_train$gender)
+titanic_train$embarked <- factor(titanic_train$embarked)
+titanic_train <- na.omit(titanic_train)
+head(titanic_train) %>% prt()
+
+Vars <- c(
+  "class"
+, "gender"
+, "age"
+, "sibsp"
+, "parch"
+, "fare"
+, "embarked"
+)
+
+
+factorVars <- c(
+  "class"
+, "gender"
+, "sibsp"
+, "parch"
+, "embarked"
+)
+
+tbl1n(data = titanic_train) %>% prt()
+
+```
+
+## Build Model
+
+
+```{r}
+library("randomForest")
+set.seed(123)
+model_rf <- randomForest(survived ~ . , data = titanic_train)
+
+
+model_rf
+
+plot(model_rf)
+
+model_rf$importance %>% prt()
+
+varImpPlot(model_rf)
+
+```
+
+## shapper
+
+```{r}
+
+
+## reticulate::py_module_available("shap")
+
+library("DALEX")
+exp_rf <- explain(model_rf, data = titanic_train[,-1], y = as.numeric(titanic_train[,1])-1)
+
+
+p_function <- function(model, data) predict(model, newdata = data, type = "prob")
+
+library("shapper")
+
+ive_rf <- individual_variable_effect(
+  model_rf
+, data = titanic_train[, -1]
+, predict_function = p_function
+, new_observation = titanic_train[1:2, -1]
+, nsamples = 50
+)
+
+## ive_rf %>% prt()
+
+plot(ive_rf)
+
+
+
+```
+
+
+# SHAPforxgboost Package
+
+ * https://liuyanguu.github.io/post/2019/07/18/visualization-of-shap-for-xgboost/
+
+
+## Model
+
+
+```{r}
+library(SHAPforxgboost)
+suppressPackageStartupMessages({
+library("SHAPforxgboost"); library("ggplot2"); library("xgboost")
+library("data.table"); library("here")
+})
+
+y_var <-  "diffcwv"
+dataX <- as.matrix(dataXY_df[,-..y_var])
+
+param_list <- list(objective = "reg:squarederror",  # For regression
+                   eta = 0.02,
+                   max_depth = 10,
+                   gamma = 0.01,
+                   subsample = 0.95
+                   )
+
+
+mod <- xgboost::xgboost(data = dataX, 
+                        label = as.matrix(dataXY_df[[y_var]]), 
+                        params = param_list, nrounds = 10,
+                        verbose = FALSE, nthread = parallel::detectCores() - 2,
+                        early_stopping_rounds = 8)
+
+shap_values <- shap.values(xgb_model = mod, X_train = dataX)
+# The ranked features by mean |SHAP|
+shap_values$mean_shap_score %>% prt()
+
+
+shap_values$shap_score[1:30,] %>% prt()
+
+
+hist(shap_values$shap_score$forestProp_1km)
+
+
+```
+
+
+## SHAP Summary Plot
+
+
+```{r}
+
+shap_long <- shap.prep(xgb_model = mod, X_train = dataX)
+# is the same as: using given shap_contrib
+shap_long <- shap.prep(shap_contrib = shap_values$shap_score, X_train = dataX)
+
+shap.plot.summary(shap_long)
+
+shap.plot.summary.wrap1(model = mod, X = dataX)
+
+shap.plot.summary.wrap2(shap_score = shap_values$shap_score, X = dataX)
+```
+
+## Dependence Plot
+
+```{r}
+
+g1 <- shap.plot.dependence(data_long = shap_long
+                         , x = "dayint"
+                         , y = "dayint"
+                         , color_feature = "Column_WV") +
+  ggtitle("(A) SHAP values of Time trend vs. Time Trend")
+
+g2 <- shap.plot.dependence(data_long = shap_long
+                         , x = "dayint"
+                         , y = "Column_WV"
+                         , color_feature = "Column_WV") +
+  ggtitle("(B) SHAP values of CWV vs. Time Trend")
+
+gridExtra::grid.arrange(g1, g2, ncol = 2)
+```
+
+```{r}
+fig_list <- lapply(names(shap_values$mean_shap_score)[1:9]
+                 , shap.plot.dependence
+                 , data_long = shap_long
+                   )
+gridExtra::grid.arrange(grobs = fig_list, ncol = 3)
+
+```
+
+## Interaction Effects
+
+```{r}
+
+
+```

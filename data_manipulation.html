@@ -7,7 +7,7 @@
 
         <meta name="author" content="Wu Gong" />
     
-        <meta name="date" content="2021-05-13" />
+        <meta name="date" content="2021-05-20" />
     
     <title>R Data Manipulation with data.table</title>
 
@@ -216,6 +216,7 @@
       <li><a href="#replicate-rows">Replicate Rows</a></li>
       <li><a href="#pass-column-name-to-data.table-within-function">Pass Column Name to data.table within Function</a></li>
       <li><a href="#reshape-wide-to-long">Reshape Wide to Long</a></li>
+      <li><a href="#reshape-long-to-wide">Reshape Long to Wide</a></li>
       </ul></li>
       <li><a href="#merge-multiple-tables">Merge Multiple Tables</a></li>
       <li><a href="#date-and-time">Date and Time</a>
@@ -245,7 +246,7 @@
     </div>
     <div id="postamble" data-toggle="wy-nav-shift" class="status">
                   <p class="author"><span class="glyphicon glyphicon-user"></span> Wu Gong</p>
-                        <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2021-05-13</p>
+                        <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2021-05-20</p>
           </div>
    </div>
      
@@ -1223,146 +1224,610 @@ E+
 <span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  , <span class="at">var_3=</span><span class="dv">31</span><span class="sc">:</span><span class="dv">35</span></span>
 <span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>dt</span></code></pre></div>
-<p>id var_1 var_2 var_3 1: 1 10 21 31 2: 2 11 22 32 3: 3 12 23 33 4: 4 13 24 34 5: 5 14 25 35 6: 1 15 21 31</p>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>dt <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+id
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+var_1
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+var_2
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+var_3
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+31
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+32
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+3
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+23
+</td>
+<td style="text-align:right;">
+33
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+34
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+35
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+31
+</td>
+</tr>
+</tbody>
+</table>
 <div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;var_&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>)</span>
 <span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="fu">melt</span>(dt, <span class="at">id.vars=</span><span class="st">&quot;id&quot;</span>, <span class="at">measure.vars =</span> vars)</span></code></pre></div>
-<pre><code>id variable value</code></pre>
-<p>1: 1 var_1 10 2: 2 var_1 11 3: 3 var_1 12 4: 4 var_1 13 5: 5 var_1 14 6: 1 var_1 15 7: 1 var_2 21 8: 2 var_2 22 9: 3 var_2 23 10: 4 var_2 24 11: 5 var_2 25 12: 1 var_2 21 13: 1 var_3 31 14: 2 var_3 32 15: 3 var_3 33 16: 4 var_3 34 17: 5 var_3 35 18: 1 var_3 31</p>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>dtw <span class="ot">&lt;-</span> <span class="fu">melt</span>(dt, <span class="at">id.vars=</span><span class="st">&quot;id&quot;</span>, <span class="at">measure.vars =</span> vars)</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>dtw <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+id
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+variable
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:right;">
+var_1
+</td>
+<td style="text-align:right;">
+10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:right;">
+var_1
+</td>
+<td style="text-align:right;">
+11
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+3
+</td>
+<td style="text-align:right;">
+var_1
+</td>
+<td style="text-align:right;">
+12
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:right;">
+var_1
+</td>
+<td style="text-align:right;">
+13
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:right;">
+var_1
+</td>
+<td style="text-align:right;">
+14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:right;">
+var_1
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:right;">
+var_2
+</td>
+<td style="text-align:right;">
+21
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:right;">
+var_2
+</td>
+<td style="text-align:right;">
+22
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+3
+</td>
+<td style="text-align:right;">
+var_2
+</td>
+<td style="text-align:right;">
+23
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:right;">
+var_2
+</td>
+<td style="text-align:right;">
+24
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:right;">
+var_2
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:right;">
+var_2
+</td>
+<td style="text-align:right;">
+21
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:right;">
+var_3
+</td>
+<td style="text-align:right;">
+31
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:right;">
+var_3
+</td>
+<td style="text-align:right;">
+32
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+3
+</td>
+<td style="text-align:right;">
+var_3
+</td>
+<td style="text-align:right;">
+33
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:right;">
+var_3
+</td>
+<td style="text-align:right;">
+34
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:right;">
+var_3
+</td>
+<td style="text-align:right;">
+35
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:right;">
+var_3
+</td>
+<td style="text-align:right;">
+31
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="reshape-long-to-wide" class="section level2">
+<h2>Reshape Long to Wide</h2>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">data.table</span>(</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">id =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>), <span class="at">each =</span> <span class="dv">3</span>)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>, <span class="at">day =</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, <span class="dv">2</span>)</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>, <span class="at">value =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>t <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+id
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+day
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+B
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+B
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+B
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+6
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>tw <span class="ot">&lt;-</span> <span class="fu">dcast</span>(t, id <span class="sc">~</span> day, <span class="at">value.var =</span> <span class="st">&quot;value&quot;</span>)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(tw)</span></code></pre></div>
+<p>[1] “data.table” “data.frame”</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>tw <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+id
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+1
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+2
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+3
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+B
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+6
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div id="merge-multiple-tables" class="section level1">
 <h1>Merge Multiple Tables</h1>
-<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">setkey</span>(t1, key1, key2)</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">Reduce</span>(<span class="cf">function</span>(...) <span class="fu">merge</span>(..., <span class="at">all =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>            , <span class="fu">list</span>(t1, t2, t3))</span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">setkey</span>(t1, key1, key2)</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">Reduce</span>(<span class="cf">function</span>(...) <span class="fu">merge</span>(..., <span class="at">all =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>            , <span class="fu">list</span>(t1, t2, t3))</span></code></pre></div>
 </div>
 <div id="date-and-time" class="section level1">
 <h1>Date and Time</h1>
 <div id="general" class="section level2">
 <h2>General</h2>
-<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as.POSIXct</span>(</span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    data<span class="sc">$</span>guidewire_datetime</span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  , <span class="at">format=</span><span class="st">&#39;%Y-%m-%d %H:%M&#39;</span></span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  , <span class="at">tz=</span><span class="st">&#39;GMT&#39;</span>)</span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="fu">as.Date</span>(data<span class="sc">$</span>diag_ecg_date_time, <span class="at">format=</span><span class="st">&#39;%Y-%m-%d&#39;</span>)</span>
-<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>get_datetime <span class="ot">&lt;-</span> <span class="cf">function</span>(text){</span>
-<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.POSIXct</span>(</span>
-<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">trimws</span>(text)</span>
-<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>      , <span class="at">format =</span> <span class="st">&quot;%Y-%m-%d %H:%M&quot;</span></span>
-<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>      , <span class="at">tz =</span> <span class="st">&quot;GMT&quot;</span></span>
-<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>      , <span class="at">origin =</span> <span class="st">&#39;1970-01-01&#39;</span></span>
-<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a>get_ed_arrival <span class="ot">&lt;-</span> <span class="cf">function</span>(text){</span>
-<span id="cb41-18"><a href="#cb41-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.POSIXct</span>(</span>
-<span id="cb41-19"><a href="#cb41-19" aria-hidden="true" tabindex="-1"></a>        <span class="fu">trimws</span>(text)</span>
-<span id="cb41-20"><a href="#cb41-20" aria-hidden="true" tabindex="-1"></a>      , <span class="at">format =</span> <span class="st">&quot;%m/%d/%y %H%M&quot;</span></span>
-<span id="cb41-21"><a href="#cb41-21" aria-hidden="true" tabindex="-1"></a>      , <span class="at">tz =</span> <span class="st">&quot;GMT&quot;</span></span>
-<span id="cb41-22"><a href="#cb41-22" aria-hidden="true" tabindex="-1"></a>      , <span class="at">origin =</span> <span class="st">&#39;1970-01-01&#39;</span></span>
-<span id="cb41-23"><a href="#cb41-23" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb41-24"><a href="#cb41-24" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb41-25"><a href="#cb41-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-26"><a href="#cb41-26" aria-hidden="true" tabindex="-1"></a>tf <span class="ot">&lt;-</span> tf[</span>
-<span id="cb41-27"><a href="#cb41-27" aria-hidden="true" tabindex="-1"></a>  , datetime_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">get_ed_arrival</span>(ed_arrival_time_str)</span>
-<span id="cb41-28"><a href="#cb41-28" aria-hidden="true" tabindex="-1"></a>][, year_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">format</span>(datetime_ed_arrival, <span class="st">&quot;%Y&quot;</span>)</span>
-<span id="cb41-29"><a href="#cb41-29" aria-hidden="true" tabindex="-1"></a>  ][, month_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">format</span>(datetime_ed_arrival, <span class="st">&quot;%m&quot;</span>)</span>
-<span id="cb41-30"><a href="#cb41-30" aria-hidden="true" tabindex="-1"></a>  ][, yearmonth_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">format</span>(datetime_ed_arrival, <span class="st">&quot;%Y%m&quot;</span>)</span>
-<span id="cb41-31"><a href="#cb41-31" aria-hidden="true" tabindex="-1"></a>    ][, weekdays_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">weekdays</span>(datetime_ed_arrival)</span>
-<span id="cb41-32"><a href="#cb41-32" aria-hidden="true" tabindex="-1"></a>      ][, weekdays_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">factor</span>(</span>
-<span id="cb41-33"><a href="#cb41-33" aria-hidden="true" tabindex="-1"></a>              weekdays_ed_arrival</span>
-<span id="cb41-34"><a href="#cb41-34" aria-hidden="true" tabindex="-1"></a>            , <span class="at">levels =</span> <span class="fu">c</span>(</span>
-<span id="cb41-35"><a href="#cb41-35" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;Sunday&quot;</span></span>
-<span id="cb41-36"><a href="#cb41-36" aria-hidden="true" tabindex="-1"></a>                , <span class="st">&quot;Monday&quot;</span></span>
-<span id="cb41-37"><a href="#cb41-37" aria-hidden="true" tabindex="-1"></a>                , <span class="st">&quot;Tuesday&quot;</span></span>
-<span id="cb41-38"><a href="#cb41-38" aria-hidden="true" tabindex="-1"></a>                , <span class="st">&quot;Wednesday&quot;</span></span>
-<span id="cb41-39"><a href="#cb41-39" aria-hidden="true" tabindex="-1"></a>                , <span class="st">&quot;Thursday&quot;</span></span>
-<span id="cb41-40"><a href="#cb41-40" aria-hidden="true" tabindex="-1"></a>                , <span class="st">&quot;Friday&quot;</span></span>
-<span id="cb41-41"><a href="#cb41-41" aria-hidden="true" tabindex="-1"></a>                , <span class="st">&quot;Saturday&quot;</span></span>
-<span id="cb41-42"><a href="#cb41-42" aria-hidden="true" tabindex="-1"></a>              )</span>
-<span id="cb41-43"><a href="#cb41-43" aria-hidden="true" tabindex="-1"></a>          )</span>
-<span id="cb41-44"><a href="#cb41-44" aria-hidden="true" tabindex="-1"></a>        ][, weekdays_ed_arrival_n <span class="sc">:</span><span class="er">=</span> <span class="fu">as.numeric</span>(weekdays_ed_arrival)</span>
-<span id="cb41-45"><a href="#cb41-45" aria-hidden="true" tabindex="-1"></a>          ][, hour_ed_arrival <span class="sc">:</span><span class="er">=</span> data.table<span class="sc">::</span><span class="fu">hour</span>(datetime_ed_arrival)</span>
-<span id="cb41-46"><a href="#cb41-46" aria-hidden="true" tabindex="-1"></a>          ][, minute_ed_arrival <span class="sc">:</span><span class="er">=</span> data.table<span class="sc">::</span><span class="fu">minute</span>(datetime_ed_arrival)</span>
-<span id="cb41-47"><a href="#cb41-47" aria-hidden="true" tabindex="-1"></a>            ][, hour_ed_arrival_c <span class="sc">:</span><span class="er">=</span> <span class="fu">strftime</span>(datetime_ed_arrival, <span class="at">format =</span> <span class="st">&quot;%H&quot;</span>, <span class="at">tz =</span> <span class="st">&quot;GMT&quot;</span>)</span>
-<span id="cb41-48"><a href="#cb41-48" aria-hidden="true" tabindex="-1"></a>              ][, minute_ed_arrival_c <span class="sc">:</span><span class="er">=</span> <span class="fu">strftime</span>(datetime_ed_arrival, <span class="at">format =</span> <span class="st">&quot;%M&quot;</span>, <span class="at">tz =</span> <span class="st">&quot;GMT&quot;</span>)][, hour_ed_arrival_n <span class="sc">:</span><span class="er">=</span> hour_ed_arrival <span class="sc">+</span> minute_ed_arrival<span class="sc">/</span><span class="dv">60</span>]</span>
-<span id="cb41-49"><a href="#cb41-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-50"><a href="#cb41-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-51"><a href="#cb41-51" aria-hidden="true" tabindex="-1"></a>tf <span class="ot">&lt;-</span> tf[, flag_bussiness_hours <span class="sc">:</span><span class="er">=</span> <span class="fu">case_when</span>(</span>
-<span id="cb41-52"><a href="#cb41-52" aria-hidden="true" tabindex="-1"></a>               <span class="fu">is.na</span>(hour_ed_arrival) <span class="sc">~</span> <span class="fu">as.character</span>(<span class="cn">NA</span>)</span>
-<span id="cb41-53"><a href="#cb41-53" aria-hidden="true" tabindex="-1"></a>             , hour_ed_arrival <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">&quot;Non-Business Hours&quot;</span></span>
-<span id="cb41-54"><a href="#cb41-54" aria-hidden="true" tabindex="-1"></a>             , hour_ed_arrival <span class="sc">==</span> <span class="dv">17</span> <span class="sc">&amp;</span> minute_ed_arrival <span class="sc">&gt;=</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">&quot;Non-Business Hours&quot;</span></span>
-<span id="cb41-55"><a href="#cb41-55" aria-hidden="true" tabindex="-1"></a>             , hour_ed_arrival <span class="sc">&gt;</span> <span class="dv">17</span> <span class="sc">~</span> <span class="st">&quot;Non-Business Hours&quot;</span></span>
-<span id="cb41-56"><a href="#cb41-56" aria-hidden="true" tabindex="-1"></a>             , <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">&quot;Business Hours&quot;</span></span>
-<span id="cb41-57"><a href="#cb41-57" aria-hidden="true" tabindex="-1"></a>           )</span>
-<span id="cb41-58"><a href="#cb41-58" aria-hidden="true" tabindex="-1"></a>         ][, flag_bussiness_hours <span class="sc">:</span><span class="er">=</span> <span class="fu">factor</span>(</span>
-<span id="cb41-59"><a href="#cb41-59" aria-hidden="true" tabindex="-1"></a>                 flag_bussiness_hours</span>
-<span id="cb41-60"><a href="#cb41-60" aria-hidden="true" tabindex="-1"></a>               , <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">&quot;Business Hours&quot;</span>, <span class="st">&quot;Non-Business Hours&quot;</span>)</span>
-<span id="cb41-61"><a href="#cb41-61" aria-hidden="true" tabindex="-1"></a>             )]</span>
-<span id="cb41-62"><a href="#cb41-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-63"><a href="#cb41-63" aria-hidden="true" tabindex="-1"></a>tf <span class="ot">&lt;-</span> tf[</span>
-<span id="cb41-64"><a href="#cb41-64" aria-hidden="true" tabindex="-1"></a>  , flag_weekday <span class="sc">:</span><span class="er">=</span> <span class="fu">case_when</span>(</span>
-<span id="cb41-65"><a href="#cb41-65" aria-hidden="true" tabindex="-1"></a>        weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Tuesday&quot;</span>, <span class="st">&quot;Wednesday&quot;</span>, <span class="st">&quot;Thursday&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Weekday&quot;</span></span>
-<span id="cb41-66"><a href="#cb41-66" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Saturday&quot;</span>, <span class="st">&quot;Sunday&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Weekend&quot;</span></span>
-<span id="cb41-67"><a href="#cb41-67" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Friday&quot;</span>) <span class="sc">&amp;</span> hour_ed_arrival <span class="sc">==</span> <span class="dv">17</span> <span class="sc">&amp;</span> minute_ed_arrival <span class="sc">&gt;=</span> <span class="dv">1</span>  <span class="sc">~</span> <span class="st">&quot;Weekend&quot;</span></span>
-<span id="cb41-68"><a href="#cb41-68" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Friday&quot;</span>) <span class="sc">&amp;</span> hour_ed_arrival <span class="sc">&gt;</span> <span class="dv">17</span>  <span class="sc">~</span> <span class="st">&quot;Weekend&quot;</span></span>
-<span id="cb41-69"><a href="#cb41-69" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Friday&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Weekday&quot;</span></span>
-<span id="cb41-70"><a href="#cb41-70" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Monday&quot;</span>) <span class="sc">&amp;</span> hour_ed_arrival <span class="sc">==</span> <span class="dv">7</span> <span class="sc">&amp;</span> minute_ed_arrival <span class="sc">&lt;=</span> <span class="dv">59</span> <span class="sc">~</span> <span class="st">&quot;Weekend&quot;</span></span>
-<span id="cb41-71"><a href="#cb41-71" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Monday&quot;</span>) <span class="sc">&amp;</span> hour_ed_arrival <span class="sc">&lt;</span> <span class="dv">7</span> <span class="sc">~</span> <span class="st">&quot;Weekend&quot;</span></span>
-<span id="cb41-72"><a href="#cb41-72" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Monday&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Weekday&quot;</span></span>
-<span id="cb41-73"><a href="#cb41-73" aria-hidden="true" tabindex="-1"></a>      , <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.character</span>(<span class="cn">NA</span>)</span>
-<span id="cb41-74"><a href="#cb41-74" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb41-75"><a href="#cb41-75" aria-hidden="true" tabindex="-1"></a>][, flag_weekday <span class="sc">:</span><span class="er">=</span> <span class="fu">factor</span>(flag_weekday, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">&quot;Weekday&quot;</span>, <span class="st">&quot;Weekend&quot;</span>))</span>
-<span id="cb41-76"><a href="#cb41-76" aria-hidden="true" tabindex="-1"></a>  ][]</span>
-<span id="cb41-77"><a href="#cb41-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-78"><a href="#cb41-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-79"><a href="#cb41-79" aria-hidden="true" tabindex="-1"></a>fp <span class="ot">&lt;-</span> fp[</span>
-<span id="cb41-80"><a href="#cb41-80" aria-hidden="true" tabindex="-1"></a>    , datetime_proc_start <span class="sc">:</span><span class="er">=</span> <span class="fu">get_datetime</span>(proc_start_time_str)</span>
-<span id="cb41-81"><a href="#cb41-81" aria-hidden="true" tabindex="-1"></a>][, year_proc_start <span class="sc">:</span><span class="er">=</span> <span class="fu">format</span>(datetime_proc_start, <span class="st">&quot;%Y&quot;</span>)</span>
-<span id="cb41-82"><a href="#cb41-82" aria-hidden="true" tabindex="-1"></a>  ][, yearmonth_proc_start <span class="sc">:</span><span class="er">=</span> <span class="fu">format</span>(datetime_proc_start, <span class="st">&quot;%Y%m&quot;</span>)]</span>
-<span id="cb41-83"><a href="#cb41-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-84"><a href="#cb41-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-85"><a href="#cb41-85" aria-hidden="true" tabindex="-1"></a>vs4 <span class="ot">&lt;-</span> vs4[</span>
-<span id="cb41-86"><a href="#cb41-86" aria-hidden="true" tabindex="-1"></a>  , ed_arrival_to_pas_discharge <span class="sc">:</span><span class="er">=</span> <span class="fu">as.numeric</span>(<span class="fu">difftime</span>(</span>
-<span id="cb41-87"><a href="#cb41-87" aria-hidden="true" tabindex="-1"></a>        datetime_pas_discharge</span>
-<span id="cb41-88"><a href="#cb41-88" aria-hidden="true" tabindex="-1"></a>      , datetime_ed_arrival</span>
-<span id="cb41-89"><a href="#cb41-89" aria-hidden="true" tabindex="-1"></a>      , <span class="at">units =</span> <span class="st">&quot;hours&quot;</span></span>
-<span id="cb41-90"><a href="#cb41-90" aria-hidden="true" tabindex="-1"></a>    ))</span>
-<span id="cb41-91"><a href="#cb41-91" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb41-92"><a href="#cb41-92" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-93"><a href="#cb41-93" aria-hidden="true" tabindex="-1"></a>vs4 <span class="ot">&lt;-</span> vs4[</span>
-<span id="cb41-94"><a href="#cb41-94" aria-hidden="true" tabindex="-1"></a>    , date_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">date</span>(datetime_ed_arrival)</span>
-<span id="cb41-95"><a href="#cb41-95" aria-hidden="true" tabindex="-1"></a>][, age_in_years <span class="sc">:</span><span class="er">=</span> <span class="fu">as.numeric</span>(date_ed_arrival <span class="sc">-</span> dob)<span class="sc">/</span><span class="fl">365.25</span></span>
-<span id="cb41-96"><a href="#cb41-96" aria-hidden="true" tabindex="-1"></a>  ][, age_group <span class="sc">:</span><span class="er">=</span> <span class="fu">case_when</span>(</span>
-<span id="cb41-97"><a href="#cb41-97" aria-hidden="true" tabindex="-1"></a>          age_in_years <span class="sc">&lt;</span> <span class="dv">18</span> <span class="sc">~</span> <span class="st">&quot;&lt; 18&quot;</span></span>
-<span id="cb41-98"><a href="#cb41-98" aria-hidden="true" tabindex="-1"></a>        , age_in_years <span class="sc">&lt;</span> <span class="dv">65</span> <span class="sc">~</span> <span class="st">&quot;18-64&quot;</span></span>
-<span id="cb41-99"><a href="#cb41-99" aria-hidden="true" tabindex="-1"></a>        , age_in_years <span class="sc">&gt;=</span> <span class="dv">65</span> <span class="sc">~</span> <span class="st">&quot;65 +&quot;</span></span>
-<span id="cb41-100"><a href="#cb41-100" aria-hidden="true" tabindex="-1"></a>        , <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.character</span>(<span class="cn">NA</span>)</span>
-<span id="cb41-101"><a href="#cb41-101" aria-hidden="true" tabindex="-1"></a>      )</span>
-<span id="cb41-102"><a href="#cb41-102" aria-hidden="true" tabindex="-1"></a>    ]</span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as.POSIXct</span>(</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    data<span class="sc">$</span>guidewire_datetime</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  , <span class="at">format=</span><span class="st">&#39;%Y-%m-%d %H:%M&#39;</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  , <span class="at">tz=</span><span class="st">&#39;GMT&#39;</span>)</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="fu">as.Date</span>(data<span class="sc">$</span>diag_ecg_date_time, <span class="at">format=</span><span class="st">&#39;%Y-%m-%d&#39;</span>)</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>get_datetime <span class="ot">&lt;-</span> <span class="cf">function</span>(text){</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.POSIXct</span>(</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">trimws</span>(text)</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>      , <span class="at">format =</span> <span class="st">&quot;%Y-%m-%d %H:%M&quot;</span></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>      , <span class="at">tz =</span> <span class="st">&quot;GMT&quot;</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>      , <span class="at">origin =</span> <span class="st">&#39;1970-01-01&#39;</span></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>get_ed_arrival <span class="ot">&lt;-</span> <span class="cf">function</span>(text){</span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.POSIXct</span>(</span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a>        <span class="fu">trimws</span>(text)</span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>      , <span class="at">format =</span> <span class="st">&quot;%m/%d/%y %H%M&quot;</span></span>
+<span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a>      , <span class="at">tz =</span> <span class="st">&quot;GMT&quot;</span></span>
+<span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a>      , <span class="at">origin =</span> <span class="st">&#39;1970-01-01&#39;</span></span>
+<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb43-24"><a href="#cb43-24" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb43-25"><a href="#cb43-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-26"><a href="#cb43-26" aria-hidden="true" tabindex="-1"></a>tf <span class="ot">&lt;-</span> tf[</span>
+<span id="cb43-27"><a href="#cb43-27" aria-hidden="true" tabindex="-1"></a>  , datetime_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">get_ed_arrival</span>(ed_arrival_time_str)</span>
+<span id="cb43-28"><a href="#cb43-28" aria-hidden="true" tabindex="-1"></a>][, year_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">format</span>(datetime_ed_arrival, <span class="st">&quot;%Y&quot;</span>)</span>
+<span id="cb43-29"><a href="#cb43-29" aria-hidden="true" tabindex="-1"></a>  ][, month_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">format</span>(datetime_ed_arrival, <span class="st">&quot;%m&quot;</span>)</span>
+<span id="cb43-30"><a href="#cb43-30" aria-hidden="true" tabindex="-1"></a>  ][, yearmonth_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">format</span>(datetime_ed_arrival, <span class="st">&quot;%Y%m&quot;</span>)</span>
+<span id="cb43-31"><a href="#cb43-31" aria-hidden="true" tabindex="-1"></a>    ][, weekdays_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">weekdays</span>(datetime_ed_arrival)</span>
+<span id="cb43-32"><a href="#cb43-32" aria-hidden="true" tabindex="-1"></a>      ][, weekdays_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">factor</span>(</span>
+<span id="cb43-33"><a href="#cb43-33" aria-hidden="true" tabindex="-1"></a>              weekdays_ed_arrival</span>
+<span id="cb43-34"><a href="#cb43-34" aria-hidden="true" tabindex="-1"></a>            , <span class="at">levels =</span> <span class="fu">c</span>(</span>
+<span id="cb43-35"><a href="#cb43-35" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;Sunday&quot;</span></span>
+<span id="cb43-36"><a href="#cb43-36" aria-hidden="true" tabindex="-1"></a>                , <span class="st">&quot;Monday&quot;</span></span>
+<span id="cb43-37"><a href="#cb43-37" aria-hidden="true" tabindex="-1"></a>                , <span class="st">&quot;Tuesday&quot;</span></span>
+<span id="cb43-38"><a href="#cb43-38" aria-hidden="true" tabindex="-1"></a>                , <span class="st">&quot;Wednesday&quot;</span></span>
+<span id="cb43-39"><a href="#cb43-39" aria-hidden="true" tabindex="-1"></a>                , <span class="st">&quot;Thursday&quot;</span></span>
+<span id="cb43-40"><a href="#cb43-40" aria-hidden="true" tabindex="-1"></a>                , <span class="st">&quot;Friday&quot;</span></span>
+<span id="cb43-41"><a href="#cb43-41" aria-hidden="true" tabindex="-1"></a>                , <span class="st">&quot;Saturday&quot;</span></span>
+<span id="cb43-42"><a href="#cb43-42" aria-hidden="true" tabindex="-1"></a>              )</span>
+<span id="cb43-43"><a href="#cb43-43" aria-hidden="true" tabindex="-1"></a>          )</span>
+<span id="cb43-44"><a href="#cb43-44" aria-hidden="true" tabindex="-1"></a>        ][, weekdays_ed_arrival_n <span class="sc">:</span><span class="er">=</span> <span class="fu">as.numeric</span>(weekdays_ed_arrival)</span>
+<span id="cb43-45"><a href="#cb43-45" aria-hidden="true" tabindex="-1"></a>          ][, hour_ed_arrival <span class="sc">:</span><span class="er">=</span> data.table<span class="sc">::</span><span class="fu">hour</span>(datetime_ed_arrival)</span>
+<span id="cb43-46"><a href="#cb43-46" aria-hidden="true" tabindex="-1"></a>          ][, minute_ed_arrival <span class="sc">:</span><span class="er">=</span> data.table<span class="sc">::</span><span class="fu">minute</span>(datetime_ed_arrival)</span>
+<span id="cb43-47"><a href="#cb43-47" aria-hidden="true" tabindex="-1"></a>            ][, hour_ed_arrival_c <span class="sc">:</span><span class="er">=</span> <span class="fu">strftime</span>(datetime_ed_arrival, <span class="at">format =</span> <span class="st">&quot;%H&quot;</span>, <span class="at">tz =</span> <span class="st">&quot;GMT&quot;</span>)</span>
+<span id="cb43-48"><a href="#cb43-48" aria-hidden="true" tabindex="-1"></a>              ][, minute_ed_arrival_c <span class="sc">:</span><span class="er">=</span> <span class="fu">strftime</span>(datetime_ed_arrival, <span class="at">format =</span> <span class="st">&quot;%M&quot;</span>, <span class="at">tz =</span> <span class="st">&quot;GMT&quot;</span>)][, hour_ed_arrival_n <span class="sc">:</span><span class="er">=</span> hour_ed_arrival <span class="sc">+</span> minute_ed_arrival<span class="sc">/</span><span class="dv">60</span>]</span>
+<span id="cb43-49"><a href="#cb43-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-50"><a href="#cb43-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-51"><a href="#cb43-51" aria-hidden="true" tabindex="-1"></a>tf <span class="ot">&lt;-</span> tf[, flag_bussiness_hours <span class="sc">:</span><span class="er">=</span> <span class="fu">case_when</span>(</span>
+<span id="cb43-52"><a href="#cb43-52" aria-hidden="true" tabindex="-1"></a>               <span class="fu">is.na</span>(hour_ed_arrival) <span class="sc">~</span> <span class="fu">as.character</span>(<span class="cn">NA</span>)</span>
+<span id="cb43-53"><a href="#cb43-53" aria-hidden="true" tabindex="-1"></a>             , hour_ed_arrival <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">&quot;Non-Business Hours&quot;</span></span>
+<span id="cb43-54"><a href="#cb43-54" aria-hidden="true" tabindex="-1"></a>             , hour_ed_arrival <span class="sc">==</span> <span class="dv">17</span> <span class="sc">&amp;</span> minute_ed_arrival <span class="sc">&gt;=</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">&quot;Non-Business Hours&quot;</span></span>
+<span id="cb43-55"><a href="#cb43-55" aria-hidden="true" tabindex="-1"></a>             , hour_ed_arrival <span class="sc">&gt;</span> <span class="dv">17</span> <span class="sc">~</span> <span class="st">&quot;Non-Business Hours&quot;</span></span>
+<span id="cb43-56"><a href="#cb43-56" aria-hidden="true" tabindex="-1"></a>             , <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">&quot;Business Hours&quot;</span></span>
+<span id="cb43-57"><a href="#cb43-57" aria-hidden="true" tabindex="-1"></a>           )</span>
+<span id="cb43-58"><a href="#cb43-58" aria-hidden="true" tabindex="-1"></a>         ][, flag_bussiness_hours <span class="sc">:</span><span class="er">=</span> <span class="fu">factor</span>(</span>
+<span id="cb43-59"><a href="#cb43-59" aria-hidden="true" tabindex="-1"></a>                 flag_bussiness_hours</span>
+<span id="cb43-60"><a href="#cb43-60" aria-hidden="true" tabindex="-1"></a>               , <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">&quot;Business Hours&quot;</span>, <span class="st">&quot;Non-Business Hours&quot;</span>)</span>
+<span id="cb43-61"><a href="#cb43-61" aria-hidden="true" tabindex="-1"></a>             )]</span>
+<span id="cb43-62"><a href="#cb43-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-63"><a href="#cb43-63" aria-hidden="true" tabindex="-1"></a>tf <span class="ot">&lt;-</span> tf[</span>
+<span id="cb43-64"><a href="#cb43-64" aria-hidden="true" tabindex="-1"></a>  , flag_weekday <span class="sc">:</span><span class="er">=</span> <span class="fu">case_when</span>(</span>
+<span id="cb43-65"><a href="#cb43-65" aria-hidden="true" tabindex="-1"></a>        weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Tuesday&quot;</span>, <span class="st">&quot;Wednesday&quot;</span>, <span class="st">&quot;Thursday&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Weekday&quot;</span></span>
+<span id="cb43-66"><a href="#cb43-66" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Saturday&quot;</span>, <span class="st">&quot;Sunday&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Weekend&quot;</span></span>
+<span id="cb43-67"><a href="#cb43-67" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Friday&quot;</span>) <span class="sc">&amp;</span> hour_ed_arrival <span class="sc">==</span> <span class="dv">17</span> <span class="sc">&amp;</span> minute_ed_arrival <span class="sc">&gt;=</span> <span class="dv">1</span>  <span class="sc">~</span> <span class="st">&quot;Weekend&quot;</span></span>
+<span id="cb43-68"><a href="#cb43-68" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Friday&quot;</span>) <span class="sc">&amp;</span> hour_ed_arrival <span class="sc">&gt;</span> <span class="dv">17</span>  <span class="sc">~</span> <span class="st">&quot;Weekend&quot;</span></span>
+<span id="cb43-69"><a href="#cb43-69" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Friday&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Weekday&quot;</span></span>
+<span id="cb43-70"><a href="#cb43-70" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Monday&quot;</span>) <span class="sc">&amp;</span> hour_ed_arrival <span class="sc">==</span> <span class="dv">7</span> <span class="sc">&amp;</span> minute_ed_arrival <span class="sc">&lt;=</span> <span class="dv">59</span> <span class="sc">~</span> <span class="st">&quot;Weekend&quot;</span></span>
+<span id="cb43-71"><a href="#cb43-71" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Monday&quot;</span>) <span class="sc">&amp;</span> hour_ed_arrival <span class="sc">&lt;</span> <span class="dv">7</span> <span class="sc">~</span> <span class="st">&quot;Weekend&quot;</span></span>
+<span id="cb43-72"><a href="#cb43-72" aria-hidden="true" tabindex="-1"></a>      , weekdays_ed_arrival <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Monday&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Weekday&quot;</span></span>
+<span id="cb43-73"><a href="#cb43-73" aria-hidden="true" tabindex="-1"></a>      , <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.character</span>(<span class="cn">NA</span>)</span>
+<span id="cb43-74"><a href="#cb43-74" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb43-75"><a href="#cb43-75" aria-hidden="true" tabindex="-1"></a>][, flag_weekday <span class="sc">:</span><span class="er">=</span> <span class="fu">factor</span>(flag_weekday, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">&quot;Weekday&quot;</span>, <span class="st">&quot;Weekend&quot;</span>))</span>
+<span id="cb43-76"><a href="#cb43-76" aria-hidden="true" tabindex="-1"></a>  ][]</span>
+<span id="cb43-77"><a href="#cb43-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-78"><a href="#cb43-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-79"><a href="#cb43-79" aria-hidden="true" tabindex="-1"></a>fp <span class="ot">&lt;-</span> fp[</span>
+<span id="cb43-80"><a href="#cb43-80" aria-hidden="true" tabindex="-1"></a>    , datetime_proc_start <span class="sc">:</span><span class="er">=</span> <span class="fu">get_datetime</span>(proc_start_time_str)</span>
+<span id="cb43-81"><a href="#cb43-81" aria-hidden="true" tabindex="-1"></a>][, year_proc_start <span class="sc">:</span><span class="er">=</span> <span class="fu">format</span>(datetime_proc_start, <span class="st">&quot;%Y&quot;</span>)</span>
+<span id="cb43-82"><a href="#cb43-82" aria-hidden="true" tabindex="-1"></a>  ][, yearmonth_proc_start <span class="sc">:</span><span class="er">=</span> <span class="fu">format</span>(datetime_proc_start, <span class="st">&quot;%Y%m&quot;</span>)]</span>
+<span id="cb43-83"><a href="#cb43-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-84"><a href="#cb43-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-85"><a href="#cb43-85" aria-hidden="true" tabindex="-1"></a>vs4 <span class="ot">&lt;-</span> vs4[</span>
+<span id="cb43-86"><a href="#cb43-86" aria-hidden="true" tabindex="-1"></a>  , ed_arrival_to_pas_discharge <span class="sc">:</span><span class="er">=</span> <span class="fu">as.numeric</span>(<span class="fu">difftime</span>(</span>
+<span id="cb43-87"><a href="#cb43-87" aria-hidden="true" tabindex="-1"></a>        datetime_pas_discharge</span>
+<span id="cb43-88"><a href="#cb43-88" aria-hidden="true" tabindex="-1"></a>      , datetime_ed_arrival</span>
+<span id="cb43-89"><a href="#cb43-89" aria-hidden="true" tabindex="-1"></a>      , <span class="at">units =</span> <span class="st">&quot;hours&quot;</span></span>
+<span id="cb43-90"><a href="#cb43-90" aria-hidden="true" tabindex="-1"></a>    ))</span>
+<span id="cb43-91"><a href="#cb43-91" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb43-92"><a href="#cb43-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-93"><a href="#cb43-93" aria-hidden="true" tabindex="-1"></a>vs4 <span class="ot">&lt;-</span> vs4[</span>
+<span id="cb43-94"><a href="#cb43-94" aria-hidden="true" tabindex="-1"></a>    , date_ed_arrival <span class="sc">:</span><span class="er">=</span> <span class="fu">date</span>(datetime_ed_arrival)</span>
+<span id="cb43-95"><a href="#cb43-95" aria-hidden="true" tabindex="-1"></a>][, age_in_years <span class="sc">:</span><span class="er">=</span> <span class="fu">as.numeric</span>(date_ed_arrival <span class="sc">-</span> dob)<span class="sc">/</span><span class="fl">365.25</span></span>
+<span id="cb43-96"><a href="#cb43-96" aria-hidden="true" tabindex="-1"></a>  ][, age_group <span class="sc">:</span><span class="er">=</span> <span class="fu">case_when</span>(</span>
+<span id="cb43-97"><a href="#cb43-97" aria-hidden="true" tabindex="-1"></a>          age_in_years <span class="sc">&lt;</span> <span class="dv">18</span> <span class="sc">~</span> <span class="st">&quot;&lt; 18&quot;</span></span>
+<span id="cb43-98"><a href="#cb43-98" aria-hidden="true" tabindex="-1"></a>        , age_in_years <span class="sc">&lt;</span> <span class="dv">65</span> <span class="sc">~</span> <span class="st">&quot;18-64&quot;</span></span>
+<span id="cb43-99"><a href="#cb43-99" aria-hidden="true" tabindex="-1"></a>        , age_in_years <span class="sc">&gt;=</span> <span class="dv">65</span> <span class="sc">~</span> <span class="st">&quot;65 +&quot;</span></span>
+<span id="cb43-100"><a href="#cb43-100" aria-hidden="true" tabindex="-1"></a>        , <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.character</span>(<span class="cn">NA</span>)</span>
+<span id="cb43-101"><a href="#cb43-101" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb43-102"><a href="#cb43-102" aria-hidden="true" tabindex="-1"></a>    ]</span></code></pre></div>
 </div>
 <div id="sequential-date" class="section level2">
 <h2>Sequential Date</h2>
-<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>sq <span class="ot">&lt;-</span> <span class="fu">seq.Date</span>(<span class="at">from =</span> <span class="fu">as.Date</span>(<span class="st">&#39;2019-07-01&#39;</span>)</span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>       , <span class="at">to =</span> <span class="fu">as.Date</span>(<span class="st">&#39;2019-07-10&#39;</span>)</span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>       , <span class="at">by =</span> <span class="st">&#39;days&#39;</span></span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>         )</span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(sq)</span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>sq <span class="ot">&lt;-</span> <span class="fu">seq.Date</span>(<span class="at">from =</span> <span class="fu">as.Date</span>(<span class="st">&#39;2019-07-01&#39;</span>)</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>       , <span class="at">to =</span> <span class="fu">as.Date</span>(<span class="st">&#39;2019-07-10&#39;</span>)</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>       , <span class="at">by =</span> <span class="st">&#39;days&#39;</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>         )</span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(sq)</span></code></pre></div>
 <p>[1] “2019-07-01” “2019-07-02” “2019-07-03” “2019-07-04” “2019-07-05” [6] “2019-07-06” “2019-07-07” “2019-07-08” “2019-07-09” “2019-07-10”</p>
-<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>sqt <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">as.character</span>(sq), <span class="st">&quot; 00:00:00&quot;</span>)</span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(sqt)</span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>sqt <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">as.character</span>(sq), <span class="st">&quot; 00:00:00&quot;</span>)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(sqt)</span></code></pre></div>
 <p>[1] “2019-07-01 00:00:00” “2019-07-02 00:00:00” “2019-07-03 00:00:00” [4] “2019-07-04 00:00:00” “2019-07-05 00:00:00” “2019-07-06 00:00:00” [7] “2019-07-07 00:00:00” “2019-07-08 00:00:00” “2019-07-09 00:00:00” [10] “2019-07-10 00:00:00”</p>
-<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>sqt <span class="ot">&lt;-</span> <span class="fu">as.POSIXct</span>(sqt, <span class="st">&quot;%Y-%m-%d %H:%M:%S&quot;</span>)</span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(sqt)</span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>sqt <span class="ot">&lt;-</span> <span class="fu">as.POSIXct</span>(sqt, <span class="st">&quot;%Y-%m-%d %H:%M:%S&quot;</span>)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(sqt)</span></code></pre></div>
 <p>[1] “POSIXct” “POSIXt”</p>
-<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(sqt)</span></code></pre></div>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(sqt)</span></code></pre></div>
 <p>[1] “2019-07-01” “2019-07-02” “2019-07-03” “2019-07-04” “2019-07-05” [6] “2019-07-06” “2019-07-07” “2019-07-08” “2019-07-09” “2019-07-10”</p>
-<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hour</span>(sqt)</span></code></pre></div>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hour</span>(sqt)</span></code></pre></div>
 <p>[1] 0 0 0 0 0 0 0 0 0 0</p>
 </div>
 </div>
@@ -1370,22 +1835,22 @@ E+
 <h1>Scale/One-hot encoding/Dummy Variable</h1>
 <div id="scale-and-unscale" class="section level2">
 <h2>Scale and Unscale</h2>
-<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>unscale <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    x <span class="sc">*</span> <span class="fu">attr</span>(x, <span class="st">&quot;scaled:scale&quot;</span>) <span class="sc">+</span> <span class="fu">attr</span>(x, <span class="st">&quot;scaled:center&quot;</span>)</span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="cn">NA</span>)</span>
-<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>vs <span class="ot">&lt;-</span> <span class="fu">scale</span>(v)</span>
-<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>vs2 <span class="ot">&lt;-</span> (v <span class="sc">-</span> <span class="fu">mean</span>(v)) <span class="sc">/</span> <span class="fu">sd</span>(v)</span>
-<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>v2 <span class="ot">&lt;-</span> <span class="fu">unscale</span>(vs)</span>
-<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">cbind</span>(v, vs, vs2, v2))</span></code></pre></div>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>unscale <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    x <span class="sc">*</span> <span class="fu">attr</span>(x, <span class="st">&quot;scaled:scale&quot;</span>) <span class="sc">+</span> <span class="fu">attr</span>(x, <span class="st">&quot;scaled:center&quot;</span>)</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="cn">NA</span>)</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>vs <span class="ot">&lt;-</span> <span class="fu">scale</span>(v)</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>vs2 <span class="ot">&lt;-</span> (v <span class="sc">-</span> <span class="fu">mean</span>(v)) <span class="sc">/</span> <span class="fu">sd</span>(v)</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>v2 <span class="ot">&lt;-</span> <span class="fu">unscale</span>(vs)</span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">cbind</span>(v, vs, vs2, v2))</span></code></pre></div>
 <pre><code>   v            vs2   </code></pre>
 <p>[1,] 1 -1.4863011 NA 1 [2,] 2 -1.1560120 NA 2 [3,] 3 -0.8257228 NA 3 [4,] 4 -0.4954337 NA 4 [5,] 5 -0.1651446 NA 5 [6,] 6 0.1651446 NA 6 [7,] 7 0.4954337 NA 7 [8,] 8 0.8257228 NA 8 [9,] 9 1.1560120 NA 9 [10,] 10 1.4863011 NA 10 [11,] NA NA NA NA</p>
-<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(vs)</span></code></pre></div>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(vs)</span></code></pre></div>
 <p>num [1:11, 1] -1.486 -1.156 -0.826 -0.495 -0.165 … - attr(<em>, “scaled:center”)= num 5.5 - attr(</em>, “scaled:scale”)= num 3.03</p>
-<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">attr</span>(vs, <span class="st">&quot;scaled:center&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">attr</span>(vs, <span class="st">&quot;scaled:center&quot;</span>)</span></code></pre></div>
 <p>[1] 5.5</p>
-<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">attr</span>(vs, <span class="st">&quot;scaled:scale&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">attr</span>(vs, <span class="st">&quot;scaled:scale&quot;</span>)</span></code></pre></div>
 <p>[1] 3.02765</p>
 </div>
 <div id="one-hot-encoding" class="section level2">
@@ -1396,13 +1861,13 @@ E+
 <li>Single impute numeric variables as median and add a column indicating missing values</li>
 <li>Add NA level to categorical variables</li>
 </ul>
-<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Wu)</span>
-<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
-<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">var1=</span><span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="cn">NA</span>), <span class="dv">10</span>, <span class="at">replace=</span><span class="cn">TRUE</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>))</span>
-<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var2=</span><span class="fu">sample</span>(<span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="fu">rep</span>(<span class="cn">NA</span>, <span class="dv">5</span>)), <span class="dv">10</span>)</span>
-<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var3=</span><span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>), <span class="at">each=</span><span class="dv">5</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>, <span class="st">&quot;Yellow&quot;</span>))</span>
-<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>                )</span>
-<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>t <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Wu)</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">var1=</span><span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="cn">NA</span>), <span class="dv">10</span>, <span class="at">replace=</span><span class="cn">TRUE</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>))</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var2=</span><span class="fu">sample</span>(<span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="fu">rep</span>(<span class="cn">NA</span>, <span class="dv">5</span>)), <span class="dv">10</span>)</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var3=</span><span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>), <span class="at">each=</span><span class="dv">5</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>, <span class="st">&quot;Yellow&quot;</span>))</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>t <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
 <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
 <thead>
 <tr>
@@ -1530,12 +1995,12 @@ Green
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>ti <span class="ot">&lt;-</span> Wu<span class="sc">::</span><span class="fu">one_hot</span>(t</span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>                , <span class="at">vars_numeric =</span> <span class="fu">c</span>(<span class="st">&quot;var2&quot;</span>)</span>
-<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>                , <span class="at">vars_factor =</span> <span class="fu">c</span>(<span class="st">&quot;var1&quot;</span>, <span class="st">&quot;var3&quot;</span>)</span>
-<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>                  )</span>
-<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>ti <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>ti <span class="ot">&lt;-</span> Wu<span class="sc">::</span><span class="fu">one_hot</span>(t</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>                , <span class="at">vars_numeric =</span> <span class="fu">c</span>(<span class="st">&quot;var2&quot;</span>)</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>                , <span class="at">vars_factor =</span> <span class="fu">c</span>(<span class="st">&quot;var1&quot;</span>, <span class="st">&quot;var3&quot;</span>)</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>                  )</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>ti <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
 <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
 <thead>
 <tr>
@@ -1769,24 +2234,24 @@ var3-Red
 <li>Only work on factors, not characters;</li>
 <li>DEFAULT = “auto” encodes all unordered factor columns</li>
 </ul>
-<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">var1=</span><span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="cn">NA</span>), <span class="dv">10</span>, <span class="at">replace=</span><span class="cn">TRUE</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>))</span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var2=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">10</span></span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>                , <span class="at">var3=</span><span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>), <span class="at">each=</span><span class="dv">5</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>, <span class="st">&quot;Yellow&quot;</span>))</span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>                )</span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(t)</span></code></pre></div>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">var1=</span><span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="cn">NA</span>), <span class="dv">10</span>, <span class="at">replace=</span><span class="cn">TRUE</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>))</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var2=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">10</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>                , <span class="at">var3=</span><span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>), <span class="at">each=</span><span class="dv">5</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>, <span class="st">&quot;Yellow&quot;</span>))</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(t)</span></code></pre></div>
 <pre><code>var1 var2  var3</code></pre>
 <p>1: <NA> 1 Red 2: <NA> 2 Red 3: A 3 Red 4: <NA> 4 Red 5: <NA> 5 Red 6: <NA> 6 Green 7: C 7 Green 8: <NA> 8 Green 9: C 9 Green 10: C 10 Green</p>
-<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>mltools<span class="sc">::</span><span class="fu">one_hot</span>(t)</span></code></pre></div>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>mltools<span class="sc">::</span><span class="fu">one_hot</span>(t)</span></code></pre></div>
 <pre><code>var1_A var1_B var1_C var2 var3_Red var3_Green var3_Yellow</code></pre>
 <p>1: NA NA NA 1 1 0 0 2: NA NA NA 2 1 0 0 3: 1 0 0 3 1 0 0 4: NA NA NA 4 1 0 0 5: NA NA NA 5 1 0 0 6: NA NA NA 6 0 1 0 7: 0 0 1 7 0 1 0 8: NA NA NA 8 0 1 0 9: 0 0 1 9 0 1 0 10: 0 0 1 10 0 1 0</p>
-<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>mltools<span class="sc">::</span><span class="fu">one_hot</span>(t, <span class="at">sparsifyNAs =</span> <span class="cn">TRUE</span>, <span class="at">naCols =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>mltools<span class="sc">::</span><span class="fu">one_hot</span>(t, <span class="at">sparsifyNAs =</span> <span class="cn">TRUE</span>, <span class="at">naCols =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <pre><code>var1_NA var1_A var1_B var1_C var2 var3_Red var3_Green var3_Yellow</code></pre>
 <p>1: 1 0 0 0 1 1 0 0 2: 1 0 0 0 2 1 0 0 3: 0 1 0 0 3 1 0 0 4: 1 0 0 0 4 1 0 0 5: 1 0 0 0 5 1 0 0 6: 1 0 0 0 6 0 1 0 7: 0 0 0 1 7 0 1 0 8: 1 0 0 0 8 0 1 0 9: 0 0 0 1 9 0 1 0 10: 0 0 0 1 10 0 1 0</p>
-<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>mltools<span class="sc">::</span><span class="fu">one_hot</span>(t, <span class="at">sparsifyNAs =</span> <span class="cn">TRUE</span>, <span class="at">naCols =</span> <span class="cn">TRUE</span>, <span class="at">dropCols =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>mltools<span class="sc">::</span><span class="fu">one_hot</span>(t, <span class="at">sparsifyNAs =</span> <span class="cn">TRUE</span>, <span class="at">naCols =</span> <span class="cn">TRUE</span>, <span class="at">dropCols =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 <pre><code>var1 var1_NA var1_A var1_B var1_C var2  var3 var3_Red var3_Green</code></pre>
 <p>1: <NA> 1 0 0 0 1 Red 1 0 2: <NA> 1 0 0 0 2 Red 1 0 3: A 0 1 0 0 3 Red 1 0 4: <NA> 1 0 0 0 4 Red 1 0 5: <NA> 1 0 0 0 5 Red 1 0 6: <NA> 1 0 0 0 6 Green 0 1 7: C 0 0 0 1 7 Green 0 1 8: <NA> 1 0 0 0 8 Green 0 1 9: C 0 0 0 1 9 Green 0 1 10: C 0 0 0 1 10 Green 0 1 var3_Yellow 1: 0 2: 0 3: 0 4: 0 5: 0 6: 0 7: 0 8: 0 9: 0 10: 0</p>
-<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>mltools<span class="sc">::</span><span class="fu">one_hot</span>(t, <span class="at">sparsifyNAs =</span> <span class="cn">TRUE</span>, <span class="at">naCols =</span> <span class="cn">TRUE</span>, <span class="at">dropCols =</span> <span class="cn">FALSE</span>, <span class="at">dropUnusedLevels=</span><span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>mltools<span class="sc">::</span><span class="fu">one_hot</span>(t, <span class="at">sparsifyNAs =</span> <span class="cn">TRUE</span>, <span class="at">naCols =</span> <span class="cn">TRUE</span>, <span class="at">dropCols =</span> <span class="cn">FALSE</span>, <span class="at">dropUnusedLevels=</span><span class="cn">TRUE</span>)</span></code></pre></div>
 <pre><code>var1 var1_NA var1_A var1_C var2  var3 var3_Red var3_Green</code></pre>
 <p>1: <NA> 1 0 0 1 Red 1 0 2: <NA> 1 0 0 2 Red 1 0 3: A 0 1 0 3 Red 1 0 4: <NA> 1 0 0 4 Red 1 0 5: <NA> 1 0 0 5 Red 1 0 6: <NA> 1 0 0 6 Green 0 1 7: C 0 0 1 7 Green 0 1 8: <NA> 1 0 0 8 Green 0 1 9: C 0 0 1 9 Green 0 1 10: C 0 0 1 10 Green 0 1</p>
 </div>
@@ -1797,16 +2262,16 @@ var3-Red
 <li>fullRank remove referral level</li>
 <li>Cannot drop unused levels</li>
 </ul>
-<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span>
-<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
-<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">var1=</span><span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="cn">NA</span>), <span class="dv">10</span>, <span class="at">replace=</span><span class="cn">TRUE</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>))</span>
-<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var2=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">10</span></span>
-<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var3=</span><span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>), <span class="at">each=</span><span class="dv">5</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>, <span class="st">&quot;Yellow&quot;</span>))</span>
-<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var4=</span><span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Low&quot;</span>, <span class="st">&quot;High&quot;</span>), <span class="dv">5</span>)</span>
-<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>                )</span>
-<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>t <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">var1=</span><span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="cn">NA</span>), <span class="dv">10</span>, <span class="at">replace=</span><span class="cn">TRUE</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>))</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var2=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">10</span></span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var3=</span><span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>), <span class="at">each=</span><span class="dv">5</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>, <span class="st">&quot;Yellow&quot;</span>))</span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var4=</span><span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Low&quot;</span>, <span class="st">&quot;High&quot;</span>), <span class="dv">5</span>)</span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>t <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
 <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
 <thead>
 <tr>
@@ -1967,10 +2432,10 @@ High
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb65"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>dummy <span class="ot">&lt;-</span> <span class="fu">dummyVars</span>(<span class="st">&quot; ~ .&quot;</span>, <span class="at">data=</span>t, <span class="at">fullRank =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>tdummy <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">predict</span>(dummy, t))</span>
-<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>tdummy <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb67"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>dummy <span class="ot">&lt;-</span> <span class="fu">dummyVars</span>(<span class="st">&quot; ~ .&quot;</span>, <span class="at">data=</span>t, <span class="at">fullRank =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>tdummy <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">predict</span>(dummy, t))</span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>tdummy <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
 <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
 <thead>
 <tr>
@@ -2201,7 +2666,7 @@ NA
 </div>
 <div id="model.matrix" class="section level2">
 <h2>model.matrix</h2>
-<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">model.matrix</span>(<span class="sc">~</span><span class="dv">0</span> <span class="sc">+</span> ., t)</span></code></pre></div>
+<div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">model.matrix</span>(<span class="sc">~</span><span class="dv">0</span> <span class="sc">+</span> ., t)</span></code></pre></div>
 <p>var1A var1B var1C var2 var3Green var3Yellow var4Low 3 0 1 0 3 0 0 1 4 0 1 0 4 0 0 0 5 1 0 0 5 0 0 1 7 0 0 1 7 1 0 1 8 1 0 0 8 1 0 0 9 1 0 0 9 1 0 1 10 0 1 0 10 1 0 0 attr(,“assign”) [1] 1 1 1 2 3 3 4 attr(,“contrasts”) attr(,“contrasts”)$var1 [1] “contr.treatment”</p>
 <p>attr(,“contrasts”)$var3 [1] “contr.treatment”</p>
 <p>attr(,“contrasts”)$var4 [1] “contr.treatment”</p>
@@ -2216,12 +2681,12 @@ NA
 </ul>
 <div id="mice-package" class="section level2">
 <h2>mice package</h2>
-<div class="sourceCode" id="cb67"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mice)</span>
-<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> airquality</span>
-<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>data[<span class="dv">4</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>,<span class="dv">7</span>)</span>
-<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>data[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,<span class="dv">4</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
-<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mice)</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> airquality</span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>data[<span class="dv">4</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>,<span class="dv">7</span>)</span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>data[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,<span class="dv">4</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
 <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
 <thead>
 <tr>
@@ -5308,25 +5773,25 @@ NA
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">md.pattern</span>(data, <span class="at">plot=</span><span class="cn">FALSE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">md.pattern</span>(data, <span class="at">plot=</span><span class="cn">FALSE</span>)</span></code></pre></div>
 <pre><code>Month Day Temp Solar.R Wind Ozone   </code></pre>
 <p>104 1 1 1 1 1 1 0 34 1 1 1 1 1 0 1 3 1 1 1 1 0 1 1 1 1 1 1 1 0 0 2 4 1 1 1 0 1 1 1 1 1 1 1 0 1 0 2 1 1 1 1 0 0 1 2 3 1 1 0 1 1 1 1 1 1 1 0 1 0 1 2 1 1 1 0 0 0 0 4 0 0 5 7 7 37 56</p>
-<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">md.pattern</span>(data)</span></code></pre></div>
+<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="fu">md.pattern</span>(data)</span></code></pre></div>
 <p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABgAAAAPACAIAAAB8XCUvAAAACXBIWXMAAB2HAAAdhwGP5fFlAAAgAElEQVR4nOzdd5wV5d034HtZFpBeFiGKSrEQAopYUB9RFAWJBQsiilGTYDexgImiGLGAYtQYW4z4qLEXQBEBuygiIBpEhECiSJXeV4Et5/1jnsznvLsLUnb3wHBdf83O3DP7G07b8+UuWalUKgAAAACQXJUyXQAAAAAA5UsABAAAAJBwAiAAAACAhBMAAQAAACScAAgAAAAg4QRAAAAAAAknAAIAAABIOAEQAAAAQMIJgAAAAAASTgAEAAAAkHACIAAAAICEEwABAAAAJJwACAAAACDhBEAAAAAACScAAgAAAEg4ARAAAABAwgmAAAAAABJOAAQAAACQcAIgAAAAgIQTAAEAAAAknAAIAAAAIOEEQAAAAAAJJwACAAAASDgBEAAAAEDCCYAAAAAAEk4ABAAAAJBwAiAAAACAhBMAAQAAACScAAgAAAAg4QRAAAAAAAknAAIAAABIOAEQAAAAQMIJgAAAAAASTgAEAAAAkHACIAAAAICEEwABAAAAJJwACAAAACDhBEAAAAAACScAAgAAAEg4ARAAAABAwgmAAAAAABJOAAQAAACQcAIgAAAAgIQTAAEAAAAknAAIAAAAIOEEQAAAAAAJJwACAAAASDgBEAAAAEDCCYAAAAAAEk4ABAAAAJBwAiAAAACAhBMAAQAAACScAAgAAAAg4QRAAAAAAAknAAIAAABIOAEQAAAAQMIJgAAAAAASTgAEAAAAkHACIAAAAICEEwABAAAAJJwACAAAACDhBEAAAAAACScAAgAAAEg4ARAAZebiiy/O+q8zzjhjS07Jz8+vX79+fNZLL71U3kVugw4dOmRlZe21115be+LMmTOzNq1+/fq/+MUvevfuPWrUqFQqVR6Vb4OhQ4dupuZN2W233TJdeCk++uijK664om3btrm5uTk5OfXr12/ZsuX555///PPPb9y4sQx/UZs2bbKystq0aVOG19wqGzZs2PwDVKlSpSZNmhx77LG//e1vx4wZE5/Yt2/fqEGDBg2Kioo2df0uXbpEza644ooKuaH/T/TP27p169dff713794HHXRQ48aNq1atuueee7Zr1+6KK64YNWpU2T6gAJBIAiAAysXo0aNXr179k83eeeedlStXVkA9P+mtt96KvuI+/fTTFfMbV65cOX369CeeeOLkk08+6qijpk6dWjG/d1fw7bffHnPMMccee+yjjz765ZdfLl++vKCgYOXKlTNnznzuued69erVrFmzkSNHZrrMipNKpRYsWPDRRx/97//+b9euXTt37hy97t56662owYoVKyZNmlTquUVFRRMmTIi2jz/++BDC4sWL42jpk08+qZA7CLNmzTr99NOfeOKJqVOnLl68eOPGjQsXLvznP//56KOPnnzyyS1btnz++ed3nCAVAHZAlTNdAADJtGHDhuHDh1900UWbb/byyy9XSDkZVr9+/dNOOy19z8aNGxcvXvzPf/5zxYoVIYQJEyYcffTRb775ZocOHTJU4//ZZ599Sn3Uxo4dO3v27BDC8ccfv/feexc7mpOTUwG1baFZs2Z16NBhyZIl0Y+HHHJIq1at9thjjwULFsyePXvixIkFBQULFy487bTTnn766V/96leZrbZsValS5bzzzou2P/roo2+//TaEsN9++x100EFz5syZMWPGunXrQgjvvPPOmWee+eyzz06bNi0+d/To0UcccUTJa06bNm3NmjUhhKysrI4dO1bAXaTLy8ubM2dOCCE/Pz/a06JFi/32269evXrLli2bOXPm3LlzQwizZ8/u1avXiBEjnnrqqWrVqlVwkQCwc0gBQBnp3bt39OGSnZ0dQujSpcvm22/YsKFOnTpx+xDCiy++WDGllhSPi3nqqaeKHTr66KNDCE2aNNnaa/7rX/+Krtm2bdtSGxQUFLzxxhv7779/1KxWrVpz5szZlurLX8+ePaMiX3vttUzXsjmFhYXt2rWLSj344IM/+eSTYg2++eabXr16RQ2qVas2e/bs7f+lrVu3DiG0bt16+y+1bdavXx/dUd26deOdQ4YMiXYecMAB0Z4VK1ZceeWV8R+BV111VfrfhIcddlipF3/kkUeiBgcddFC0Z9GiRfFZ48aNK9f7at++ffy7fvOb30yfPr1YmylTppx77rlxm44dO+bn55dfSQCw8zIEDICyF3UTeO+995YuXbqZZm+99VY0TKziuxXsILKzs0855ZTPPvss6nmxdu3ayy+/PNNF7dxGjx79xRdfhBD22muvMWPGHHXUUcUaNG/e/Nlnnz399NNDCOvXr7/vvvsyUGWF6NSpU7Qxc+bM6JVYr169Bx988Jhjjon2R4PgsrOzDz300BDC5MmTS33BxoO8ovFfIYS6deu++l8tW7Ysv1v43e9+N3HixGi7WbNmTzzxxM9//vNibQ466KDnn39+xIgR1atXDyF8+OGH/fr1K7+SAGDnJQACoOxFvUUKCgpeffXVzTSLpnxu2LDhcccdV0GV7ZBq1679yiuv1KxZM4QwatQokwFtj3hmn9///ve77777pprFvVrefPPNiihrW61evfrFF1984IEHFi5cuLXnNm3atHnz5tF2HOJkZWWdeeaZ0fb8+fNDCO3bt49esKlU6u233y55nfHjx0cbcQBUtWrVs/6rQYMGW1vYFvroo48ef/zxqOYQQo0aNTbT+NRTTx0+fHjU8s9//vNXX31VTlUBwM5LAARA2Wvbtu0BBxwQQnjxxRc31Wb9+vUjRowIIXTv3r1y5c3NSVdYWPiPf/yjW7due+21V9WqVRs0aNCuXbs//vGP3333Xanto0W7Tj311OjcJ5988phjjmnUqFHNmjUPPvjgSy65pNiJ1157bVZW1kknnRT9eNFFF0Wz20YzjxSTn5//wAMPHHnkkbm5uTVr1mzbtm3v3r2jmVa2R5MmTeKxOX//+99LNli3bt0DDzzQqVOn/fffv3r16g0bNmzXrt0555zz7rvvpjf77LPPouLPP//8Tf2u//mf/8nKysrOzl6wYMF2ll2qTz755OKLL95vv/1q1KiRm5vbvn3766+/vtR/zBDCiSeeGD9Yy5Ytu+mmm37+85/XqFGjQYMGHTp0eO655+KWY8aMOfXUUxs3blytWrUDDjigZ8+e8Qi72NixY//2t79F2+3atZs0adKvfvWrZs2aVatWbc899/zlL38ZzxP8s5/9bM899wwhzJkzp+TqV1v7lNuMLXzgYtGzNxrTNGbMmH333ffcc8+95pprZsyYsbW/OqRFNuPGjYt3xuvZFRQUhBC6dOnStWvXaM/o0aOLXeH777+P5n7Kzs6Ouw6FTSyNt7UvvXTz5s374x//eOCBB9apU6d27doHHnjghRdeGB3Kzc3dkpvt3Llz9CJKpVIDBw6M97/00ktbspLd119/XeyC5f3OU8xWvXAAYFtkeAgaAAkSzwE0efLkP/3pTyGErKysefPmldp42LBhUeMPP/zwrrvuirZLzgH0zTffRBOslFS1atU///nPJa8cTdlzyimnrF69unPnzlHjRo0aVapUKT5x+PDhcftrrrmm1Ot/99136Rds0qTJokWL4vll0lWpUmXYsGElK/nJOYDSxdPxtmzZstih4cOH161bd1Mf5SeccMKGDRvixk2bNg0h1K5dO31n7Lvvvot6SXTq1OknS0q3JXMA/fjjj/H0OsVkZ2ffeuutJU854YQTogfryy+/bNKkSQihTp066YvKX3vttUVFRXE61rBhw/hxzMnJeffdd9Ov9uGHH8Yndu/ePW6Z7uijj16+fHkqlfryyy/HjRs3bty4goKC9Itsw1NuU3MAbdUDF4mebD179vz444+rVq0aNy52p8WUOgdQKpV64YUXov3t27ePd/7lL39JL2PChAmpVCqa2Ds3N7ewsDD9Cq+88krJK6Q2MTHW1r70Yk8//XQ0gKuk3XbbLRr2tSVTLM2bNy+aj7xy5cqrV6+Odm4mhk43bdq09EtVwDtPbBteOACwDQRAAJSZ9AAo7rBw7733ltr4nHPOCSHssccehYWFmwqAvv/++8aNG0eHatWq1aVLlz/+8Y8XXnhh1L0oMnjw4GJXjr6GnXzyyd26ddttt90ee+yxZcuWpVKpvLy8QYMGRRNO161b9/vvv4/aL1iwYMqUKQ8//HB0wdtuu23KlClTpkzZuHFj+gVzc3Oj9Kd169Z9+/YdMmRIv379GjVqFJ1Vr169xYsXF6tkqwKgVCoVTYmdlZW1cuXK9IvEQUCzZs0uu+yyW2+9tU+fPl26dIknz/79738ft+/bt2+088033yz5KwYNGhQdLTnX9eb9ZABUWFgYpTkhhJycnM6dO/ft2/fKK688/PDD4wfriiuuKHZWdMqhhx7apEmTgw8+ePLkyUVFRYWFhcOGDYv+NcJ/57L59a9/PX/+/FQqlZeX94c//CE6tN9++xUVFcVXSw+AQggNGjR45JFHpk2bNnv27BdeeOGwww6L9h9yyCHxg1vMtj3lSg2AtvaBi0RPtq5du+6zzz7Rieedd96AAQMWLFiwmUdnUwFQPFtzTk5OXl5etDOeGyh63kaJz6WXXhrtmTRpUvoVrr322mj/jTfeWLLOUgOgLX/pRV588cUolAwh1K9f/5e//OW1117bqlWraE+VKlUaNmxY8p93U7p06RKdOGLEiGjPnDlzXtyEeLagevXqLVmyJL5IxbzzRLbthQMA20AABECZSQ+AUqnUQQcdFDaxtFBeXl40o8fVV1+dSqU2FQB169Yt2t+uXbv01ZqKioriL1Q5OTkzZsxIPyv6GlatWrXKlSsX+zabSqWuv/766JrPPvts+v6fXAUs/iaWnh2sXr06ngT3pZdeKnbi1gZA8YzFX3zxRbzzpptuinZeeeWVxXpnTJ48uVatWiGEvfbaK94ZT5r7m9/8puSvaNOmTQihevXqa9as2ZKSYj8ZAMUPYtu2badOnZp+6I033oiTsrfffjv9UPzVd//99//xxx/TD6VPz3zllVcW+3XxvFHpT4ySAdBf/vKXhQsXRkd//PHHHj16RIfuvPPOUu9i255ypQZAW/vARdKfbIMGDSrWO2lTNhUAxbWFED744IPVq1dfd9110Y9R5nL22WdHzV577bVo/4ABA9JPj2OId955p2SdpQZAW/XSW7p0adxJqlu3bnG3nfjNJLaFAVA8+OuGG27YfMtly5Y1a9YshJCdnf3WW2+lH6rId55te+EAwDYQAAFQZooFQHFnk3//+9/FWr788svRofHjx6c2EQDNmDEj+o5av379+GthuhtuuCE669JLL03fH3+Fvvjii0ue9dlnn0VH+/btm75/SwKgQw45pOQF43u56aabih3a2gDolFNOidq/99578c4o6ahevfr69etLnnLeeedFp6xYsSLeGXUeadCgQbH1sOOZcc8777wtqSfd5gOgH374IZqopW7dunPnzi3Z4L333osezcMPPzx9fxwAlRwaE3ciq1Wr1qpVq4odHTx4cHQ0/at7sQAoUqlSpfbt2998880ffvjhokWLateuHULYfffdS3YC2uanXKkB0DY8cKm0J1uXLl1KnrUpcQBUpUqV3v+/OADaZ599onuPnsnRxpAhQ6IrrF27Nho8dcQRR8SX/eGHH6KdVapUiTsQpddZagC0VS+9O++8M9p57LHHpnfmimbSCSHUq1cv2tjCACiaWj6E8Otf/3ozzfLz8+MMsdh4rop859nmFw4AbAOTQANQXqJBXuG/q32li/bsvffe0fLnpYoSgRBCnz594i+u6a677rqoG9Hw4cNLvUKpS6pH4UgIIf7OvOWiiY2Kadu2bbSxYcOGrb1gMfE0KGvXro133nLLLWPGjHn33XfTZ4SJxeOkNm7cGO88++yzQwjLly8fO3ZseuPnn38+2vjVr361naUW8/bbby9btiyEcPXVVxebGDhy/PHHR1nP5MmTV65cWbLBscceW2xPNElzCKFdu3bxbcaiCYNCCD/++GPJqzVo0CA+paioaOLEiXfccUfHjh2bN28efd9esmTJBx98UOys7X/KpduGBy5dnDJslY0bNw75/8VzS82ZM2fNmjUhhN///vdxABRPVVOzZs0ov5g0adLy5cujnZ999ll+fn4I4YgjjtjUHD2l2vKXXjwX2MCBA+OBYCGE6OkUQrjgggu2/PeGEOJVyZYsWbKZZtdcc030BDj//PP79OmTfqgi33m2/4UDAFtOAARAeWnWrFn79u1DCPFMtJF169aNGjUqhNCjR4/0r3zFTJgwIdqI+wIU07Bhwyg/WrJkSanL6+y///4ld5Y6MfAWKjWu2qovxpsXz9gSjQ+KdOzYsUuXLkceeWSxxvn5+WPHjn399ddLXicKgEIIQ4cOjXem/jslcKNGjU488cSyqjkSLzIV96ooKXoyFBUVTZkypdihevXqxR09YvEjFa9lXurRUp100knff//9M888c/bZZ6evU/7DDz/ES7Zde+2133zzTfpZ2/+US7cND1y6gw8+ePMNttlf//rXZ599NoTQqlWr9NAhWgusqKgoXgw+Xjw+Xk1sC23hS2/9+vXRk6FJkybx+MdI/BJIHxO3JeJ4pVq1aptqM2TIkGjOr0MOOSRaaT5dRb7zbOcLBwC2igAIgHIUjRv6+uuv424IIYQ33ngj6rURjyoq1ffffx9tRMtalSqawiOEUHJF84YNG0b/S19WatWqFU1GW37mzp0bbdSvX7/k0dmzZw8bNuyee+65/PLLTzjhhPr163fs2HHhwoUlWx5++OFRd4Phw4fHa5x/+umn0ZfV8847L56EuMwr79ix46aW2b7jjjuiNqtXry52+ubr2YZqmzZtuttuu51//vkvv/zykiVLPv/887vvvrtz587Vq1ePu95Mnz798MMP/+ijj+KztvMptylb/sDF0uvcKiXnAEqlzeMzYMCAaE6ZH374IaR1/4nEi8HHwyG3LQDa8pfesmXLCgsLQwj77rtvyYtEG/n5+ZuJckqKU9R49pxiPvnkk2hRud133/21114refGKfOfZzhcOAGwVARAA5ahHjx7R/3unr8QcTZrTokWLeBxKqaJhUDVr1kzvDlNMPEpo1apVxQ6VOu5me2zbF/ItV1hYOH/+/BBCVlZW+jfPVCr1j3/8o2XLls2bNz/rrLP+8Ic//O1vf3vvvffWrVu3xx57tGjRotSrde/ePYSwaNGi8ePHR3vifljnn39+mRcfjS3aQukD3MqpjJo1a8Y7K1Wq1K5duz/84Q9vvfVWXl5e+tRCK1asOOecc9atW5de2DY/5YrZtgcuUrI/1PaIl/2qX7/+6NGj4253xTqCtW7dOuoQNGbMmCg5+vTTT0MI1atXjzqhbKEtf+nl5eVFG/G/aixeBWz8+PF77LHHlv/2OLSKFo8vZt68eWeeeebGjRtzcnKGDh0aDyRMV5HvPDvICweAXUTlTBcAQJLtscceHTp0GDt27Isvvhj9P/aaNWtGjx4d0mYI2pTo29e6devWrVuX/n0+3eLFi9Mb79RmzpxZUFAQQmjZsmW8LlII4Yorrvjb3/4Wbf/iF79o3779gQceeMABB+y///7NmjW77rrr/vKXv5S82tlnn33vvfeGEIYOHXr00UcXFBREuVurVq2ixezLVvzvP3LkyFK/VKf7yQbbLJ7WZ8yYMZuaQ2fOnDnRRrt27caOHbto0aIHH3zwxhtvDGX9lNu2By6ymaGR26BTp07RjOyffPLJVVddVb9+/WiWn5/97GfFWp500kmPP/74kiVLvvjii+rVq69YsSKEcPTRR1epUqUM64nFM+yU7A/VuXPnaBm1ESNGxHMS/aQNGzZEw0tDCCeddFKxoz/++OPpp58ezQ304IMPbmpwWUW+8+wgLxwAdhECIADKV8+ePceOHfvNN9989tlnhx122Ouvvx5NlvyTAVD87fS7776LVzIqJp7DpXHjxmVXcmY899xz0Ub6cJuxY8dGIUKzZs1eeumlww47rNhZ0Wy1JbVv337vvfeeO3fusGHD7r///vfeey/63lvm0z9H4gcrOzv7oIMOKo9fsSXijjOzZ8/eVJt///vf0UazZs2iSbKnT58e7SnDp9w2P3Dl4aijjqpateqGDRs+/vjjDRs2xCOJooFg6bp27RrNiTN69Oj4Brd2AqAtl5ubGxX2n//8p9ihQw45pEWLFt988008SGpLPP7441E0065du5LDyn79619/8cUXIYRLL7300ksv3dRFKvKdZwd54QCwizAEDIDy1b1798qVK4f/DkGK+qG0bNnywAMP3PyJ8aiTN998s9QGK1asmDhxYgihfv36++23XxnWXPEWLlz40EMPRduXXHJJvP+NN96INh566KGSIUIIYdasWZu6ZjQV9Ny5cydPnhyt/5WVldWrV68yLDsWT3U8adKkTbUZOXLkY489Fq07Xh41hBDir+vz5s2Lg55iovmPQ1rni3gdrjJ8ym3PA1fmdtttt2iK5QULFjzzzDNRR7MQQsmeNZ06dYrWfR8zZkw8eLD8AqCcnJyoP9q8efPiqZcjWVlZ/fv336qrzZgxI+rJFUK49dZbix0dOHBgtPjg0Ucf/eCDD27mOhX5zrODvHAA2EUIgAAoX7m5udEUJC+99NKKFSuiBYY2P/1z5PTTT482/vznP8eztKS75557ohk0unXrVrZDZirYunXrzjnnnOheunbtmh6NxVOElJwkJYQwb968Ygu9p4vXAnv22Wej9ao7duxY6lLT2++kk06KJr6999574zl0082ZM+ess8667LLLXnvttfJ7sOLJs1Op1MknnxxNMJzu448/jp6BNWvWfP/996OdXbp0iTbK8Cm3PQ9ceYhDnNtvvz3eWXKh9Nq1a0dR0YQJE6J/qDp16pTHmMHYWWedFW3069ev2KHzzz8/fZRW1HNwU7744ovOnTtHj9ppp51WbAGvkSNHRnHSXnvtNXTo0Cjk2pSKfOfZQV44AOwiBEAAlLso7lm4cGGfPn2i3hY/Of4rhNCqVatTTjklhLBs2bITTzwxmiA5Nnjw4HvuuSeEkJOT07dv3zKstuS34vJTVFT01ltvtW/fPloNunbt2o899lh6gzZt2kQbw4YNK3bujBkzOnXqFI/iKbkaUTQKLITw8MMPR9PHltP4rxBC3bp1L7/88hDCmjVrzjjjjJkzZ6YfnT9//imnnBI99JsZelO2/v3vfzdp0iS9E8eYMWNOO+20aLtWrVpff/11CGH//fePe0WV4VNuex64TVm5cuXr/xUvdr6F4nmg00dUxRPZpIvWAissLIwKO/bYY8t8zbh0v/71r6PY7oMPPujevXv6PMcrVqxIj/C++eabfv36lfznmjNnznXXXXfUUUdFj9fPf/7zZ555Jr3B9OnTzzvvvKKiomrVqg0fPnz33XfffEkV+c6zA75wAEgwcwABUO7OOOOMyy67bMOGDU899VQI4cADD2zZsuWWnPjYY48dfPDBS5YsmTBhQuvWrY855piDDjpo8eLF48ePj769hxDuvPPOeMGg7bHbbrtFG0OGDKlevXq1atXOPvvseJLa7TR37tyLL744fc/GjRuXLl36+eefx3lTrVq1Ro4cWayHzsknn3zjjTfm5eXdfvvtX3/99fHHH1+nTp25c+d++umnI0eOTKVSP//5z6Nlrc4777xu3br169cvfbWy7t2733fffdGQn2rVqsW9LcrD7bff/u67706ZMmXixIkHHXRQ586dW7VqVbVq1RkzZowYMSLqvvG73/2uWNeMcrVo0aJTTjmlSpUqderUKSgoWLVqVTyIJupt0bBhw1dffTV92aayespt5wNXqlmzZsWdU+bPn19q36JNOeyww2rVqlVsGalSl6Lv2rVr+vzZ5Tf+K1K/fv3HHnusR48eqVRq6NChH3300VFHHXXAAQfMmDFj3LhxK1eurFmzZnZ29urVq4uKigYNGjRo0KDWrVu3aNGiTp06q1atmjVr1r/+9a/4ascdd9yrr76a/rJNpVLdunWLbrxbt27ffffdd999V2olTZs2jdclrMh3nh3whQNAYqUAoIz07t07+nCZPHlysUPdunWLP3ruvPPOYkfvuuuu6NCLL75Y7NCsWbNKXc45hFC1atV77723ZBnRsJEmTZqUWuSyZcui06+66qr0/atWrUpfeyuE8N13323JBeMOAn379i12KP2r6ea1b99+ypQppV7/+eefL3XESs2aNR988MHFixc3atQo3jl//vz0c6NlvCPnnHNOqdffQvGovddee21TbVasWFFsZfFYTk7O1VdfXVhYWOyUE044IYSQm5tb8mrx6JvevXuXPPriiy+WrOfDDz+MH9xNrd8U69q16+zZs0teeRuectHcQ61bt07fuW0P3GaebOmz5BR7oOMOQXXr1i15YuTkk08uVkmjRo2WL19esmV6tDR16tRSr1Zqndv20kulUk899VT16tVL/ls1aNDg/fffjzrabL4jUuPGjf/617/m5+cXu3I84dFPKvY0q7B3ntQ2vXAAYBvoAQRARejZs+frr78ebW/J+K/YfvvtN3Xq1GeeeWbYsGFffPHFsmXLqlev3rRp086dO19xxRX77LNPWVVYp06dkSNH3nDDDV9++WVWVtbPfvazclr6Ola3bt3GjRsfeeSRZ5111i9/+ctNTfBx7rnntm/ffuDAgZMnT/7mm28qV67cokWLU0899dJLL41WIBo/fvzgwYPnz5+/7777FuuyFK8FFspz/FesXr16b7/99qhRo5599tnx48cvXry4du3a++23X9u2ba+77rrmzZuXdwGx1q1br1y5cuDAgU8++eSCBQvy8/NDCNnZ2bVr127btu2RRx557rnnbmqBp7J6ym3PA1ceOnXqFA2Iy8rKqly5cn5+/uLFiy+55JJXX321WMuTTjrpiSeeCCHk5uZu6l+pbF144YXHH/t5F6MAACAASURBVH/8Qw89NHr06Dlz5hQUFDRp0uS000675ppr9txzzw0bNlSuXLlOnTp77bXXmDFj/vnPfy5ZsmTVqlX16tVr1KjRYYcd9stf/rJr166lRkjbrMLeecKO9MIBINmyUhYUAGAXs3bt2u+//z4nJ6dZs2aZrqV8pVKpFi1azJ49u2HDhgsXLoyWY0uGVCq1fPnyRYsW7bHHHvHcz2PHju3YsWMI4W9/+5s5U3ZAu85Lr1S7+O0DkHHJ+UMQALZQrVq14iXAk+2DDz6YPXt2COHcc89NUvoTQsjKysrNzc3Nzc10IWyFXeelV6pd/PYByDirgAFAYj3++OPRRgWM/wIAYEcmAAKAZJowYcLLL78cQvjFL35x6KGHZrocAAAyKVG9wQGACRMmDBw4MD8/f+zYsUVFRSGE/v37Z7ooAAAyTAAEAImyevXqN954I/6xR48ePXr0yGA9AADsCARAAJAoe+yxx1FHHfXll1/uueeev/nNb6677rpNLTCfPMcee6zlTQEASmUZeAAAAICEMwk0AAAAQMIJgAAAAAASTgAEAAAAkHACIAAAAICEEwABAAAAJJwACAAAACDhBEAAAAAACScAAgAAAEg4ARAAAABAwgmAAAAAABJOAAQAAACQcAIgAAAAgIQTAAEAAAAkXOVMFwBAYr399tvfffddpqsoL//5z3/q1q2bm5ub6ULKxZw5c6pUqfKzn/0s04WUi/nz54cQmjRpkulCysX333+/YcOGpk2bZrqQcrFs2bLVq1e3aNEi04WUl2bNmp144omZrgKAZMpKpVKZrgGABPr6669bt26d6SoAdjLTpk37xS9+kekqAEggPYAAKBdr1qwJIVSt3aDRQcdnupayt37loiXTPs7K2W2vI07JdC1lr+DHtQsnjwnZlfc+6oxM11Iu5n78Sghh7w5nZ7qQcjH341dDSO1x+CmVq+6W6VrK3rxxQ1Opot3bnlitVt1M11L2Fn/5/oY1y6M3TwAocwIgAMpR9dwmB/b6U6arKHtLp3+yZNrHWdVqJfLu8pbMWTh5TMiumsi7C/8NgBJ7d+NeDalwwBl9atRrmOlayt788a+lCouanXRJw6Y/z3QtZe+TBbM2rFme6SoASCyTQAMAAAAknAAIAAAAIOEEQAAAAAAJJwACAAAASDgBEAAAAEDCCYAAAAAAEk4ABAAAAJBwAiAAAACAhBMAAQAAACScAAgAAAAg4QRAAAAAAAknAAIAAABIOAEQAAAAQMIJgAAAAAASTgAEAAAAkHACIAAAAICEEwABAAAAJJwACAAAACDhBEAAAAAACScAAgAAAEg4ARAAAABAwgmAAAAAABJOAAQAAACQcAIgAAAAgIQTAAHscPLz83Nzc7OyshYvXvyTjSdNmtS7d+999923evXqubm5hx9++F133bVy5cqt+o0TJ06sUqVKVlbWe++9t61VA7DDKZPPCACSoXKmCwCguFGjRi1fvnxLWt58882DBg0qKiqKfvzxxx+XL1/+2WefPfTQQ6+88sqRRx65JRdZsWJFjx498vPzt71iAHY8ZfIZAUBiCIAAdizr1q27+eabt6Tl3Xfffeedd4YQsrKyjjvuuHbt2q1bt27kyJHz589fsGDBqaeeOnHixBYtWmz+IqlU6oILLpg7d24ZlA7ADqNMPiMASBJDwAB2FAUFBSNGjDjhhBOmTZv2k42/++67W265JYRQrVq1UaNGvffee/fcc8+jjz76zTff9OzZM4SwfPny66677ievM3jw4DfffHP7iwdgx1FWnxEAJIkACCDz+vfv36ZNmxo1anTr1m3ixIlbcsrgwYM3btwYQvjTn/500kknxfurVKny5JNPNm/ePIQwYsSIzWdJH3/8cdTbqF69ett1AwDsSMrkMwKAhBEAAWTeuHHjpk2bFv2xviVSqdSwYcNCCFlZWRdddFGxo9WqVevVq1e0HTUr1ZIlS3r27FlQUNCxY8cLL7xwW+oGYMdTJp8RACSPAAgg8wYMGPBqmrZt226+/dSpU6MFwo488sjGjRuXbHDmmWdGG2+//XapVygqKurVq9fChQsbNWr0wgsvVK5sSjiAhNj+zwgAEslf/ACZd8wxx6T/OGTIkM23nz59erTRsWPHUhu0bdu2du3aa9asiVsWc9ttt7377ruVKlV67rnnSv16AMBOavs/IwBIJD2AAHY+//73v6ON3XfffVNtGjZsGEJYuXJlyRXl33333dtvvz2EcMstt3Tq1KncygQgA7bzMwKApBIAAex8Vq1aFW00aNBgU21yc3OLNY4sXLiwV69eRUVFnTp16t+/f/kVCUBGbM9nBAAJJgAC2Pnk5eVFG5v54z4+tG7dunhnQUFBz549lyxZ0rhx4+eee65SJZ8CAEmzzZ8RACSbP/0Bdj6pVCrayMrK+sk2BQUF8c6bb775448/zs7Ofv755xs1alSuRQKQEdv8GQFAsgmAAHY+NWvWjDZWrFixqTbxoVq1akUbb7755uDBg0MIt95663HHHVfONQKQGdv2GQFA4gmAAHY+derUiTY2M3lnfKh27dohhLVr115wwQWpVOrEE0/s169fBRQJQEZsw2cEALsCy8AD7Hz23XffaGPZsmWbahP9cV+rVq1oqNeaNWui/+995513srOzN3XWCSecEG1cdNFFTz75ZBnWDEDF2IbPCAB2BXoAAex8WrVqFW18+umnpTaYOXPmypUro5abmQMCgOTxGQFAqfQAAtj5HHTQQQ0bNly6dOmHH364atWqunXrFmvw2muvRRudO3eONmrVqnXDDTds6oLvv//+pEmTQgg9e/Zs2rRpCOGQQw4pj8oBKG/b8BkBwK5AAASw86lUqdIZZ5zx97//PT8//5VXXrn44ovTj6ZSqZdffjna7t69e7RRu3btQYMGbeqC119/fRQA9e7du1OnTuVWOADlbhs+IwDYFRgCBrBT+uMf/5iTkxNC6Nev38yZM9MP3XbbbV988UUIoVu3bgceeGBm6gMgc3xGAFCSHkAAO6XmzZsPGDCgX79+y5YtO/zww3v37t22bds1a9YMGzbs/fffDyE0bNjw/vvvz3SZAGSAzwgAShIAAeysbrzxxjVr1tx9991r1qy577770g/tvffeQ4cObdasWaZqAyCzfEYAUIwhYAA7sUGDBn366acXXXRRs2bNqlWrVr9+/cMOO+yuu+766quvDj300ExXB0Am+YwAIJ0eQAA7nNGjR2954/bt27dv3347f+M999xzzz33bOdFANjRlMlnBADJoAcQAAAAQMIJgAAAAAASTgAEAAAAkHACIAAAAICEEwABAAAAJJwACAAAACDhBEAAAAAACScAAgAAAEg4ARAAAABAwgmAAAAAABJOAAQAAACQcAIgAAAAgIQTAAEAAAAknAAIAAAAIOEEQAAAAAAJJwACAAAASDgBEAAAAEDCCYAAAAAAEk4ABAAAAJBwAiAAAACAhBMAAQAAACScAAgAAAAg4QRAAAAAAAlXOdMFAJBk69et/mbiW5muouzlLZgZQkgVbEzk3W1cszSEEIoKE3l3scTeXSqEEOZOGVuleq1Ml1L2UqmiEMLCrz9ds3hupmspe+vXrc50CQAkWVYqlcp0DQAk0CuvvNKjR49MVwGwk3n55ZfPPvvsTFcBQALpAQRAuWjUqFEIIatSduXdama6lrKXKiwoWJ8XsirlJLGTRSgqyv9xbcjKyqleO9OllIv8vNUhhJwadTJdSLn4v7urXjtkZWW6lrIX3V3NnKqVKiVwHoO8/A2FRUXRmycAlDkBEADlIicnJ4RQt2nr//nDc5mupewtnf7JxL9eWqlmbpd73s90LWUvb8mcD245OeRU73LvJ5mupVyMvKx1CCGxd3d5m5BKHd3/9Rr1Gma6lrI36sqDiwrz/3b8r1s22ivTtZS934x+bOrSudGbJwCUuQT+5wkAAAAA6QRAAAAAAAknAAIAAABIOAEQAAAAQMIJgAAAAAASTgAEAAAAkHACIAAAAICEEwABAAAAJJwACAAAACDhBEAAAAAACScAAgAAAEg4ARAAAABAwgmAAAAAABJOAAQAAACQcAIgAAAAgIQTAAEAAAAknAAIAAAAIOEEQAAAAAAJJwACAAAASDgBEAAAAEDCCYAAAAAAEk4ABAAAAJBwAiAAAACAhBMAAQAAACScAAhgJ7Zs2bI777yzQ4cOu+++e9WqVVu0aNG1a9ebbrpp6dKlW3WdiRMnVqlSJSsr67333iunUgHIoPz8/Nzc3KysrMWLF2e6FgAyo3KmCwBgG40cOfL8889fvXp1vOfbb7/99ttvx4wZ89BDD/Xv379v375bcp0VK1b06NEjPz+/3CoFIMNGjRq1fPnyTFcBQCYJgAB2ShMmTDjrrLM2btwYQmjevHmHDh322WefRYsWjRs3bvr06WvWrLn++uuzs7OvvfbazV8nlUpdcMEFc+fOrZCqAciAdevW3XzzzZmuAoAMEwAB7JSuueaaKP3p06fPwIEDq1SpEu0vKiq6//77o74//fv3v/jii2vWrLmZ6wwePPjNN9+sgIIBqHgFBQWjRo0aOHDgtGnTMl0LABlmDiCAnc+iRYsmTpwYQmjTps3dd98dpz8hhEqVKvXp06dr164hhLy8vC+++GIz1/n444+j/xOuV69eOZcMQIXq379/mzZtatSo0a1bt+gjA4BdnAAIYOfz1VdfRRunn356dnZ2yQbHHXdctLGZAGjJkiU9e/YsKCjo2LHjhRdeWB51ApAp48aNmzZtWtRXFACCIWAAO6MlS5a0bt06hHDIIYeU2qCwsDDayMnJKbVBUVFRr169Fi5c2KhRoxdeeOHee+8tp1IByIgBAwakrwh5xx13TJkyJYP1AJBxAiCAnU+vXr169eq1qaMbN24cMWJECCErK6tDhw6ltrntttvefffdSpUqPffcc40bNy6vQgHIkGOOOSb9xyFDhmSqEgB2EAIggCTYuHHj6tWrV65cOX78+CeeeOLTTz8NIVxxxRUHHnhgycbvvvvu7bffHkK45ZZbOnXqVNG1AgAAFU4ABJAEjRo1WrVqVfxjgwYN+vXrV+oa8AsXLuzVq1dRUVGnTp369+9fgTUCAAAZYxJogASqW7du3bp145mAYgUFBT179lyyZEnjxo2fe+65SpV8CgAAwC5BDyCAJHjkkUc2bNhQUFCQl5f3zDPPfP7557/97W+HDx/+yiuvVKtWLW528803f/zxx9nZ2c8//3yjRo0yWDAAAFCRBEAASXDuuefG21dfffVVV1318MMPjxw5ctCgQQMGDIj2v/nmm4MHDw4h3HrrrfE68QAAwK5A53+ABLr33nurV68eQnj44YejPWvXrr3gggtSqdSJJ57Yr1+/jFYHAABUND2AAHY+I0eOLCwsrFGjxgknnFBqg6pVq7Zu3XrSpEnLly9funRpw4YN16xZs2LFihDCO++8k52dvakrxxe86KKLnnzyyfIoHgAAqHgCIICdz0033TR16tTddttt7dq1m0pzioqKoo28vLyGDRtWYHUAAMAORwAEsPM59NBDp06d+uOPP86cObNVq1YlGxQVFc2YMSOEkJOT07hx4xBCrVq1brjhhk1d8P333580aVIIoWfPnk2bNg0hHHLIIeVUPAAAUPEEQAA7n0MPPfR///d/QwiDBw9+6qmnSjZ45JFH8vLyQggdOnSIVgGrXbv2oEGDNnXB66+/PgqAevfu3alTp3IqGwAAyBSTQAPsfM4888xojuenn3763nvvLSwsTD/6/PPP33jjjdH29ddfn4H6AACAHYweQAA7n0aNGt122219+/YNIfTt2/fvf//74Ycfvvfeey9cuPDzzz//6quvomaXXXbZSSedlNFKAQCAHYIACGCn1KdPn3Xr1t12221FRUWzZs2aNWtW+tHs7Owbb7zx1ltvzVB1AADAjkUABLCz+tOf/nT22WcPGTJk+vTp//nPf+bNm1ezZs0WLVocf/zxl1xySfPmzTNdIAAAsKMQAAHsxFq1anXfffdt/3Xuueeee+65Z/uvA8COafTo0ZkuAYAMMwk0AAAAQMIJgAAAAAASTgAEAAAAkHACIAAAAICEEwABAAAAJJwACAAAACDhBEAAAAAACScAAgAAAEg4ARAAAABAwgmAAAAAABJOAAQAAACQcAIgAAAAgIQTAAEAAAAknAAIAAAAIOEEQAAAAAAJJwACAAAASDgBEAAAAEDCCYAAAAAAEk4ABAAAAJBwAiAAAACAhBMAAQAAACScAAgAAAAg4QRAAAAAAAlXOdMFAJBkG39Yt2D6pExXUfbWzpkZQkgV5ify7jasWhxCCKnCRN5dLNl3t/jf/6xas26mqyh7qVRRCGHG4rlr1/+Q6VrK3toNP2a6BACSLCuVSmW6BgASaNiwYWeddVamqwDYyQwdOvTMM8/MdBUAJJAeQACUi3r16oUQsrIqVcqpkulaykFRUWHBxpCVlZ1TNdOllIdU4cYNIYTsKtUyXUm5KNy4PiT97qpm52RlZbqUcrC+ID+EUCmnalYSb68of2MqVRS9eQJAmRMAAVAuqlWrFkKo26zN//zhuUzXUvaWTv9k4l8vrVSzYdd73s90LWUvb8mcD245OVSp0fWvEzNdS7kYeVnrEELXv07OdCHlYuTlbUIq9dpp1zasVSfTtZS9I569paCo8LA+zzZs+vNM11L2Phnca+W3X0ZvngBQ5kwCDQAAAJBwAiAAAACAhBMAAQAAACScAAgAAAAg4QRAAAAAAAknAAIAAABIOAEQAAAAQMIJgAAAAAASTgAEAAAAkHACIAAAAICEEwABAAAAJJwACAAAACDhBEAAAAAACScAAgAAAEg4ARAAAABAwgmAAAAAABJOAAQAAACQcAIgAAAAgIQTAAEAAAAknAAIAAAAIOEEQAAAAAAJJwACAAAASDgBEAAAAEDCCYAAAAAAEk4ABLDLWbZs2Z133tmhQ4fdd9+9atWqLVq06Nq160033bR06dJMlwZAucjPz8/Nzc3Kylq8eHGmawEgMypnugAAKtTIkSPPP//81atXx3u+/fbbb7/9dsyYMQ899FD//v379u2bwfIAKA+jRo1avnx5pqsAIJMEQAC7kAkTJpx11lkbN24MITRv3rxDhw777LPPokWLxo0bN3369DVr1lx//fXZ2dnXXnttpisFoMysW7fu5ptvznQVAGSYAAhgF3LNNddE6U+fPn0GDhxYpUqVaH9RUdH9998f9f3p37//xRdfXLNmzUwWCkBZKCgoGDVq1MCBA6dNm5bpWgDIMHMAAewqFi1aNHHixBBCmzZt7r777jj9CSFUqlSpT58+Xbt2DSHk5eV98cUXGasSgLLQv3//Nm3a1KhRo1u3btGbPwC7OAEQwK7iq6++ijZOP/307Ozskg2OO+64aEMABLCzGzdu3LRp06JenwAQDAED2HUsWbKkdevWIYRDDjmk1AaFhYXRRk5OTsWVBUA5GDBgQPrajnfccceUKVMyWA8AGScAAthV9OrVq1evXps6unHjxhEjRoQQsrKyOnToUIF1AVD2jjnmmPQfhwwZkqlKANhBCIAAdl0bN25cvXr1ypUrx48f/8QTT3z66achhCuuuOLAAw/MdGkAAEBZEgAB7LoaNWq0atWq+McGDRr069fPGvAAAJA8JoEG4P/UrVu3bt268UxAAABAYugBBLDreuSRRzZs2FBQUJCXl/fMM898/vnnv/3tb4cPH/7KK69Uq1Yt09UBAABlRgAEsOs699xz4+2rr776qquuevjhh0eOHDlo0KABAwZksDAAAKBsGQIGwP+59957q1evHkJ4+OGHM10LAABQlgRAALuKkSNHvv766+++++6mGlStWrV169YhhOXLly9durQCSwMAAMqXIWAAu4qbbrpp6tSpu+2229q1a7Ozs0ttU1RUFG3k5eU1bNiwAqsDAADKkR5AALuKQw89NITw448/zpw5s9QGRUVFM2bMCCHk5OQ0bty4QosDAADKkwAIYFcRBUAhhMGDB5fa4JFHHsnLywshdOjQwSpgAACQJAIggF3FmWeeGc3x/PTTT997772FhYXpR59//vkbb7wx2r7++uszUB8AAFBuzAEEsKto1KjRbbfd1rdv3xBC3759//73vx9++OF77733woULP//886+++ipqdtlll5100kkZrRQAAChjAiCAXUifPn3WrVt32223FRUVzZo1a9asWelHs7Ozb7zxxltvvTVD1QEAAOVFAASwa/nTn/509tlnDxkyZPr06f/5z3/mzZtXs2bNFi1aHH/88Zdccknz5s0zXSAAAFD2BEAAu5xWrVrdd999ma4CgIozevToTJcAQIaZBBoAAAAg4QRAAAAAAAknAAIAAABIOAEQAAAAQMIJgAAAAAASTgAEAAAAkHACIAAAAICEEwABAAAAJJwACAAAACDhBEAAAAAACScAAgAAAEg4ARAAAABAwgmAAAAAABJOAAQAAACQcAIgAAAAgIQTAAEAAAAknAAIAAAAIOEEQAAAAAAJJwACAAAASDgBEAAAAEDCCYAAAAAAEk4ABAAAAJBwAiAAAACAhKuc6QIASLKCDeuXz/t3pqsoe2uXLgwhpIoKE3l361d+H0IIqaJE3l0s2Xc3Z+Xi1evzMl1FeUiFENYsnlcpO4F/xBZsWJ/pEgBIsqxUKpXpGgBIoNdff/3000/PdBUAO5nXXnutW7duma4CgARK4H+eALAjqFGjRgghZGVlVcrOdC3lIJVKFRWGELKS2A0h4XcXQqqwICT97rKzKmVlZbqUclBQVBSSe3eFRalUSP3fmycAlLVk/ukDQMZF32HqNTvwf/7wXKZrKXtLp38y8a+XVqq1+y/veT/TtZS9vCVzPrjl5FClxsl/nZjpWsrFyMtahxBOfnhKpgspFyMvbxNSqZGn921Yq06mayl7Rzx7S0FR4dOdL2nZaK9M11L2fjP6salL5wqAACgnJoEGAAAASDgBEAAAAEDCCYAAAAAAEk4ABAAAAJBwAiAAAACAhBMAAQAAACScAAgAAAAg4QRAAAAAAAknAAIAAABIOAEQAAAAQMIJgAAAAAASTgAEAAAAkHACIAAAAICEEwABAAAAJJwACAAAACDhBEAAAAAACScAAgAAAEg4ARAAAABAwgmAAAAAABJOAAQAAACQcAIgAAAAgIQTAAEAAAAknAAIAAAAIOEEQAAAAAAJJwAC2KXl5+fn5uZmZWUtXrw407UAUJaKioqGDh16zjnnNGvWrGbNmtWrV2/RosUFF1zwzjvvZLo0ADKgcqYLACCTRo0atXz58kxXAUAZW7BgQffu3SdMmJC+89tvv/3222+feeaZzp07P/PMM7vvvnumygOg4gmAAHZd69atu/nmmzNdBQBl7IcffujatetXX30VQqhcufKJJ57YqlWrwsLCf/7znx999FEqlXr77bdPOOGETz75pFatWpkuFoAKIgAC2BUVFBSMGjVq4MCB06ZNy3QtAJSxBx54IEp/mjVr9vLLLx966KHxoXHjxp1//vlz5sz56quvbrnllvvvvz9zZQJQocwBBLBr6d+/f5s2bWrUqNGtW7eJEydmuhwAyt4jjzwSbTz66KPp6U8I4eijj37ppZcqV64cQnj88cfXr1+fgfoAyAQBEMCuZdy4cdOmTdu4cWOmCwGgXMyaNWv+/PkhhIMPPrhLly4lG7Rv3/6oo44KIeTl5U2ePLmi6wMgQwwBA9i1DBgwYOnSpfGPd9xxx5QpUzJYDwBla9asWdFGu3btNtWmTZs2H330UQjBOgAAuw4BEMCu5Zhjjkn/cciQIZmqBIDyULNmze7du4cQTj311E21iboIhRCaNWtWQWUBkGkCIAAASI6OHTt27NhxMw3mzZs3ZsyYEELdunX333//CioLgEwzBxAAAOwq1q1b17179w0bNoQQ+vbtW61atUxXBEAFEQABAMAuYfz48YceeuikSZNCCEccccS1116b6YoAqDgCIAAASLjZs2efd955Rx999MyZM0MI7du3HzNmTPXq1TNdFwAVRwAEAACJlZeXd/3117ds2fKFF15IpVLVqlW76667xo0bV6dOnUyXBkCFMgk0AAAk05gxYy677LI5c+aEELKzsy+44IJbbrmladOmma4LgAwQAAEAQNKkUqnLL7/8sccei37s0aPH7bffbs0vgF2ZAAgAAJLmyiuvjNKfFi1aPPbYY506dcp0RQBkmAAIAAAS5YEHHnj00UdDCMcee+zw4cPr1auX6YoAyDwBEAAAJEdBQcGf//znEEKTJk1ef/11kz0DELEKGAAAJMfQoUPnz58fQvjd734n/QEgpgcQAAAkx8cffxxtPPnkk8OHD99843/84x/77bdf+RcFQOYJgAAAIDm++eabaONf//rXTzb+4YcfyrkcAHYUhoABAEByxAEQAKTTAwhglzZ69OhMlwBAWZo1a1amSwBgR6QHEAAAAEDCCYAAAAAAEk4ABAAAAJBwAiAAAACAhBMAAQAAACScAAgAAAAg4QRAAAAAAAknAAIAAABIOAEQAADw/9i78zApqwNv2Ke6mx0EYrMYNxD1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BFCM6urqZs+ePX78+MrKythZAMizu+66K9f+9OzZ8+GHH+7bt2/jSxUVFRdffPGaNWuWLVs2duzYO++8M15MAJqUPYAAisuYMWP69OnTrl27c889d/HixbHjAJB/kyZNyg0mT568e/sTQjjllFMeeuihsrKyEMI999yzc+fOCPkAiEEBBFBcKioqKisra2pqYgcBoCBWrFixdu3aEMJxxx13xhlnfHxCv379Tj755BBCdXX1Sy+91NT5AIjEJWAAxWXcuHEbN25sfHjLLbcsXbo0Yh4A8mvFihW5wfHHH7+nOX369FmwYEEIwX0AAIqHAgiguAwYMGD3h1OmTImVBIBCaN++/dChQ0MIZ5999p7m5E4RCiH07NmziWIBEJsCCAAA0jFw4MCBAwd+yoR333137ty5IYROnTodeeSRTRQLgNjsAQQAAMWiqqpq6NChu3btCiGMHDmydevWsRMB0EQUQAAAUBQWLVrUt2/fF198MYRw0kknXXPNNbETAdB0FEAAAJC41atXX3TRRaeccsqbb74ZQujXr9/cuXPbtm0bOxcATUcBBAAAyaqurh41atRRRx01ffr0bDbbunXrW2+9taKiomPHjrGjAdCkbAINAABpmjt37hVXXLFmzZoQQmlp6YgRI8aOHdujR4/YuQCIQAEEAACpyWazV1555d133517eMEFF9x8883u+QVQzBRAAACQmquvvjrX/vTq1evuu+8eNGhQ7EQARKYAAgCApNx1112TJ08OIZx66qkzZ87s3Llz7EQAxKcAAgCAdNTV1d1+++0hhIMOOujxxx+32TMAOe4CBgAA6ZgxY8batWtDCD/4wQ+0PwA0cgYQAACkY+HChbnB1KlTZ86c+emTH3jggSOOOKLwoQCITwEEAADpWLlyZW7wxhtv/M3J27dvL3AcAPYVLgEDAIB0NBZAALA7ZwABFLU5c+bEjgBAPq1YsSJ2BAD2Rc4AAgAAAEicAggAAAAgcQogAAAAgMQpgAAAAAASpwACAAAASJwCCAAAACBxCiAAAACAxCmAAAAAABKnAAIAAABInAIIAAAAIHEKIAAAAIDEKYAAAAAAEqcAAgAAAEicAggAAAAgcQogAAAAgMQpgAAAAAASpwACAAAASJwCCAAAACBxCiAAAACAxCmAAAAAABKnAAIAAABInAIIAAAAIHEKIAAAAIDEKYAAAAAAEpfJZrOxMwCQoPnz5w8ZMiSUtsi03i92lgJoqM3u2BpKSjNtOsWOUgANDdkdm0OmJNO2c+woBZGt3hRC+FxZm9hBCuLDuh0hhM6lrTOZTOws+ZdbXaZtp5ApjZ0l/7I7t4b62nnz5g0ePDh2FgASVBY7AABpqq6uDiGE+trcl+00NdSnvLpsQ8qr+2uVkKrN9TtjRyig7PaPYkcooP/+8ASAfFMAAVAQXbt2DSF0OODw3t+8IXaW/NuypnL5jDsybTuddMWdsbPk386P1i+576etMqW/GvLt2FkK4vKnpoQQvvz/To0dpCCev/M7IZs97nu/bN2hY+ws+ffCXZdm6+uPvujGjt0PjZ0l/yqn/3zbX97KfXgCQN4pgAAooLI27fY/8h9ip8i/hrqaEEKmtGWSq6vesCaEUJopOaF7z9hZCijJf7tGnQ77UrvOXWKnyL9MKMmG+g6HfHH/Hl+InSX/ytq0ix0BgJTZBBoAAAAgcQogAAAAgMQpgAAAAAASpwACAAAASJwCCAAAACBxCiAAAACAxCmAAAAAABKnAAIAAABInAIIAAAAIHEKIAAAAIDEKYAAAAAAEqcAAgAAAEicAggAAAAgcQogAAAAgMQpgAAAAAASpwACAAAASJwCCAAAACBxCiAAAACAxCmAAAAAABKnAAIAAABInAIIAAAAIHEKIAAAAIDEKYAAAAAAEqcAAig6H3zwwc9//vP+/ft37dq1VatWvXr1Ouuss2644YaNGzfGjgZAQdTW1paXl2cymfXr18fOAkAcZbEDANCkZs2adfHFF2/ZsqXxmVWrVq1atWru3Lm//vWvx4wZM3LkyIjxACiE2bNnb9q0KXYKAGJSAAEUkRdeeOH888+vqakJIRx22GH9+/c/9NBD33///YqKiuXLl2/dunXUqFGlpaXXXHNN7KQA5E1VVdXo0aNjpwAgMgUQQBH5l3/5l1z7c+21144fP75ly5a55xsaGu68887cuT9jxoz53ve+1759+5hBAciHurq62bNnjx8/vrKyMnYWACKzBxBAsXj//fcXL14cQujTp88vfvGLxvYnhFBSUnLttdeeddZZIYTq6upXXnklWkoA8mHMmDF9+vRp167dueeem/vwB6DIKYAAisWyZctyg69//eulpaUfn3DaaaflBgoggOauoqKisrIyd9YnAASXgAEUjw0bNvTu3TuEcMIJJ3zihPr6+tygRYsWTRcLgAIYN27c7vd2vOWWW5YuXRoxDwDRKYAAisXw4cOHDx++p1dramqeeOKJEEImk+nfv38T5gIg/wYMGLD7wylTpsRKAsA+QgEEULxqamq2bNmyefPmRYsW3Xvvvc8//3wI4aqrrjrmmGNiRwMAAPJJAQRQvLp16/bRRx81Ptx///2vv/5694AHAID02AQagP/WqVOnTp06Ne4EBAAAJMMZQADFa9KkSbt27aqrq6uurp42bdrLL7/83e9+d+bMmY888kjr1q1jpwMAAPJGAQRQvL75zW82jn/0ox99//vf/81vfjNr1qwJEyaMGzcuYjAAACC/XAIGwH+744472rZtG0L4zW9+EzsLAACQTwoggGIxa9asxx9/fP78+Xua0KpVq969e4cQNm3atHHjxiaMBgAAFJZLwACKxQ033PDqq6+2adNm27ZtpaWlnzinoaEhN6iuru7SpUsTpgMAAArIGUAAxaJv374hhB07drz55pufOKGhoeH1118PIbRo0aJ79+5NGg4AACgkBRBAscgVQCGEiRMnfuKESZMmVVdXhxD69+/vLmAAAJASBRBAsTjvvPNyezz/+7//+x133FFfX7/7q7/73e+uu+663HjUqFER8gEAAAVjDyCAYtGtW7ebbrpp5MiRIYSRI0f+9re/PfHEEw855JB169a9/PLLy5Yty0274oorzjzzzKhJAQCAPFMAARSRa6+9tqqq6qabbmpoaFixYsWKFSt2f7W0tPS666678cYbI6UDAAAKRQEEUFx+9rOffeMb35gyZcry5cvfeuutd999t3379r169frKV75y2WWXHXbYYbEDAgAA+acAAig6Rx999L/+67/GTgFA05kzZ07sCABEZhNoAAAAgMQpgAAAAAASpwACAAAASJwCCAAAACBxCiAAAACAxCmAAAAAABKnAAIAAABInAIIAAAAIHEKIAAAAIDEKYAAAAAAEqcAAgAAAEicAggAAAAgcQogAAAAgMQpgAAAAAASpwACAAAASJwCCAAAACBxCiAAAACAxCmAAAAAABKnAAIAAABInAIIAAAAIHEKIAAAAIDEKYAAAAAAEqcAAgAAAEicAggAAAAgcZlsNhs7AwAJeuaZZ77yla9kylqV7NctdpYCqN1Rv21jKCkr7fT52FEKoKGu/qN1JSFz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/fSLL74YQhg2bFiPHj1CCCeccEKTZQMgLgUQAAAkYr/99pswYcKeXh01alSuALr00ksHDRrUhLkAiM8lYAAAAACJUwABAAAAJE4BBAAAAJA4BRAAAABA4hRAAEVtzpw52Ww2m81269YtdhYACuu2227LfebbARqgCCmAAAAAABKnAAIAAABInAIIAAAAIHEKIAAAAIDEKYAAAAAAEqcAAgAAAEicAggAAAAgcQogAAAAgMQpgAAAAAASpwACAAAASJwCCAAAACBxCiAAAACAxCmAAAAAABKnAAIAAABInAIIAAAAIHEKIAAAAIDEKYAAAAAAEqcAAgAAAEicAggAAAAgcQogAAAAgMQpgAAAAAASpwACAAAASJwCCAAAACBxCiAAAACAxJXFDgBAyrZ/sPbVB8fFTpF/Oze/H0LI7tyW5OrqdmwLIdRk68e/8FjsLAWU6uqy2WwI4VdLft+mZcvYWfKvIdsQQrjvtQWdVreLnSX/1m77MHYEAFKWyf2WAAD59dprr/Xu3Tt2CoBmprKy8otf/GLsFAAkSAEEQKE89dRTb7/9duwUhfLWW2916tSpvLw8dpCCWLNmTcuWLQ844IDYQQpi7dq1IYSDDjoodpCC+Mtf/rJr164ePXrEDlIQH3zwwZYtW3r16hU7SKH07NlzyJAhsVMAkCYFEAAAAEDibAINAAAAkDgFEAAAAEDiFEAAAAAAiVMAAQAAACROAQQAAACQOAUQAAAAQOIUQAAAAACJUwABAAAAJE4BBAAAAJA4BRAAzduLL7546aWXHn744W3bti0vLz/xxBNvvfXWzZs3x86VH6mu7pprrsn8LYsXL44d8//adddd9zfX1ejb3/527Lz/d1Ja3QcffPDzn/+8f//+Xbt2bdWqVa9evc4666wbbrhh48aNH58cfeGf5XjZuXPnlClThgwZcvDBB7dt27Z3797Dhg2rqKjIe0gA9n1lsQMAwN4bPXr0hAkTGhoacg937NixadOmP/3pT7/+9a8feeSRL3/5y3HjfUYJr+6//uu/YkegeM2aNeviiy/esmVL4zOrVq1atWrV3Llzf/3rX48ZM2bkyJER433cXh8vr7766rBhw15//fXGZ1577bXXXnvtoYceGjFixL333ltW5rsAQBHxoQ9Ac/WLX/zi5z//eQghk8mcdtppxx9/fFVV1axZs9auXfvee++dffbZixcv7tWrV+yYeynt1a1YsSKE0L59+6OOOmpPc9q1a9eEifLjwAMP7Nu376fP2bRp0+rVq0MIRxxxRJOEyps0VvfCCy+cf/75NTU1IYTDDjusf//+hx566Pvvv19RUbF8+fKtW7eOGjWqtLT0mmuuaXxL9IXv3fGycuXKwYMH585pOvTQQ88888wOHTq8/vrrc+bMaWhoeOCBB7p06XL77bfnPS0A+64sADRDq1evbtmyZQihdevWc+bMaXx+165dw4YNy/0/7pxzzomY8LNIe3U1NTW58w6+8Y1vxM7S1Orq6k4++eQQwsknn1xbWxs7Tp41i9X169cvdwRde+21u3btany+vr6+sQ1p167dtm3b/v6fWdCF7/XxctJJJ+WWc91119XV1TU+v2TJks997nO5l55//vn8pgVgX2YPIACapYkTJ+b+hv+zn/3szDPPbHy+ZcuWU6dOPeyww0IITzzxRGVlZbSIn0Haq1u9enVdXV0I4Qtf+ELsLE3tlltuWbRoUefOnadPn57e1Tf7/uref//93F45ffr0+cUvfpGrWXNKSkquvfbas846K4RQXV39yiuv/P0/tqAL37vjZebMmS+88EII4cILLxw/fnxpaWnjS8cee+ykSZNy44ceeiivYQHYpymAAGh+stnso48+GkLIZDKXXHLJ/3i1devWw4cPz41z05qXtFcX/no9SwjhU65nSdKiRYtuvvnmEMLUqVMPOeSQ2HHyrFmsbtmyZbnB17/+9d07kUannXZabvD3F0CFXvjeHS/33XdfbvCJ+xmdd955l19++aWXXtqxY8fPnhCA5kIBBEDz8+qrr65fvz6E8OUvf7l79+4fn3DeeeflBk899VSTJsuHtFcXdtvRtqjOANq6devFF19cX1//wx/+8Nxzz40dJ8+ay+o2bNjQu3fv3r17n3DCCZ84ob6+Pjdo0aLF3/MDm2Dhe3G8VFVVzZs3L4RwzDHHfOLuRS1atPi3f/u3e+6558Ybb8xTTACaAQUQAM3P8uXLc4OBAwd+4oRjjz12v/32231mM5L26sJfz2jIZDIHH3zwxIkTBwwY0L1797Zt2x5++OHf/va3n3322dgBC+InP/nJ6tWru3XrltvbOzHNZXXDhw9ftmzZsmXLPrGsqampeeKJJ0IImUymf//+f88PbIKF78Xx8uc//3nXrl0hhMGDBxcoFQDN0b54eTYAfLrGP4l37dp1T3O6dOmydevWzZs3b9q0af/992+qaHmQ9urCX7/QtmzZ8phjjlm3bl3j8ytXrly5cuX9999//vnnT506tUOHDvEy5tny5cvvueeeEMJNN93Uvn372HHyrFmvrqamZsuWLZs3b160aNG99977/PPPhxCuuuqqY4455m++t2kWvhfHy2uvvZYbfP7znw8h/Md//Mf999+/ZMmSDz744HOf+9wJJ5xw4YUXXnTRRZ94ERwACVMAAdD8fPTRR7nBp3Qf5eXlK1euzE1uXhVJ2qsLf/1Cu2vXrnXr1h144IFnnnlmeXn522+//corr+TKrxkzZmzcuHH+/Pl/52U4+75Ro0bV19cfffTR3/3ud2Nnyb9mvbpu3bo1HnEhhP333//666/f/R7wn6JpFr4Xx8s777yTG3Tq1Onss8+eNWtW4097//33n3zyySeffPLOO+989NFHe/ToUbjkAOxrFEAAND/V1dW5wad0H40vVVVVNUWm/El7ddu3b3/vvfdy49GjR48dO7bxW2s2m/3tb387cuTIqqqqBQsW/PKXvxw1alS8pHkzf/782bNnhxBuu+229M65SGx1nTp16tSpU319/d+8mVfTLHzvjpdt27blBjfddNM777yTyWS+/OUv9+7du3Xr1suXL3/22Wdra2uXLFkyaNCgF198sdk1yADsNQUQAM1PNpvNDTKZzN+ck7uDcjOS9uq2b9/+k5/8JITQu3fvxtuZ5WQymcsvvzyEcMUVV4QQbr/99muvvbakpHnvV9jQ0JC7DdOAAQO++tWvxo6TZwmsbtKkSbt27aqrq6uurp42bdrLL7/83e9+d+bMmY888kjr1q339K4mW/jeHS+NJfI777xzxBFH3H///SeffHLjG5ctW3bRRRdVVlauWrVqzJgxjbeEByB5zfuXKgCKU+N2Gx9++OGe5jS+1Oy2kkl7deXl5RMmTJgwYcL/+Dbb6LLLLjvyyCNDCBs2bFiyZEnTpsu/OXPm/PnPfw4hfP/734+dJf8SWN03v/nNSy655NJLL/3Rj3700ksvXX311SGEWbNmTZgw4VPe1WQL37vjpWXLlrlBq1atHn300d3bnxBCnz59pk+fnjuT6L777mtsiwBIngIIgOanY8eOucGmTZv2NKfxpdwNs5qRtFf3N2UymcYbV+f2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" width="80%" /> Month Day Temp Solar.R Wind Ozone<br />
 104 1 1 1 1 1 1 0 34 1 1 1 1 1 0 1 3 1 1 1 1 0 1 1 1 1 1 1 1 0 0 2 4 1 1 1 0 1 1 1 1 1 1 1 0 1 0 2 1 1 1 1 0 0 1 2 3 1 1 0 1 1 1 1 1 1 1 0 1 0 1 2 1 1 1 0 0 0 0 4 0 0 5 7 7 37 56</p>
 </div>
 <div id="multiple-imputation" class="section level2">
 <h2>Multiple-Imputation</h2>
-<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mice)</span>
-<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
-<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">id=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">10</span></span>
-<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var1=</span><span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="cn">NA</span>), <span class="dv">10</span>, <span class="at">replace=</span><span class="cn">TRUE</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>))</span>
-<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var2=</span><span class="fu">sample</span>(<span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="fu">rep</span>(<span class="cn">NA</span>, <span class="dv">5</span>)), <span class="dv">10</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var3=</span><span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>), <span class="at">each=</span><span class="dv">5</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>, <span class="st">&quot;Yellow&quot;</span>))</span>
-<span id="cb71-7"><a href="#cb71-7" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var4=</span><span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Low&quot;</span>, <span class="st">&quot;High&quot;</span>), <span class="dv">5</span>)</span>
-<span id="cb71-8"><a href="#cb71-8" aria-hidden="true" tabindex="-1"></a>                )</span>
-<span id="cb71-9"><a href="#cb71-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb71-10"><a href="#cb71-10" aria-hidden="true" tabindex="-1"></a>t <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mice)</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">id=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">10</span></span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var1=</span><span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="cn">NA</span>), <span class="dv">10</span>, <span class="at">replace=</span><span class="cn">TRUE</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>))</span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var2=</span><span class="fu">sample</span>(<span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="fu">rep</span>(<span class="cn">NA</span>, <span class="dv">5</span>)), <span class="dv">10</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var3=</span><span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>), <span class="at">each=</span><span class="dv">5</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>, <span class="st">&quot;Yellow&quot;</span>))</span>
+<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var4=</span><span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Low&quot;</span>, <span class="st">&quot;High&quot;</span>), <span class="dv">5</span>)</span>
+<span id="cb73-8"><a href="#cb73-8" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb73-9"><a href="#cb73-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-10"><a href="#cb73-10" aria-hidden="true" tabindex="-1"></a>t <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
 <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
 <thead>
 <tr>
@@ -5520,19 +5985,19 @@ High
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>ti <span class="ot">&lt;-</span> <span class="fu">mice</span>(t</span>
-<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>         , <span class="at">m=</span><span class="dv">5</span></span>
-<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>         , <span class="at">maxit =</span> <span class="dv">50</span></span>
-<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>         , <span class="at">method =</span> <span class="st">&#39;pmm&#39;</span></span>
-<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>         , <span class="at">seed =</span> <span class="dv">500</span></span>
-<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a>         , <span class="at">printFlag =</span> <span class="cn">FALSE</span></span>
-<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a>           )</span>
-<span id="cb72-8"><a href="#cb72-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-9"><a href="#cb72-9" aria-hidden="true" tabindex="-1"></a>tic <span class="ot">&lt;-</span> <span class="fu">complete</span>(ti, <span class="at">action =</span> <span class="st">&quot;all&quot;</span>, <span class="at">include =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb72-10"><a href="#cb72-10" aria-hidden="true" tabindex="-1"></a><span class="do">##tic &lt;- complete(ti, action = 2L, include = TRUE)</span></span>
-<span id="cb72-11"><a href="#cb72-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-12"><a href="#cb72-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-13"><a href="#cb72-13" aria-hidden="true" tabindex="-1"></a>tic[[<span class="dv">2</span>]] <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>ti <span class="ot">&lt;-</span> <span class="fu">mice</span>(t</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>         , <span class="at">m=</span><span class="dv">5</span></span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>         , <span class="at">maxit =</span> <span class="dv">50</span></span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>         , <span class="at">method =</span> <span class="st">&#39;pmm&#39;</span></span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>         , <span class="at">seed =</span> <span class="dv">500</span></span>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>         , <span class="at">printFlag =</span> <span class="cn">FALSE</span></span>
+<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a>           )</span>
+<span id="cb74-8"><a href="#cb74-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb74-9"><a href="#cb74-9" aria-hidden="true" tabindex="-1"></a>tic <span class="ot">&lt;-</span> <span class="fu">complete</span>(ti, <span class="at">action =</span> <span class="st">&quot;all&quot;</span>, <span class="at">include =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb74-10"><a href="#cb74-10" aria-hidden="true" tabindex="-1"></a><span class="do">##tic &lt;- complete(ti, action = 2L, include = TRUE)</span></span>
+<span id="cb74-11"><a href="#cb74-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb74-12"><a href="#cb74-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb74-13"><a href="#cb74-13" aria-hidden="true" tabindex="-1"></a>tic[[<span class="dv">2</span>]] <span class="sc">%&gt;%</span> <span class="fu">prt</span>()</span></code></pre></div>
 <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
 <thead>
 <tr>
@@ -5729,21 +6194,21 @@ High
 </div>
 <div id="vim-package" class="section level2">
 <h2>VIM package</h2>
-<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(VIM)</span>
-<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">id=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">10</span></span>
-<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>                , <span class="at">var1=</span><span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="cn">NA</span>), <span class="dv">10</span>, <span class="at">replace=</span><span class="cn">TRUE</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>))</span>
-<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var2=</span><span class="fu">sample</span>(<span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="cn">NA</span>), <span class="dv">10</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var3=</span><span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>), <span class="at">each=</span><span class="dv">5</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>, <span class="st">&quot;Yellow&quot;</span>))</span>
-<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var4=</span><span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Low&quot;</span>, <span class="st">&quot;High&quot;</span>), <span class="dv">5</span>)</span>
-<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a>                )</span>
-<span id="cb73-8"><a href="#cb73-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb73-9"><a href="#cb73-9" aria-hidden="true" tabindex="-1"></a><span class="fu">matrixplot</span>(t, <span class="at">sortby =</span> <span class="fu">c</span>(<span class="st">&#39;id&#39;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(VIM)</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">id=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">10</span></span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>                , <span class="at">var1=</span><span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="cn">NA</span>), <span class="dv">10</span>, <span class="at">replace=</span><span class="cn">TRUE</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>, <span class="st">&quot;C&quot;</span>))</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var2=</span><span class="fu">sample</span>(<span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="cn">NA</span>), <span class="dv">10</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var3=</span><span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>), <span class="at">each=</span><span class="dv">5</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;Red&quot;</span>, <span class="st">&quot;Green&quot;</span>, <span class="st">&quot;Yellow&quot;</span>))</span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>              , <span class="at">var4=</span><span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Low&quot;</span>, <span class="st">&quot;High&quot;</span>), <span class="dv">5</span>)</span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-9"><a href="#cb75-9" aria-hidden="true" tabindex="-1"></a><span class="fu">matrixplot</span>(t, <span class="at">sortby =</span> <span class="fu">c</span>(<span class="st">&#39;id&#39;</span>))</span></code></pre></div>
 <p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABgAAAAPACAMAAADE4EJKAAAC+lBMVEUAAAABAQECAgIDAwMEBAQFBQUGBgYHBwcICAgJCQkKCgoLCwsMDAwNDQ0ODg4PDw8QEBARERESEhITExMUFBQVFRUWFhYXFxcYGBgZGRkaGhobGxscHBwdHR0eHh4fHx8gICAhISEiIiIjIyMkJCQlJSUnJycoKCgpKSkqKiorKyssLCwtLS0uLi4vLy8wMDAxMTEyMjIzMzM0NDQ1NTU2NjY3Nzc4ODg5OTk6Ojo7Ozs8PDw9PT0+Pj4/Pz9AQEBBQUFCQkJDQ0NERERFRUVGRkZHR0dISEhJSUlKSkpLS0tMTExNTU1OTk5PT09QUFBRUVFTU1NUVFRVVVVWVlZXV1dYWFhZWVlaWlpbW1tcXFxdXV1eXl5fX19gYGBhYWFiYmJjY2NkZGRlZWVmZmZnZ2doaGhpaWlqampra2tsbGxtbW1ubm5vb29wcHBxcXFycnJzc3N0dHR1dXV2dnZ3d3d4eHh5eXl6enp7e3t8fHx9fX1+fn5/f3+AgICBgYGCgoKDg4OEhISFhYWGhoaHh4eIiIiJiYmKioqLi4uMjIyNjY2Ojo6Pj4+QkJCRkZGSkpKTk5OUlJSVlZWWlpaYmJiZmZmampqbm5ucnJydnZ2enp6fn5+goKChoaGioqKjo6OkpKSlpaWmpqanp6eoqKipqamqqqqrq6usrKytra2urq6vr6+wsLCxsbGysrKzs7O0tLS1tbW2tra3t7e4uLi5ubm6urq7u7u8vLy9vb2+vr6/v7/AwMDBwcHCwsLDw8PExMTFxcXGxsbHx8fIyMjJycnKysrLy8vMzMzNzc3Ozs7Pz8/Q0NDR0dHS0tLT09PU1NTV1dXW1tbX19fY2NjZ2dna2trb29vc3Nzd3d3e3t7f39/g4ODh4eHi4uLj4+Pk5OTl5eXm5ubn5+fo6Ojp6enq6urr6+vs7Ozt7e3u7u7v7+/w8PDx8fHy8vLz8/P09PT19fX29vb39/f4+Pj5+fn6+vr7+/v8/Pz9/f3+/v7/AAD////nDbJBAAAACXBIWXMAAB2HAAAdhwGP5fFlAAAgAElEQVR4nO3de7ynZV3u8XsYhjOCjChbUVRQUzyQCuQpSDEUSs2Mre40TcRMBUVF0zwk5iHSrHZmllvNTN1KWWFulTRRc5NS6VbbCSmgUKgcFJDD7PV67XUc1hp+v9/tsxbf67rv5/t5/+E6OLPW81zrfq5rYGYNZQ4AkFJxXwAAwIMBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkGAAASIoBAICkRjYAJRl33mpfzMZ9wNTcByydkSXuPr9q7rzV3H0s5z5gau4Dls7IEnefXzV33mruPpZzHzA19wFLZ2SJu8+vmjtvNXcfy7kPmJr7gKUzssTd51fNnbeau4/l3AdMzX3A0hlZ4u7zq+bOW83dx3LuA6bmPmDpjCxx9/lVc+et5u5jOfcBU3MfsHRGlrj7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hazmzpsBQE/cfSznDlzNXchq7rwZAPTE3cdy7sDV3IWs5s6bAUBP3H0s5w5czV3Iau68GQD0xN3Hcu7A1dyFrObOmwFAT9x9LOcOXM1dyGruvBkA9MTdx3LuwNXchazmzpsBQE/cfSznDlzNXchq7rwZAPTE3cdy7sDV3IWs5s6bAUBP3H0s5w5czV3Iau68GQD0xN3Hcu7A1dyFrObOmwEAgKwYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAgKQYAABIigEAZrj678/8p2tuevNfzzvPdy1a/3HBNfUfNCZPfer73ZegxwCs26ETvcl9WbgFXXHynqWUfU//wco7jizjfmKu/OSbfu+f5l9e8/L9Stny8I+4r0eplNPcl6A37uMcqkyU8AyN16X3Xv6q/sTly+8Z+QD81sLebfrVueuPW77xZ93gviSdlA/vqI9zrJVf8++/8KDsdteFR6ccf9pZ7svCLeeYUnZ+2LMfs0spR16/9J5xD8Ablmv/t99Wyh6HP2DhSP+6+5oifWyNUk5YfOm+KqkxH2eNv9u3HHDGhdvm5i55653KrT7hvhzccj5SykH/MP/ymw8s5fVL7xr1AFy6dymPesNvHlm2Hlyefe3c3I1v2atsvsB9VYEm/0O8+6qkct1tgEtuUx7w/eXXf/iwcpuLrVcT65KJ3FcV50ll0zmLr1x5t7L7vy++NuoBePH8r/3nX/zwIaU8YOk97yrlJdZLirWFAch1twFeUva+qfMv3be8yHgt0bL9gunO5ejl187ZVJ62+MqoB+CYcui2hZdvL+V3lt91aDnCeEHRPnenUm598qnLSjl88aX7qqRGfJw17lUeueqt48vdbVcSb2uyAditnLLy6gll89cWXo56AO5cnrX48qulvH35XU8p+/uuJ953jivl6G8vv8FvAmO4vcrzV731orKH7UriXXfmveYL/37HruW+qjj7l+2/Gjx/l/ILCy9HPQC7l1csvry0lD9ZftdLyq62y1HY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" width="80%" /></p>
 </div>
 </div>
 <div id="computing-environment" class="section level1">
 <h1>Computing Environment</h1>
-<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <p>R version 4.0.3 (2020-10-10) Platform: x86_64-pc-linux-gnu (64-bit) Running under: Ubuntu 18.04.5 LTS</p>
 <p>Matrix products: default BLAS: /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1 LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1</p>
 <p>locale: [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C<br />
@@ -5755,7 +6220,7 @@ High
 <p>attached base packages: [1] grid stats graphics grDevices utils datasets methods<br />
 [8] base</p>
 <p>other attached packages: [1] VIM_6.1.0 colorspace_2.0-0 mice_3.11.0<br />
-[4] caret_6.0-86 lattice_0.20-41 Wu_0.0.0.9000<br />
+[4] caret_6.0-88 lattice_0.20-41 Wu_0.0.0.9000<br />
 [7] flexdashboard_0.5.2 lme4_1.1-26 Matrix_1.2-18<br />
 [10] mgcv_1.8-33 nlme_3.1-149 png_0.1-7<br />
 [13] scales_1.1.1 nnet_7.3-14 labelled_2.8.0<br />
