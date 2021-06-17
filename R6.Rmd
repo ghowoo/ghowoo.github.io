@@ -1,0 +1,107 @@
+---
+title: "R6 Class"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE,
+               cache=FALSE,
+               eval=TRUE,
+               prompt=FALSE,
+               results="asis",
+               tidy=FALSE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE,
+               out.width = '80%')
+eval_fast <- TRUE
+eval_slow <- FALSE
+```
+
+
+
+# [Index](index.html)
+
+# R6 Object
+
+
+```{r}
+library(Wu)
+library(R6)
+library(sloop)
+library(epitools)
+
+dt <- data.table(
+  outcome = sample(c(0,1), 100, replace = TRUE)
+, treatment = factor(rep(c("case", "control"), 50), levels = c("case", "control"))
+, sex = factor(sample(c("F", "M"), 100, replace = TRUE), levels = c("F", "M"))
+)
+
+
+RR <- R6Class(
+  "RR"
+, list(binary = NA
+     , groups = NA
+     , data = NULL
+     , groups_nlevels = NULL
+     , tables = NULL
+     , freqs = NULL
+     , ors_str = NULL
+     , oddsratios = NULL
+     , riskratios = NULL
+     , fx_or = function(x) epitools::epitab(x, method = "oddsratio", oddsratio = "wald")
+     , fx_rr = function(x) epitools::epitab(x, method = "riskratio", oddsratio = "wald")
+     , initialize = function(binary, groups, data) {
+       self$binary <- binary
+       self$groups <- groups
+       vars <- c(binary, groups)
+       self$data <- data[, ..vars]
+       self$groups_nlevels <- lapply(groups, function(x) length(levels(self$data[[x]])))
+       self$tables <- lapply(self$groups, function(x) table(self$data[[x]], self$data[[self$binary]]))
+       self$freqs <- lapply(self$groups, function(x) Wu::tab_freq(self$binary, x, self$data))
+       self$ors_str <- Wu::get_ors(self$binary, self$groups, self$data)
+       self$oddsratios <- lapply(self$tables, self$fx_or)
+       self$riskratios <- lapply(self$tables, self$fx_rr)
+     }
+     ))
+
+
+
+RR1 <- RR$new(binary = "outcome", groups = c("treatment", "sex"), data = dt)
+
+otype(RR1)
+str(RR1)
+
+class(RR1$data)
+
+RR1$tables
+RR1$freqs
+RR1$ors
+RR1$groups_levels
+RR1$groups_nlevels
+RR1$oddsratios
+RR1$riskratios
+
+
+
+
+
+```
+
+

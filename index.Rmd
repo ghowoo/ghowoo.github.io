@@ -58,5 +58,5 @@ eval_slow <- FALSE
 # [RMarkdown Slides](rmarkdown_slides.html)
 # [Neural Network](neural_network.html)
 # [SHAP: SHapley Additive exPlanations](shap.html)
-
+# [R6 Object](R6.html)
 # [Python](python.html)

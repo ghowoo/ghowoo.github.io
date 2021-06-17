@@ -33,14 +33,12 @@ eval_fast <- TRUE
 eval_slow <- FALSE
 ```
 
-# Links
-
-[Index](index.html)
+# [Index](index.html)
 
 
 # Pull Data
 
-## REDCapstatsge
+## REDCap
 
 ```{r,eval=FALSE,echo=TRUE}
 
@@ -209,6 +207,19 @@ dm <- dm[, conditions_num := sum(is.1(hypertension)
                                  )
        , by = 1:nrow(dm)
          ]
+
+```
+
+
+## Rolling Average
+
+```{r}
+library(zoo)
+dt <- data.table(series = c(1:10, NA, 11:21))
+dt <- dt[, mv2 := rollmean(series, k = 2, align = "right", na.pad = TRUE)
+         ][, mv3 := rollmean(series, k = 3, align = "right", na.pad = TRUE)]
+
+dt %>% prt()
 
 ```
 
