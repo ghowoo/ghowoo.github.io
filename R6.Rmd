@@ -6,7 +6,7 @@ output:
   rmdformats::readthedown:
     self_contained: true
     thumbnails: false
-    code_folding: hide
+    code_folding: none
     toc_depth: 6
     lightbox: true
     gallery: false
@@ -14,6 +14,28 @@ output:
     css: Wu.css
 ---
 
+
+<script type="text/javascript">
+function selectElementContents(el) {
+    let body = document.body, range, sel;
+    if (document.createRange && window.getSelection) {
+        range = document.createRange();
+        sel = window.getSelection();
+        sel.removeAllRanges();
+        try {
+            range.selectNodeContents(el);
+            sel.addRange(range);
+        } catch (e) {
+            range.selectNode(el);
+            sel.addRange(range);
+        }
+    } else if (body.createTextRange) {
+        range = body.createTextRange();
+        range.moveToElementText(el);
+        range.select();
+    }
+    document.execCommand("Copy");}
+</script>
 
 
 ```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
@@ -29,9 +51,14 @@ opts_chunk$set(echo=TRUE,
                comment=NA,
                message=FALSE,
                warning=FALSE,
-               out.width = '80%')
+               out.width = '80%',
+               class.source='klippy'
+               )
 eval_fast <- TRUE
 eval_slow <- FALSE
+klippy::klippy(position = c('top', 'right')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
 ```
 
 
@@ -41,7 +68,8 @@ eval_slow <- FALSE
 # R6 Object
 
 
-```{r}
+```{r, class.source='klippy'}
+
 library(Wu)
 library(R6)
 library(sloop)
@@ -85,23 +113,89 @@ RR <- R6Class(
 
 RR1 <- RR$new(binary = "outcome", groups = c("treatment", "sex"), data = dt)
 
-otype(RR1)
-str(RR1)
-
-class(RR1$data)
-
-RR1$tables
-RR1$freqs
-RR1$ors
-RR1$groups_levels
-RR1$groups_nlevels
-RR1$oddsratios
-RR1$riskratios
 
 
 
+add_copy_icon <- function(id){
+  txt <- paste0('<button type=\"button\" onclick=\"selectElementContents( document.getElementById('
+              , '\''
+              , id
+              , '\''
+              , ') );\">Copy Table</button>')
+  cat(txt)
+}
 
+add_copy_icon("t1")
+RR1$oddsratios[[2]]$tab %>%
+   prt(table.attr="id=t1", caption = "Table of Odds Ratio")
+
+
+
+
+
+library(DT)
+dt <- RR1$oddsratios[[2]]$tab
+dt <- as.data.frame(dt)
+dt <- round(dt, 4)
+
+datatable(dt
+, extensions = 'Buttons'
+, options = list(
+    dom = 'Bfrtip'
+  , buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+  )
+  , caption = "Odds Ratios"
+)
 
 ```
 
 
+
+<!-- <button type="button" onclick="selectElementContents( document.getElementById('t1') );">Copy Table</button> -->
+
+
+
+# Test GPU (doesn't work)
+
+* http://www.r-tutor.com/gpu-computing/clustering/distance-matrix
+* https://github.com/cdeterman/gpuR/wiki/Build-Instructions-for-Linux
+  
+```{r, eval = FALSE}
+
+test.data <- function(dim, num, seed = 17){
+  set.seed(seed)
+  matrix(rnorm(dim * dim), nrow = num)
+}
+
+m <- test.data(1200, 45000)
+
+system.time(dist(m))
+
+
+# Dev RViennaCL
+devtools::install_github("cdeterman/RViennaCL")
+
+# Dev gpuR
+devtools::install_github("cdeterman/gpuR")
+
+
+A <- seq.int(from=0, to=999)
+B <- seq.int(from=1000, to=1)
+gpuA <- gpuVector(A)
+gpuB <- gpuVector(B)
+
+C <- A + B
+gpuC <- gpuA + gpuB
+
+all(C == gpuC)
+
+
+```
+
+# Environment
+
+```{r}
+
+sessionInfo()
+
+```
