@@ -1,0 +1,68 @@
+---
+title: "Descritization"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE,
+               cache=FALSE,
+               eval=TRUE,
+               prompt=FALSE,
+               results="asis",
+               tidy=FALSE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE,
+               out.width = '80%')
+eval_fast <- TRUE
+eval_slow <- FALSE
+```
+
+
+
+# [Index](index.html)
+
+
+# "discretization" package
+
+ * FSelectorRcpp: 'Rcpp' Implementation of 'FSelector' Entropy-Based Feature
+Selection Algorithms with a Sparse Matrix Support
+
+```{r}
+
+library(FSelectorRcpp)
+
+
+t <- discretize(x = iris[[1]], y = iris[[5]])
+setDT(t)
+
+colnames(t) %>% prt()
+
+dt <- as.data.table(iris)
+colnames(dt) %>% prt()
+
+dt2 <- discretize(x = dt$Sepal.Length, y = dt$Species, all = TRUE)
+colnames(dt2) %>% prt()
+
+setDT(dt2)
+dt2[,.N,by=.(Species, Sepal.Length)][order(Species, Sepal.Length)] %>% prt()
+
+
+
+```

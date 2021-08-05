@@ -51,6 +51,8 @@ eval_slow <- FALSE
 * [R Notes](r_notes.html)
 * [Time to Event](time_to_event.html)
 * [Support Vector Machine (SVM)](support_vector_machine.html)
+* [Discretization](discretization.html)
+
 
 # [R Graph](graph.html)
 # [Flow Chart](flowchart.html)
