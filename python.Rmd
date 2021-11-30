@@ -77,12 +77,13 @@ knitr::knit_engines$set(python = reticulate::eng_python)
 ##              "/home/gongw/.virtualenvs/pybert/lib"
 ##            , Sys.getenv("LD_LIBRARY_PATH")
 ##            , sep = ":"))
+## use_python("/home/gongw/.virtualenvs/pybert/bin/python3.9")
 
 library(reticulate)
 use_python("/usr/bin/python3")
 py_config()
 py_discover_config()
-py_install()
+## py_install()
 
 
 
@@ -109,6 +110,8 @@ os$listdir(".")
 # python matplotlib
 
 ```{python}
+
+print(4)
 
 
 import seaborn as sns

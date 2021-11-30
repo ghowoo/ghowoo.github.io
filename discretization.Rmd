@@ -66,3 +66,19 @@ dt2[,.N,by=.(Species, Sepal.Length)][order(Species, Sepal.Length)] %>% prt()
 
 
 ```
+
+
+```{r}
+library(FSelector)
+data(iris)
+
+weights <- information.gain(Species~., iris)
+print(weights)
+
+subset <- cutoff.k(weights, 2)
+
+f <- as.simple.formula(subset, "Species")
+print(f)
+
+
+```

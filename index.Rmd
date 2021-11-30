@@ -49,6 +49,7 @@ eval_slow <- FALSE
 * [Power Analysis](power_analysis.html)
 * [Restricted Cubic Spline](restricted_cubic_spline.html)
 * [R Notes](r_notes.html)
+* [Intall R Packages](install_packages.html)
 * [Time to Event](time_to_event.html)
 * [Support Vector Machine (SVM)](support_vector_machine.html)
 * [Discretization](discretization.html)
