@@ -21,6 +21,13 @@ output:
 
 # Setup
 
+ * library(reticulate)
+ * use_virtualenv("py39bert")
+ * knitr::knit_engines$set(python = reticulate::eng_python)
+
+
+# Setup
+
  * Create virtual evironment "rmd" using default python python3.7
  * Automatically install pip, wheel, setuptools, numpy
  * install python packages: py_install("package-name", envname = "rmd")
@@ -44,11 +51,13 @@ opts_chunk$set(echo=TRUE,
 eval_fast <- TRUE
 eval_slow <- FALSE
 library(reticulate)
+## use_condaenv("rmd")
+use_virtualenv("py39bert")
 ## reticulate::install_miniconda()
 ## virtualenv_create("rmd")
 ## py_install("seaborn", envname = "rmd")
-use_virtualenv("rmd")
-use_virtualenv("py3-virtualenv")
+## use_virtualenv("rmd")
+##use_virtualenv("py3-virtualenv")
 ## py_config()
 ## py_available()
 knitr::knit_engines$set(python = reticulate::eng_python)
@@ -56,6 +65,88 @@ knitr::knit_engines$set(python = reticulate::eng_python)
 
 
 
+# Data Transfer
+
+```{r}
+library(feather)
+library(Wu)
+dt <- data.table(v1=1:6, v2=rep("A", 6))
+write_feather(dt, "dt.feather")
+
+
+```
+
+# Install package
+
+```{r}
+library(reticulate)
+use_virtualenv("py39bert")
+## virtualenv_install("py39bert", "feather")
+
+```
+
+# Read feather in Python
+
+```{python}
+
+import pandas as pd
+import feather
+path = "dt.feather"
+
+df = pd.read_feather(path)
+
+print(df)
+
+```
+
+# Conda Installation
+
+ * conda_create: create new env using conda
+ * virtualenv_create: using virtualenv
+ 
+
+```{r}
+library(reticulate)
+
+## repl_python()
+conda_list()
+
+## conda_create("rmd")
+
+## reticulate::conda_remove("base")
+## conda_remove("rmd")
+
+## use_condaenv("rmd")
+
+## conda_install(envname="rmd", packages="matplotlib")
+
+
+## virtualenv_list()
+## virtualenv_remove("rmd")
+## virtualenv_create("rmd")
+## virtualenv_install(envname="rmd", packages="scipy")
+
+```
+
+# Check Python env
+
+ * py_config: see current python version
+
+```{r}
+
+
+## use_virtualenv("py39bert")
+## virtualenv_install(envname="py39bert", packages="scipy")
+## py_config()
+
+## os <- import("os")
+## os$environ
+## os$environ['HOME']
+
+## os$listdir()
+
+
+```
 
 
 # reticulate
@@ -81,11 +172,14 @@ knitr::knit_engines$set(python = reticulate::eng_python)
 ## use_python("/home/gongw/.virtualenvs/pybert/bin/python3.9")
 
 library(reticulate)
-use_python("/usr/bin/python3")
+## use_python("/home/gongw/.virtualenvs/py39bert/bin/python3.9")
+## use_python("/usr/bin/python3")
+
+use_virtualenv("py39bert")
+
 py_config()
 py_discover_config()
 ## py_install()
-
 
 
 ## reticulate::py_config()
@@ -100,7 +194,8 @@ py_discover_config()
 
 os <- import("os")
 os$listdir(".")
-
+sys <- import("sys")
+sys$version
 
 
 ## py_install("pandas")
@@ -112,8 +207,12 @@ os$listdir(".")
 
 ```{python}
 
+
 print(4)
 
+
+import sys
+print(sys.version)
 
 import seaborn as sns
 pr = sns.load_dataset("fmri")
@@ -122,17 +221,27 @@ sns.lmplot("timepoint", "signal", data = pr)
 mpl.pyplot.show()
 # print(pr)
 
+x=4
+print(x)
+
+
 ```
 
 ```{r}
-f1 <- subset(py$fmri, region = "parietal")
 
+
+## py_get_item(x)
+## print(py$x)
+
+## f1 <- subset(py$fmri, region = "parietal")
+
+y <- 5
 ```
 
 ```{python}
 import matplotlib as mpl
-sns.lmplot("timepoint", "signal", data = r.f1)
-mpl.pyplot.show()
+# sns.lmplot("timepoint", "signal", data = r.f1)
+# mpl.pyplot.show()
 
 ```
 
@@ -151,12 +260,12 @@ print(x)
 
 
 ```{r, eval = FALSE}
-try:
-    import seaborn
-except ImportError:
-    from pip._internal import main as pip
-    pip(['install', 'seaborn'])
-    import seaborn
+## try:
+##     import seaborn
+## except ImportError:
+##     from pip._internal import main as pip
+##     pip(['install', 'seaborn'])
+##     import seaborn
 
 
 # from pip._internal import main as pip
