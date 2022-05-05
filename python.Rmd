@@ -19,22 +19,10 @@ output:
 # [Index](index.html)
 
 
-# Setup
 
- * library(reticulate)
- * use_virtualenv("py39bert")
- * knitr::knit_engines$set(python = reticulate::eng_python)
+# General rmarkdown Setting
 
-
-# Setup
-
- * Create virtual evironment "rmd" using default python python3.7
- * Automatically install pip, wheel, setuptools, numpy
- * install python packages: py_install("package-name", envname = "rmd")
- * use_virtualenv("rmd")
- * set knitr_engines using reticulate
-
-```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+```{r setup, echo = FALSE, cache = FALSE, warning = FALSE, message = FALSE}
 library(knitr)
 library(rmdformats)
 library(Wu)
@@ -50,101 +38,138 @@ opts_chunk$set(echo=TRUE,
                out.width = '80%')
 eval_fast <- TRUE
 eval_slow <- FALSE
+```
+
+
+
+
+
+# Knitr setting for rmarkdown export
+
+ * library(reticulate)
+ * py_config: see current python version
+ * use_virtualenv("py39bert")
+ * Enable knit_engine to use python for rmarkdown export purpose
+ * knitr::knit_engines$set(python = reticulate::eng_python)
+ 
+```{r}
 library(reticulate)
-## use_condaenv("rmd")
-use_virtualenv("py39bert")
-## reticulate::install_miniconda()
-## virtualenv_create("rmd")
-## py_install("seaborn", envname = "rmd")
-## use_virtualenv("rmd")
-##use_virtualenv("py3-virtualenv")
-## py_config()
-## py_available()
+py_home <- py_config()
+use_virtualenv(py_home$virtualenv)
 knitr::knit_engines$set(python = reticulate::eng_python)
 ```
 
+# Install Python 3.9 on Ubuntu
+
+ 1. Check Ubuntu version
+	````
+    lsb_release -a
+	````
+ 2. Update packages
+	````
+    sudo apt update
+	sudo apt -y upgrade
+	````
+ 3. Install python 3.9
+    ````
+	sudo apt install python3.9
+	python3 -V
+	python3.9 -V
+	````
+ 4. Install pip
+	````
+    python3.9 -m pip install --upgrade pip
+	````
+ 5. Install virtualenv
+    ````
+	pip3 install virtualenv
+	which virtualenv
+	````
+ 6. Create a virtualenv using Python 3.9 named as py39bert
+    ````
+	which python3.9
+	virtualenv -p /usr/bin/python3.9 py39bert
+	````
+ 7. Activate the virtualenv
+    ````
+	source ~/py39bert/bin/activate
+	````
+ 8. Install ipython and jupyter notebook within virtualenv
+    ````
+	pip3 install ipython
+	pip3 install jupyter notebook
+    jupyter notebook to start jupyter notebook
+	````
+ 9. Install python packages within the virtualenv
+    ````
+	pip3 install numpy
+	````
+ 
 
 
-# Data Transfer
+# Install Python packages within R
 
-```{r}
-library(feather)
-library(Wu)
-dt <- data.table(v1=1:6, v2=rep("A", 6))
-write_feather(dt, "dt.feather")
-
-
-```
-
-# Install package
+ * Run python module within R
 
 ```{r}
 library(reticulate)
-use_virtualenv("py39bert")
-## virtualenv_install("py39bert", "feather")
+py_home <- py_config()
+use_virtualenv(py_home$virtualenv)
+## virtualenv_install(py_home$virtualenv, "feather")
+
+os <- import("os")
+os$environ['HOME']
+os$listdir()[1:2]
+```
+
+
+
+# Install Python packages within Python
+
+```{python}
+
+import subprocess
+
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+# install("matplotlib")
 
 ```
+
+
+
+# Save Data in R
+
+```{r}
+library(feather)
+library(data.table)
+dt <- data.table(v1=1:6, v2=rep("A", 6))
+write_feather(dt, "dt.feather")
+list.files(pattern = "*.feather")
+
+```
+
 
 # Read feather in Python
 
 ```{python}
+import os
+print(os.getcwd())
+path = os.getcwd()
+os.chdir(path)
+print(os.listdir())
+print(os.getcwd())
+
 
 import pandas as pd
-import feather
+# import feather
 path = "dt.feather"
+
 
 df = pd.read_feather(path)
 
 print(df)
-
-```
-
-# Conda Installation
-
- * conda_create: create new env using conda
- * virtualenv_create: using virtualenv
- 
-
-```{r}
-library(reticulate)
-
-## repl_python()
-conda_list()
-
-## conda_create("rmd")
-
-## reticulate::conda_remove("base")
-## conda_remove("rmd")
-
-## use_condaenv("rmd")
-
-## conda_install(envname="rmd", packages="matplotlib")
-
-
-## virtualenv_list()
-## virtualenv_remove("rmd")
-## virtualenv_create("rmd")
-## virtualenv_install(envname="rmd", packages="scipy")
-
-```
-
-# Check Python env
-
- * py_config: see current python version
-
-```{r}
-
-
-## use_virtualenv("py39bert")
-## virtualenv_install(envname="py39bert", packages="scipy")
-## py_config()
-
-## os <- import("os")
-## os$environ
-## os$environ['HOME']
-
-## os$listdir()
-
 
 ```
 
@@ -185,7 +210,7 @@ py_discover_config()
 ## reticulate::py_config()
 
 
-## virtualenv_list()
+virtualenv_list()
 ## reticulate::use_python("/usr/bin/python3")
 ## use_virtualenv("py39bert", required = TRUE)
 ## py_available()
@@ -207,73 +232,15 @@ sys$version
 
 ```{python}
 
-
-print(4)
-
-
 import sys
 print(sys.version)
 
 import seaborn as sns
 pr = sns.load_dataset("fmri")
-import matplotlib as mpl
+import matplotlib as plt
 sns.lmplot("timepoint", "signal", data = pr)
-mpl.pyplot.show()
-# print(pr)
-
-x=4
-print(x)
-
-
+plt.pyplot.show()
 ```
-
-```{r}
-
-
-## py_get_item(x)
-## print(py$x)
-
-## f1 <- subset(py$fmri, region = "parietal")
-
-y <- 5
-```
-
-```{python}
-import matplotlib as mpl
-# sns.lmplot("timepoint", "signal", data = r.f1)
-# mpl.pyplot.show()
-
-```
-
-# Python chunk
-
-```{python}
-
-import numpy as np
-x = np.arange(5)
-print(x)
-
-
-```
-
-# Install Packages within Python 
-
-
-```{r, eval = FALSE}
-## try:
-##     import seaborn
-## except ImportError:
-##     from pip._internal import main as pip
-##     pip(['install', 'seaborn'])
-##     import seaborn
-
-
-# from pip._internal import main as pip
-# pip(['install', 'seaborn'])
-
-```
-
-
 
 # Python print
 
@@ -294,7 +261,16 @@ print(a)
 
 
 
-# Python plot
+
+# Save Python plot
+
+ * To show plot in rmarkdown
+ 
+    ````
+	
+    ![matplot](pythton_pyplot.png)
+	
+    ````
 
 ```{python}
 
@@ -311,3 +287,18 @@ plt.close(fig)
 
 
 ![matplot](pythton_pyplot.png)
+
+
+# Python Version
+
+```{python}
+import sys
+print(sys.version_info)
+```
+
+# sessionInfo()
+
+```{r}
+sessionInfo()
+
+```
