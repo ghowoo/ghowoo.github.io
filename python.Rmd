@@ -16,11 +16,11 @@ output:
 
 
 
-# [Index](index.html)
+# [Back to Index](index.html)
 
 
 
-# General rmarkdown Setting
+
 
 ```{r setup, echo = FALSE, cache = FALSE, warning = FALSE, message = FALSE}
 library(knitr)
@@ -51,6 +51,14 @@ eval_slow <- FALSE
  * use_virtualenv("py39bert")
  * Enable knit_engine to use python for rmarkdown export purpose
  * knitr::knit_engines$set(python = reticulate::eng_python)
+ 
+ 
+````
+library(reticulate)
+py_home <- py_config()
+use_virtualenv(py_home$virtualenv)
+knitr::knit_engines$set(python = reticulate::eng_python)
+````
  
 ```{r}
 library(reticulate)
@@ -133,7 +141,7 @@ import subprocess
 def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
-# install("matplotlib")
+# install("tabulate")
 
 ```
 
@@ -155,11 +163,11 @@ list.files(pattern = "*.feather")
 
 ```{python}
 import os
-print(os.getcwd())
+#print(os.getcwd())
 path = os.getcwd()
 os.chdir(path)
-print(os.listdir())
-print(os.getcwd())
+print(os.listdir()[0:4])
+#print(os.getcwd())
 
 
 import pandas as pd
@@ -169,7 +177,8 @@ path = "dt.feather"
 
 df = pd.read_feather(path)
 
-print(df)
+from tabulate import tabulate
+print(tabulate(df, tablefmt='html'))
 
 ```
 
@@ -242,7 +251,7 @@ sns.lmplot("timepoint", "signal", data = pr)
 plt.pyplot.show()
 ```
 
-# Python print
+# Python print table
 
 
 
@@ -253,8 +262,11 @@ x = 'hello, python world!'
 print(x)
 
 import numpy as np
-a = np.arange(5)
-print(a)
+# a = np.arange(5)
+
+table = [['one','two','three'],['four','five','six'],['seven','eight','nine']]
+from tabulate import tabulate
+print(tabulate(table, tablefmt = 'html', headers = ["Column I", "Column II", "Column III"]))
 
 
 ```
@@ -296,7 +308,7 @@ import sys
 print(sys.version_info)
 ```
 
-# sessionInfo()
+# R sessionInfo()
 
 ```{r}
 sessionInfo()
