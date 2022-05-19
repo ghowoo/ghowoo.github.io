@@ -51,35 +51,6 @@ eval_slow <- FALSE
 
 
 
-# CONSORT Flow Diagram
-
- * consort plot using [tgsify](https://github.com/thomasgstewart/tgsify) package
-
-```{r}
-library(Wu)
-library(tgsify)
-
-df <- data.frame(
-    age = 1:100
-  , sex = sample(c("M", "F"), size = 100, replace = TRUE)
-  , state = sample(c("Tennessee", "Kentucky"), size = 100, replace = TRUE)
-)
-
-
-df %>%
-    mutate(consort = case_when(
-               state !=  "Tennessee" ~ "2 2 Not from Tennessee"
-             , age < 18 ~ "3 2 Age less than 18"
-             , sex != "M" ~ "4 2 Female"
-             , TRUE ~ "5 1 Study population"
-           )) %>%
-    le("consort") %>%
-    two_column_consort("Total Records")
-
-```
-
-
-
 # ggplot
 ## Add annotation with special symbols
 

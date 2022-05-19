@@ -20,26 +20,30 @@ output:
 library(knitr)
 library(rmdformats)
 library(Wu)
-opts_chunk$set(echo=TRUE,
-               cache=FALSE,
-               eval=TRUE,
-               cache=FALSE,
-               prompt=FALSE,
-               results="asis",
-               tidy=FALSE,
-               comment=NA,
-               message=FALSE,
-               warning=FALSE,
-               out.width = '80%')
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
 eval_fast <- TRUE
 eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
 ```
 
 
 
 # [R Notes](index.html)
 
-# ggplot2
+# Customized flowchart with ggplot2
 
 
 ```{r}
@@ -286,29 +290,33 @@ p
 
 ```
 
+# CONSORT Flow Diagram
 
+ * consort plot using [tgsify](https://github.com/thomasgstewart/tgsify) package
 
-# Flowchart Using tgsify Package
-
-
-```{r, eval = FALSE}
+```{r}
+library(Wu)
 library(tgsify)
 
-df <- data.frame(age = 1:10, sex = rep(c("M", "F"), each = 5))
+df <- data.frame(
+    age = 1:100
+  , sex = sample(c("M", "F"), size = 100, replace = TRUE)
+  , state = sample(c("Tennessee", "Kentucky"), size = 100, replace = TRUE)
+)
+
 
 df %>%
     mutate(consort = case_when(
-               age >= 3 ~ "2 2 Age >= 3 "
-             , sex == "M" ~ "3 2 Male"
-             , TRUE ~ "4 2 Study Population"
+               state !=  "Tennessee" ~ "2 2 Not from Tennessee"
+             , age < 18 ~ "3 2 Age less than 18"
+             , sex != "M" ~ "4 2 Female"
+             , TRUE ~ "5 1 Study population"
            )) %>%
     le("consort") %>%
     two_column_consort("Total Records")
 
-
-
-
 ```
+
 
 
 

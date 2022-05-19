@@ -1,0 +1,89 @@
+---
+title: "Visualize Hierarchical Network with visNetwork"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+# [Back to Index](index.html)
+
+
+
+# Network by visNetwork
+
+
+```{r,eval=eval_fast}
+library(Wu)
+dt <- data.table(
+    attrition_1=sample(c("A", "B"), 50, replace=TRUE)
+  , attrition_2=sample(c("Blue", "Red", "Yellow"), 50, replace=TRUE)
+  , attrition_3=sample(c("Female", "Male"), 50, replace=TRUE)
+  , attrition_4=sample(c("Medicaid", "Medcare", "Commercial"), 50, replace=TRUE)
+)
+
+nodes <- get_nodes(dt
+                 , c("attrition_1", "attrition_2", "attrition_3", "attrition_4")
+                 , top = "Total")
+
+
+## nodes$size <- sqrt(nodes$size*900)
+## nodes$shape <- "dot"
+## edges <- get_edges(nodes)
+## edges$width <- sqrt(edges$width)
+## library(visNetwork)
+## visNetwork::visNetwork(nodes, edges, width = "80%", height = 700) %>% visOptions(highlightNearest = TRUE) %>% visNodes(scaling = list(label = list(enabled = T)))
+
+
+plt_fl_net <- function(data, vars){
+    nodes <- get_nodes(data, vars, top = "Total")
+    nodes$size <- sqrt(nodes$size * 900)
+    nodes$shape <- "dot"
+    edges <- get_edges(nodes)
+    edges$width <- sqrt(edges$width)
+    library(visNetwork)
+    visNetwork::visNetwork(nodes, edges, width = "100%", height = 700) %>% visOptions(highlightNearest = TRUE) %>%
+        visNodes(scaling = list(label = list(enabled = T)))
+}
+
+
+plt_fl_net(dt, c("attrition_1", "attrition_2", "attrition_3", "attrition_4"))
+
+
+```
+

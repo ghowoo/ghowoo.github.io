@@ -54,6 +54,9 @@ eval_slow <- FALSE
 # Visualization
  * [R Graphics](graph.html)
  * [Flow Chart](flowchart.html)
+ * [Map: Hydraulic Dams around the World](hydraulic_dams_around_the_world.html)
+ * [Network with Gephi](network_Gephi.html)
+ * [Newtork with visNetwork](network_visNetwork.html)
  * [RMarkdown Slides](rmarkdown_slides.html)
 
 # R Programming
