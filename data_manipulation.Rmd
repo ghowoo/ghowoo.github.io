@@ -36,29 +36,29 @@ eval_slow <- FALSE
 # [Index](index.html)
 
 
-# Pull Data
+# Pull Data from REDCap
 
-## REDCap
+ * Pull data from REDCap using API and save the csv file
 
 ```{r,eval=FALSE,echo=TRUE}
 
 api_token       <- '1245456abcdef'
 api_url         <- 'https://redcap_url/api/'
-
-
 csv_file <- RCurl::postForm(
-  api_url,
-  token=api_token,
-  content='record',
-  format='csv',
-  type='flat'
-  ,.opts=curlOptions(ssl.verifypeer=FALSE)
+  api_url
+  , token=api_token
+  , content='record'
+  , format='csv'
+  , type='flat'
+  , .opts=curlOptions(ssl.verifypeer=FALSE)
 )
-write(csv_file,file='../csv/filename.csv')
+write(csv_file, file='../csv/filename.csv')
 
 ```
 
 # General Data Description
+
+ * Create a HTML file the describe all variables in a dataset
 
 ```{r, eval=FALSE,echo=TRUE}
 Wu::sv_desc(dt, file_name = "dt_variables.html")

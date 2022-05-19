@@ -15,29 +15,6 @@ output:
 ---
 
 
-<script type="text/javascript">
-function selectElementContents(el) {
-    let body = document.body, range, sel;
-    if (document.createRange && window.getSelection) {
-        range = document.createRange();
-        sel = window.getSelection();
-        sel.removeAllRanges();
-        try {
-            range.selectNodeContents(el);
-            sel.addRange(range);
-        } catch (e) {
-            range.selectNode(el);
-            sel.addRange(range);
-        }
-    } else if (body.createTextRange) {
-        range = body.createTextRange();
-        range.moveToElementText(el);
-        range.select();
-    }
-    document.execCommand("Copy");}
-</script>
-
-
 ```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
 library(knitr)
 library(rmdformats)
@@ -56,151 +33,20 @@ opts_chunk$set(echo=TRUE,
                )
 eval_fast <- TRUE
 eval_slow <- FALSE
-klippy::klippy(position = c('top', 'right')
+klippy::klippy(position = c('top', 'left')
              , tooltip_message = 'Click to copy'
              , tooltip_success = 'Done')
 ```
 
 
 
-# [Index](index.html)
+# [Back to Index](index.html)
 
 
 
 
 
 
-# Functions
-
-
-## Expression
-
- * https://adv-r.hadley.nz/expressions.html
- * Expression: separate out description of the action from the action itself.
- * rlang::expr() function captures the structure of the code without evaluating it.
-
-```{r}
-
-z <- rlang::expr(y <- x * 10)
-z
-
-x <- 4
-base::eval(z)
-y
-
-```
-
-## Abstract Syntax trees (ASTs)
-
- * The leaves of the trees are either symbols or constants.
- * Strings and symbols are easily confused, so strings are always surrounded in quotes.
- * The branches of the tree are called objects which represent function calls. The first child is the function that gets called, and the second and subsequent are children that are the arguments to that function.
- * The depth within the tree is determined by the nesting of function calls. This also determines evaluation order, as evaluation proceeds from deepest-to-shallowest, but not guaranteed because of lazy evaluation.
- * infix vs prefix calls:
-
-
-```{r}
-
-library(rlang)
-library(lobstr)
-
-lobstr::ast(f(x, "y", 1))
-
-lobstr::ast(f(g(1, 2), h(3, 4, i())))
-
-
-```
-
-## Missing arguments to a function
-
- * missing() function inside a function can check if an argument's value comes from the user or from a default
- 
-```{r}
-fx <- function(x = 10, y = NULL) {
-  list(missing(x), is.null(x), x, missing(y), is.null(y), y)
-}
-
-str(fx())
-str(fx(5))
-str(fx(5, 6))
-
-args(fx)
-
-
-lapply(list(1, NULL, 2, NULL), function(x = NULL) is.null(x))
-
-sapply(list(1, NULL, 2, NULL), function(x = NULL) is.null(x))
-
-sapply(list(1, NULL, 2, NULL), function(x) missing(x))
-
-```
-
-## Capture the current call
-
- * sys.call() captures exactly what the user feeds the function (some of them positional)
- * match.call() captures named arguments
-
-```{r}
-f <- function(a = 1, b = 2, c = 3){
-  list(sys = sys.call(), match = match.call())
-}
-
-f(a = 5, 6)
-
-
-f <- function(a = 1, b = 2, c =3){
-  print(match.call())
-  print(as.list(match.call()))
-  s <- do.call("sum", as.list(match.call())[-1L])
-  print(s)
-}
-
-f(1, 2, 3)
-
-
-fx <- function(a = 1, b = 2, c = 3, ...){
-  all_arguments <- c(as.list(environment()), list(...))
-  print("All arguments including default arguments:")
-  print(all_arguments)
-  print("----------------")
-  print("match.call(): ")
-  print(match.call())
-  print("")
-  print("----------------")
-  print("match.call() as list:")
-  print(as.list(match.call()))
-  print("")
-  print("----------------")
-  print("match.call(expand.dots = TRUE) as list:")
-  print(as.list(match.call(expand.dots = TRUE)))
-  print("")
-  print("----------------")
-  print("list(...):")
-  print(list(...))
-  print("----------------")
-  s <- do.call("sum", as.list(match.call())[-1L])
-  print(s)
-}
-
-value <- 33
-fx(a = value, d = 4, f = 5)
-
-```
-
-## call() and do.call()
-
- * call() returns a call object with its name and arguments
- * do.call() evaluates the call immediately
-
-```{r}
-call("sum", list(1, 2))
-
-base::eval(call("sum", c(1, 2)))
-
-do.call("sum", list(1, 2))
-
-
-```
 
 # R6 Object RR
 
@@ -250,86 +96,16 @@ RR <- R6Class(
 
 RR1 <- RR$new(binary = "outcome", groups = c("treatment", "sex"), data = dt)
 
+RR1$oddsratios[[2]]$tab %>% prt()
 
 
 
-add_copy_icon <- function(id){
-  txt <- paste0('<button type=\"button\" onclick=\"selectElementContents( document.getElementById('
-              , '\''
-              , id
-              , '\''
-              , ') );\">Copy Table</button>')
-  cat(txt)
-}
-
-add_copy_icon("t1")
-RR1$oddsratios[[2]]$tab %>%
-   prt(table.attr="id=t1", caption = "Table of Odds Ratio")
-
-
-
-
-
-library(DT)
-dt <- RR1$oddsratios[[2]]$tab
-dt <- as.data.frame(dt)
-dt <- round(dt, 4)
-
-datatable(dt
-, extensions = 'Buttons'
-, options = list(
-    dom = 'Bfrtip'
-  , buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
-  )
-  , caption = "Odds Ratios"
-)
 
 ```
 
 
 
-<!-- <button type="button" onclick="selectElementContents( document.getElementById('t1') );">Copy Table</button> -->
-
-
-
-# Test GPU (doesn't work)
-
-* http://www.r-tutor.com/gpu-computing/clustering/distance-matrix
-* https://github.com/cdeterman/gpuR/wiki/Build-Instructions-for-Linux
-  
-```{r, eval = FALSE}
-
-test.data <- function(dim, num, seed = 17){
-  set.seed(seed)
-  matrix(rnorm(dim * dim), nrow = num)
-}
-
-m <- test.data(1200, 45000)
-
-system.time(dist(m))
-
-
-# Dev RViennaCL
-devtools::install_github("cdeterman/RViennaCL")
-
-# Dev gpuR
-devtools::install_github("cdeterman/gpuR")
-
-
-A <- seq.int(from=0, to=999)
-B <- seq.int(from=1000, to=1)
-gpuA <- gpuVector(A)
-gpuB <- gpuVector(B)
-
-C <- A + B
-gpuC <- gpuA + gpuB
-
-all(C == gpuC)
-
-
-```
-
-# Environment
+# R sessionInfo
 
 ```{r}
 

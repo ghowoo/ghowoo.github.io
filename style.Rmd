@@ -1,5 +1,5 @@
 ---
-title: "Style"
+title: "rmarkdown HTML Style"
 author: "Wu Gong"
 date: "`r Sys.Date()`"
 output:
@@ -15,23 +15,28 @@ output:
 ---
 
 
-
+	
 ```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
 library(knitr)
 library(rmdformats)
 library(Wu)
-opts_chunk$set(echo=TRUE,
-               cache=FALSE,
-               eval=TRUE,
-               prompt=FALSE,
-               results="asis",
-               tidy=FALSE,
-               comment=NA,
-               message=FALSE,
-               warning=FALSE,
-               out.width = '80%')
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
 eval_fast <- TRUE
 eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
 ```
 
 
@@ -228,7 +233,16 @@ attach_docx(ttt)
 ```
 
 
-# Level Three
+# Add a copy icon on the rmarkdown chunk
+
+
+````
+opts_chunk$set(class.source='klippy')
+klippy::klippy(position = c('top', left)
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+````
+
 
 
 # Level Four

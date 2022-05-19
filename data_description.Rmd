@@ -1,0 +1,125 @@
+---
+title: "Data Description"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE,
+               cache=FALSE,
+               eval=TRUE,
+               prompt=FALSE,
+               results="asis",
+               tidy=FALSE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE,
+               out.width = '80%')
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+# [Back to Index](index.html)
+
+
+
+# General Data Description
+
+ * Create a HTML file the describe all variables in a dataset
+
+```{r, eval=FALSE,echo=TRUE}
+Wu::sv_desc(dt, file_name = "dt_variables.html")
+
+```
+
+# tableone
+
+ * Use R package [tableone](https://github.com/kaz-yos/tableone) to describe variables by strata
+
+```{r}
+library(Wu)
+
+dt <- data.table(
+    age = sample(x = 18:65, size = 100, replace = TRUE)
+  , sex = sample(x = c("M", "F", NA), size = 100, replace = TRUE)
+  , treatment = rep(x = c("Case", "Control"), times = 50)
+)
+
+options(knitr.kable.NA = '')
+vars <- c("age", "sex")
+factorVars <- c("sex")
+tbl <- Wu::tbl1n(data = dt
+    , vars = vars
+    , factorVars = factorVars
+    , strata = "treatment"
+    , test = TRUE
+    , includeNA = TRUE
+    , showAllLevels = TRUE
+    , catDigits = 3
+    , conDigits = 2
+    , pDigits = 4
+      )
+tbl %>% Wu::prt()
+
+```
+
+# Two Continuous Variables
+
+```{r}
+library(data.table)
+dt <- data.table(
+    outcome = rnorm(100)
+)
+dt <- dt[, var1 := outcome * 0.3 + rnorm(100) * 0.3
+         ][, var2 := outcome * 0.01 + rnorm(100)]
+
+
+crrs <- Wu::Table2_nbyn(data = dt, var = "outcome", nvars = c("var1", "var2"), digits_n = 3, digits_p = 4)
+
+crrs %>% prt()
+
+```
+
+# Continuous Variable by Categories
+
+```{r}
+library(data.table)
+dt <- data.table(
+    treatment = factor(sample(c("Case", "Control"), size = 100, replace = TRUE), levels = c("Case", "Control"))
+  , var = rnorm(100)
+  , treatment2 = factor(sample(c("A", "B", "C"), size = 100, replace = TRUE), levels = c("A", "B", "C"))
+)
+
+label(dt$treatment) <- "Treatment I"
+label(dt$treatment2) <- "Treatment II"
+
+crrs <- Wu::Table2_nbyc(data = dt, group = c("treatment", "treatment2"), var = "var", digits_c = 3, digits_p = 4)
+
+crrs %>% prt()
+
+```
+
+
+# R sessionInfo
+
+
+```{r}
+sessionInfo()
+```

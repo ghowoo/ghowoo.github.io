@@ -1,5 +1,5 @@
 ---
-title: "R Graph"
+title: "R Graphics"
 author: "Wu Gong"
 date: "`r Sys.Date()`"
 output:
@@ -36,61 +36,72 @@ eval_slow <- FALSE
 ```
 
 
-# [R Notes](index.html)
+# [Back to Index](index.html)
 
-# plot
+# Insert image in R rmarkdown
+ 
+ 
+ ````
+ ![Caption for the Picture](path to the image file)
+ ````
 
- * Add image to the rmarkdown:
-
-## Accumulative Distribution
-
-```{r, eval=FALSE}
-ggplot(dt, aes(status_day5_num)) + stat_ecdf(geom = "step") +
-    scale_x_continuous(limits=c(0.8, 8.8)
-                       , breaks=1:8
-                       , labels=levels(dt$status_day5)
-                     , name="Numerical Day 5 Status")
+![Sample Image](pythton_pyplot.png)
 
 
 
-```
-
-## Histogram by Group
-
-```{r, eval=FALSE}
-ggplot(dt, aes(x=avg_daily_prone, fill=treatment)) +
-    geom_histogram( color="#e9ecef", alpha=0.3, position = 'identity') +
-    scale_fill_manual(values=c("#69b3a2", "#404080"))
-
-```
-
-## Flowchart
 
 
-```{r,eval=FALSE}
+# CONSORT Flow Diagram
+
+ * consort plot using [tgsify](https://github.com/thomasgstewart/tgsify) package
+
+```{r}
 library(Wu)
 library(tgsify)
-readRDS(file="df.RDS") %>%
+
+df <- data.frame(
+    age = 1:100
+  , sex = sample(c("M", "F"), size = 100, replace = TRUE)
+  , state = sample(c("Tennessee", "Kentucky"), size = 100, replace = TRUE)
+)
+
+
+df %>%
     mutate(consort = case_when(
-               iculos7d !=  "ICULOS 7d or more" ~ "2 2 ICU LOS less than 7 days"
-             , is.na(inptrehabdc) ~ "3 2 Missing Values on Discharge Destination"
-             , TRUE ~ "4 1 Study population"
+               state !=  "Tennessee" ~ "2 2 Not from Tennessee"
+             , age < 18 ~ "3 2 Age less than 18"
+             , sex != "M" ~ "4 2 Female"
+             , TRUE ~ "5 1 Study population"
            )) %>%
     le("consort") %>%
     two_column_consort("Total Records")
 
+```
 
 
+
+# ggplot
+## Add annotation with special symbols
+
+ * Add text on a ggplot graph with a special symbol
+
+```{r}
+library(ggplot2)
+library(data.table)
+dt <- data.table(var_x = 1:10, var_y= (1:10) ^ 2)
+
+ggplot(data = dt, mapping = aes(x = var_x, y = var_y)) +
+    geom_point(size = 2, alpha = (1:10) / 10) +
+    annotate("text", x = 2, y = 80, label = expression("Spearman's" ~ rho ~ "= 0.77"))
 
 ```
 
-# ggplot
 
 ## Pass Column Names to ggplot inside a function
 
- * sym() function turn text into a symbol, like as.name() or as.symbol
- * !! function is to unquote
- * Use color from a column
+ * sym() function turns text into a symbol, like as.name() or as.symbol
+ * !! function is to unquote a symbol
+ * Use color from a column in a data frame, use scal_color_identity to deactivate legend by colour
 
 ```{r}
 library(data.table)
@@ -109,7 +120,7 @@ plt <- function(x, y, group){
     y <- sym(y)
     ggplot(dt, aes(x=!!x, y=!!y)) +
         geom_point() +
-        facet_wrap( as.formula(paste0("~", group)), nrow = 1)
+        facet_wrap(as.formula(paste0("~", group)), nrow = 1)
 }
 
 plt("A", "B", "sex")
@@ -123,22 +134,37 @@ ggplot(dt, aes(x=C, group=sex, colour=varcolor, fill=varcolor)) +
 
 ```
 
-## Stacked Bar Charts
+## Stacked Bar Charts by Count
+
 
 ```{r,eval=FALSE}
-p <- ggplot(fdt2, aes(day_assessment_icu)) +
+library(data.table)
+dt <- data.table(
+    day = sample(1:14, size = 1400, replace = TRUE)
+  , state = sample(c("Good", "Bad"), size = 1400, replace = TRUE)
+)
+
+p <- ggplot(dt, aes(day)) +
     geom_bar() +
-    geom_bar(aes(fill = state_daily4_locf))
+    geom_bar(aes(fill = state))
 p
 
 ```
 ## Stacked Bar Charts by Percentage
 
-```{r, eval=FALSE}
-ggplot(fdt3, aes(x = factor(day_assessment_icu)
-               , fill = state_daily4_locf)) +
-    geom_bar(position="fill") +
-    facet_wrap( ~ race_ethnicity, ncol=2)
+
+```{r}
+library(data.table)
+dt <- data.table(
+    day = sample(1:14, size = 1400, replace = TRUE)
+  , state = sample(c("Good", "Bad"), size = 1400, replace = TRUE)
+  , group = sample(c("I", "II", "III"), size = 1400, replace = TRUE)
+)
+
+p <- ggplot(dt, aes(x = day, fill = state)) +
+    geom_bar(position = "fill") +
+    facet_wrap( ~ group, ncol = 3)
+p
 
 ```
 
@@ -413,44 +439,28 @@ ggplot(dt, aes(x = factor(treatment), fill = state)) + geom_bar() +
 
 ```
 
-# Animation
+## Accumulative Distribution
 
-## gganimate
+```{r, eval=FALSE}
+ggplot(dt, aes(status_day5_num)) + stat_ecdf(geom = "step") +
+    scale_x_continuous(limits=c(0.8, 8.8)
+                       , breaks=1:8
+                       , labels=levels(dt$status_day5)
+                     , name="Numerical Day 5 Status")
 
-```{r}
-library(ggplot2)
-library(gganimate)
 
-ggplot(mtcars, aes(factor(cyl), mpg)) +
-  geom_boxplot() +
-  # Here comes the gganimate code
-  transition_states(
-    gear,
-    transition_length = 2,
-    state_length = 1
-  ) +
-  enter_fade() +
-  exit_shrink() +
-  ease_aes('sine-in-out')
 
 ```
 
+## Histogram by Group
 
-```{r}
-library(gapminder)
-
-ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
-  geom_point(alpha = 0.7, show.legend = FALSE) +
-  scale_colour_manual(values = country_colors) +
-  scale_size(range = c(2, 12)) +
-  scale_x_log10() +
-  facet_wrap(~continent) +
-  # Here comes the gganimate specific bits
-  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
-  transition_time(year) +
-  ease_aes('linear')
+```{r, eval=FALSE}
+ggplot(dt, aes(x=avg_daily_prone, fill=treatment)) +
+    geom_histogram( color="#e9ecef", alpha=0.3, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080"))
 
 ```
+
 
 
 # Color
@@ -597,7 +607,88 @@ t <- data.table(
 ```
 
 
-# Computing Environment
+
+# Animation
+
+## gifski
+
+```{r}
+library(gifski)
+png("frame%03d.png")
+par(ask = FALSE)
+for(i in 1:10)
+  plot((1:10) ^ (sqrt(i)), main = i)
+dev.off()
+png_files <- sprintf("frame%03d.png", 1:10)
+gif_file <- tempfile(fileext = ".gif")
+gifski(png_files, gif_file)
+## utils::browseURL(gif_file)
+knitr::include_graphics(gif_file)
+
+```
+
+
+```{r}
+# Example borrowed from gganimate
+library(gapminder)
+library(ggplot2)
+makeplot <- function(){
+  datalist <- split(gapminder, gapminder$year)
+  lapply(datalist, function(data){
+    p <- ggplot(data, aes(gdpPercap, lifeExp, size = pop, color = continent)) +
+      scale_size("population", limits = range(gapminder$pop)) + geom_point() + ylim(20, 90) +
+      scale_x_log10(limits = range(gapminder$gdpPercap)) + ggtitle(data$year) + theme_classic()
+    print(p)
+  })
+}
+
+# High Definition images:
+gif_file <- save_gif(makeplot(), width = 800, height = 450, res = 92)
+## utils::browseURL(gif_file)
+
+knitr::include_graphics(gif_file)
+
+```
+
+## gganimate
+
+```{r, eval=FALSE}
+library(ggplot2)
+library(gganimate)
+
+ggplot(mtcars, aes(factor(cyl), mpg)) +
+  geom_boxplot() +
+  # Here comes the gganimate code
+  transition_states(
+    gear,
+    transition_length = 2,
+    state_length = 1
+  ) +
+  enter_fade() +
+  exit_shrink() +
+  ease_aes('sine-in-out')
+
+```
+
+
+```{r eval=FALSE}
+library(gapminder)
+
+ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+  geom_point(alpha = 0.7, show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  facet_wrap(~continent) +
+  # Here comes the gganimate specific bits
+  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
+  transition_time(year) +
+  ease_aes('linear')
+
+```
+
+
+# R sessionInfo
 
 
 ```{r}
