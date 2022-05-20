@@ -46,10 +46,9 @@ eval_slow <- FALSE
  * [Discretization](discretization.html)
 
 # Statistics
- * [Clustering](clustering.html)
- * [Power Analysis](power_analysis.html)
- * [Restricted Cubic Spline](restricted_cubic_spline.html)
  * [Power and Sample Size Simulation for Two Proportions](simulation_proportion.html)
+ * [Power Analysis: Non-inferiority Cluster Randomised Trial](power_analysis.html)
+ * [Restricted Cubic Spline](restricted_cubic_spline.html)
  * [Jeffreys Interval for One-Sample Proportion with SAS/STAT® Software](https://support.sas.com/resources/papers/proceedings15/3020-2015.pdf)
 
 

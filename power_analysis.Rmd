@@ -1,16 +1,17 @@
 ---
-title: "Power Analysis"
+title: "Power Analysis: Non-inferiority Cluster Randomised Trial"
 author: "Wu Gong"
 date: "`r Sys.Date()`"
 output:
   rmdformats::readthedown:
     self_contained: true
-    thumbnails: true
+    thumbnails: false
     code_folding: hide
     toc_depth: 6
     lightbox: true
     gallery: false
-    highlight: tango
+    highlight: monochrome
+    css: Wu.css
 ---
 
 
@@ -18,23 +19,70 @@ output:
 library(knitr)
 library(rmdformats)
 library(Wu)
-## Global options
-options(max.print="2000")
-opts_chunk$set(echo=TRUE,
-               eval=TRUE,
-               cache=FALSE,
-               results="asis",
-               prompt=FALSE,
-               tidy=TRUE,
-               comment=NA,
-               message=FALSE,
-               warning=FALSE)
-opts_knit$set(width=75)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
 eval_fast <- TRUE
 eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
 
 ```
 
+# [Back to Index](index.html)
+
+# Sample Size and Power Calculation for Non-Inferiority Test
+
+Null Hypothesis: The efficacy of the intervention arm ($\pi_2$) is inferior (worse) than the SOC arm ($\pi_1$) by margin of $\delta$.
+$$H_0: \pi_{1} - \pi_{2} \ge \delta$$
+
+Alternative Hypothesis: The efficacy of the intervention arm ($\pi_2$) is no worse than the SOC arm ($\pi_1$) by margin of $\delta$.
+$$H_1: \pi_{1}  - \pi_{2} < \delta$$
+
+Standard Error for the Difference of Two Proportions:
+
+$$SE = \sqrt{\hat{p_1}\cdot(1-\hat{p_1})/n_1 + \hat{p_2}\cdot(1-\hat{p_2})/n_2}$$
+
+Standard Error for the Difference of Two Means:
+$$SE = \sigma\sqrt{1/n_1 + 1/n_2}$$
+
+
+Test Statistics:
+
+$$z = \frac{\hat{p_1}- \hat{p_2} - \delta}{SE}$$
+
+Single-sided $(100-\alpha)\%$ Confidence Interval:
+
+$$[-1,\hat{p_1} - \hat{p_2} + z_{1-\alpha} \cdot SE]$$
+
+
+
+Sample Size for Individual-Randomization:
+
+$$n_I=\frac{(z_{\alpha/2}+z_\beta)^2(\pi_0(1-\pi_0)+\pi_1(1-\pi_1))}{(\pi_0-\pi_1)^2}$$
+
+
+
+Design Effect:
+
+$$Deff=1+(m-1)\rho$$
+
+
+Reference: 
+
+ * Richard J. Hayes, Lawrence H. Moulton (2017) Cluster Randomised Trials, 2nd Edition. Chapman & Hall/CRC Biostatistics Series
+ * Blackwelder WC (1992) "Proving the null hypothesis" in clinical trials. Control Clin Trials 3:345-353.
+ * Jennifer Schumi and Janet T Wittes (2011) Through the looking glass: understanding non-inferiority. Trials 2011, 12:106
 
 
 # Non-inferiority Cluster Randomised Trial
@@ -61,7 +109,7 @@ k <- 0.25
 alpha <- 0.025
 z_alpha <- qnorm(1 - alpha)
 
-c <- 1 + (z_alpha + z_beta) ^ 2 * (2 * pi_0 * (1 - pi_0) / m + 2 * k ^ 2 * pi_0 ^ 2) / (delta ^ 2)
+## c <- 1 + (z_alpha + z_beta) ^ 2 * (2 * pi_0 * (1 - pi_0) / m + 2 * k ^ 2 * pi_0 ^ 2) / (delta ^ 2)
 
 xx <- (2 * pi_0 * (1 - pi_0) / m + 2 * (k ^ 2) * (pi_0 ^ 2)) / (delta ^ 2)
 z_beta <- sqrt((C - 1) / xx) - z_alpha
@@ -72,7 +120,7 @@ pnorm(z_beta)
 
 
 
-# Computing Environment
+# R sessionInfo
 
 
 ```{r}

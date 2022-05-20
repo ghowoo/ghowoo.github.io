@@ -43,6 +43,101 @@ klippy::klippy(position = c('top', 'left')
 
 # [R Notes](index.html)
 
+
+# Flowchart Diagram
+
+
+```{r}
+library(DiagrammeR)
+library(DiagrammeRsvg)
+
+flowchart <- grViz("
+  digraph flowchart {
+    graph [overlap = true, fontsize = 24]
+    node [shape = box, fontname = Helvetica,style = filled,color = LightBlue, fontsize = 24]
+    A [label = 'Enrolled']
+    B [label = 'Initiated']
+    C1 [label = 'Treatment A']
+    C2 [label = 'Treatment B']
+    D11 [label = 'Retained in Study']
+    D21 [label = 'Retained in Study']
+    node [shape = oval, fontname = Helvetica,style = filled,color = Bisque]
+    D12 [label = 'Lost of Follow Up']
+    D22 [label = 'Lost of Follow Up']
+    E112 [label = 'Not Tested']
+    E212 [label = 'Not Tested']
+    node [shape = circle, fontname = Helvetica,style = filled,color = LightSalmon]
+    E111 [label = 'Treatment A \n Blood Tested']
+    E211 [label = 'Treatment B \n Blood Tested']
+    edge [color = grey,style=bold]
+    A->B->C1->D11->E111
+    D11->E112
+    C1->D12
+    B->C2->D21->E211 
+    D21->E212
+    C2->D22    
+  }
+")
+
+flowchart
+
+library(htmltools)
+svg <- export_svg(flowchart)
+## htmltools::html_print(HTML(svg))
+
+## library(svglite)
+## svglite::svglite("flowchat_ltfu.svg", width = 8, height = 10)
+## flowchart
+## dev.off()
+
+
+
+## library(svglite)
+## tmp <- tempfile()
+## svglite::svglite(tmp, width = 10, height = 8)
+## flowchart
+## dev.off()
+## library(rsvg)
+## rsvg(tmp, "flowchart_ltfu.png", width = 8, height = 10)
+## png(file = "flowchart_ltfu.png", width = 8, height = 12)
+## flowchart
+## dev.off()
+## library(svglite)
+## svg <- export_svg(flowchart)
+## render_graph(flowchart, output = "svg")
+## export_graph(
+##     graph = svg
+##   , file_name = "flowchart_ltfu.png"
+##   , file_type = "PNG"
+## )
+
+```
+
+
+
+# Confounding Diagram
+
+```{r}
+grViz("
+digraph Confounding{
+      graph [overlap = true, fontsize = 10,rankdir=LR]
+      subgraph cluster_0 {
+        overlap = true; fontsize = 10;
+        node [shape = box, fontname = Helvetica,style = filled,color = LightBlue]
+        A [label = 'Confounder',group=1]
+        B [label = 'Intervention',group=1]
+        C [label = 'Outcome',group=1]
+      edge [color = grey,style=bold]
+      A->B->C
+      }
+      edge [color = grey,style=bold]
+      A->C
+      }
+      ")
+
+```
+
+
 # Customized flowchart with ggplot2
 
 
