@@ -1,0 +1,126 @@
+---
+title: "Heatmaps for Correlation"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+# [Back to Index](index.html)
+
+
+
+
+# Heatmap for Correlation by $R^2$
+
+ * The correlation matrix of $R^2$ is calculated by linear regression or Cramér's V.
+ * The matrix is presented using R [plotly](https://plotly.com/r/) package.
+
+```{r, out.height='200%'}
+
+library(data.table)
+dt <- data.table(
+    var1 = 1:20 + rnorm(20)
+  , var2 = 1:20 + rnorm(20) * 2
+  , var3 = 1:20 + rnorm(20) * 4
+  , var4 = 1:20 + rnorm(20) * 8
+  , var5 = 1:20 + rnorm(20) * 16
+  , var6 = sample(c("A", "B"), size = 20, replace = TRUE)
+  , var7 = sample(c("I", "II", "III"), size = 20, replace = TRUE)
+)
+
+Wu::heatmap(dt)
+
+
+```
+
+
+# Heatmap for Spearman's Correlation Coefficient
+
+ * Use [ggcorrplot](http://www.sthda.com/english/wiki/ggcorrplot) package to present the heatmap of a correlation matrix of Spearman's $\rho$
+
+```{r}
+library(ggcorrplot)
+library(data.table)
+
+dt <- data.table(
+    var1 = 1:20 + rnorm(20)
+  , var2 = 1:20 + rnorm(20) * 2
+  , var3 = 1:20 + rnorm(20) * 4
+  , var4 = 1:20 + rnorm(20) * 8
+  , var5 = 1:20 + rnorm(20) * 16
+)
+
+
+NVars <- c("var1"
+         , "var2"
+         , "var3"
+         , "var4"
+         , "var5"
+           )
+
+mtx <- cor(dt[, ..NVars]
+         ## , na.rm=FALSE
+         , use="na.or.complete"
+         , method="spearman")
+
+
+ggcorrplot(mtx, 
+           hc.order = FALSE,
+           outline.color = "white", 
+           type = "lower",
+           ## colors = c("red", "white", "blue"), 
+           show.diag = TRUE, 
+           lab = TRUE
+         , tl.srt=30
+         , lab_size=10
+         , tl.cex=10
+           , show.legend = FALSE
+         ## , ggtheme = ggplot2::theme_gray
+         , colors = c("#6D9EC1", "white", "#E46726")
+         ## , method="circle"
+           )
+
+```
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

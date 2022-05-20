@@ -49,14 +49,18 @@ eval_slow <- FALSE
  * [Clustering](clustering.html)
  * [Power Analysis](power_analysis.html)
  * [Restricted Cubic Spline](restricted_cubic_spline.html)
+ * [Power and Sample Size Simulation for Two Proportions](simulation_proportion.html)
+ * [Jeffreys Interval for One-Sample Proportion with SAS/STAT® Software](https://support.sas.com/resources/papers/proceedings15/3020-2015.pdf)
 
 
 # Visualization
  * [R Graphics](graph.html)
  * [Flow Chart](flowchart.html)
  * [Map: Hydraulic Dams around the World](hydraulic_dams_around_the_world.html)
- * [Network with Gephi](network_Gephi.html)
- * [Newtork with visNetwork](network_visNetwork.html)
+ * [Social Network with Gephi](network_Gephi.html)
+ * [Hierarchical Newtork with visNetwork](network_visNetwork.html)
+ * [Heatmaps for Correlation Matrix](heatmap_correlation.html)
+ * [Word Cloud](word_cloud.html)
  * [RMarkdown Slides](rmarkdown_slides.html)
 
 # R Programming

@@ -41,7 +41,7 @@ klippy::klippy(position = c('top', 'left')
 
 
 
-# [Index](index.html)
+# [Back Index](index.html)
 
 
 # Level One
@@ -246,3 +246,9 @@ klippy::klippy(position = c('top', left)
 
 
 # Level Four
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

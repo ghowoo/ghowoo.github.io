@@ -1,5 +1,5 @@
 ---
-title: "Visualize Network with Gephi"
+title: "Visualize Social Network with Gephi"
 author: "Wu Gong"
 date: "`r Sys.Date()`"
 output:

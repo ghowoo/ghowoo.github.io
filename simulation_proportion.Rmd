@@ -1,0 +1,275 @@
+---
+title: "Power and Sample Size Simulation for Two Proportions"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+# An Example of Power Simulation
+
+## Effect Size
+
+ * Rate of the control group: 30%
+ * Effect size: odds ratio of 3
+ * Expected rate of the case group: 56.25%
+
+```{r}
+library(knitr)
+p0 <- 0.3
+or <- 3
+odds0 <- p0 / (1 - p0)
+odds1 <- odds0 * or
+p1 <- odds1 / (1 + odds1)
+kable(p1, col.names = "Expected Rate of the Treatment Group") %>% kable_styling(full_width = FALSE)
+
+```
+
+## Generate Target Population
+
+```{r}
+pop0 <- rbinom(n = 1000000, size = 1, prob = p0)
+pop1 <- rbinom(n = 1000000, size = 1, prob = p1)
+
+kable(mean(pop0), col.names = "Rate of the Simulated  Control Population") %>% kable_styling(full_width = FALSE)
+kable(mean(pop1), col.names = "Rate of the Simulated  Treatment Population") %>% kable_styling(full_width = FALSE)
+
+```
+
+## Fisher's Exact Test
+
+```{r}
+
+sample_size <- 50
+sample0 <- sample(x = pop0, size = sample_size, replace = FALSE)
+sample1 <- sample(x = pop1, size = sample_size, replace = FALSE)
+
+
+treatment <- c(rep(0, sample_size), rep(1, sample_size))
+outcome <- c(sample0, sample1)
+
+freq_table <- table(treatment, outcome)
+
+kable(freq_table, caption = "2x2 Contingency Table") %>% kable_styling(full_width = FALSE)
+
+ftst <- fisher.test(x = freq_table, hybrid = FALSE, alternative = "two.side", conf.int = FALSE)
+
+kable(ftst$p.value, col.names = "P-value for Fisher's Exact Test") %>% kable_styling(full_width = FALSE)
+
+```
+
+## Write A Function Simulating Power
+
+```{r}
+
+fx_fs <- function(sample_size = 50, alpha = 0.05){
+  sample0 <- sample(x = pop0, size = sample_size, replace = FALSE)
+  sample1 <- sample(x = pop1, size = sample_size, replace = FALSE)
+  treatment <- c(rep(0, sample_size), rep(1, sample_size))
+  outcome <- c(sample0, sample1)
+  freq_table <- table(treatment, outcome)
+  ftst <- fisher.test(x = freq_table, hybrid = FALSE, alternative = "two.side", conf.int = FALSE)
+  invisible(ftst$p.value < alpha)
+}
+
+kable(fx_fs(), col.names = "Reject Null Hypothesis if p-value < 0.05") %>% kable_styling(full_width = FALSE)
+```
+
+## Simulate 10000 Times
+
+
+```{r}
+
+system.time(lst <- replicate(n = 10000, expr = fx_fs(sample_size = 50, alpha = 0.05), simplify = array))
+power <- mean(lst)
+kable(power, col.names = "Power Calculated by 10000 Times Simulation") %>% kable_styling(full_width = FALSE)
+
+```
+
+## Make It Faster
+
+```{r}
+library(parallel)
+
+
+system.time(lst <- unlist(mclapply(1:10000, function(x) fx_fs(sample_size = 50, alpha = 0.05), mc.cores = detectCores())))
+power <- mean(lst)
+kable(power, col.names = "Power Calculated by Parallel Process") %>% kable_styling(full_width = FALSE)
+
+```
+
+
+# A Function for Power Simulation
+
+ * The function simulates tests using glm, Chi-squared test, and Fisher's exact test.
+ * It uses [R6](https://r6.r-lib.org/) class and [parallel](https://stat.ethz.ch/R-manual/R-devel/library/parallel/doc/parallel.pdf) computing.
+
+```{r}
+library(data.table)
+library(R6)
+library(parallel)
+
+SimProp <- R6Class(
+  "SimProp",
+  list(
+    p_control = NULL,
+    odds_control = NULL,
+    treatment_effect_or = NULL,
+    p_case = NULL,
+    odds_case = NULL,
+    n_case = NULL,
+    n_control_case_ratio = NULL,
+    n_control = NULL,
+    grid_table = NULL,
+    target_data = NULL,
+    n_target_data_case = NULL,
+    n_target_data_control = NULL,
+    n_simulation = 1000,
+    alpha = 0.05,
+    method = "glm",
+    power_table = NULL,
+    fx_p2odds = function(x) {
+      x / (1 - x)
+    },
+    fx_odds2p = function(x) {
+      x / (1 + x)
+    },
+    initialize = function(p_control, treatment_effect_or, n_case, n_control_case_ratio = 1, ...) {
+      self$p_control <- p_control
+      self$odds_control <- self$p_control / (1 - self$p_control)
+      self$treatment_effect_or <- treatment_effect_or
+      self$odds_case <- self$odds_control * self$treatment_effect_or
+      self$p_case <- self$odds_case / (self$odds_case + 1)
+      self$n_case <- n_case
+      self$n_control_case_ratio <- n_control_case_ratio
+      self$n_control <- self$n_case * self$n_control_case_ratio
+      self$n_target_data_case <- max(self$n_case) * 100
+      self$n_target_data_control <- max(self$n_control) * 100
+      self$grid_table <- as.data.table(expand.grid(
+        p_control = p_control,
+        treatment_effect_or = treatment_effect_or,
+        n_case = n_case,
+        n_control_case_ratio = n_control_case_ratio
+      ))
+      self$grid_table <- self$grid_table[
+        , odds_control := self$fx_p2odds(p_control)
+      ][, odds_case := odds_control * treatment_effect_or][, p_case := self$fx_odds2p(odds_case)][, n_control := n_case * n_control_case_ratio][, .(
+        n_case, p_case, odds_case, n_control,
+        p_control, odds_control, treatment_effect_or, n_control_case_ratio
+      )]
+    },
+    gen_target_data = function() {
+      self$target_data <- lapply(1:nrow(self$grid_table), function(x) {
+        list(
+          data_case = rbinom(n = self$n_target_data_case, size = 1, prob = self$grid_table$p_case[x]),
+          data_control = rbinom(n = self$n_target_data_control, size = 1, prob = self$grid_table$p_control[x]),
+          p_case = self$grid_table$p_case[x],
+          n_case = self$grid_table$n_case[x],
+          p_control = self$grid_table$p_control[x],
+          n_control = self$grid_table$n_control[x]
+        )
+      })
+      invisible(self)
+    },
+    sample_target_data = function(lst) {
+      require(data.table)
+      sample_case <- data.table(
+        treatment = rep(1, lst$n_case),
+        outcome = sample(x = lst[["data_case"]], size = lst$n_case, replace = FALSE)
+      )
+      sample_control <- data.table(
+        treatment = rep(0, lst$n_control),
+        outcome = sample(x = lst[["data_control"]], size = lst$n_control, replace = FALSE)
+      )
+      invisible(rbind(sample_case, sample_control))
+    },
+    get_pvalue_glm = function(data) {
+      m <- glm(outcome ~ treatment, data = data, family = binomial(link = logit))
+      ms <- summary(m)
+      invisible(ms$coefficients["treatment", "Pr(>|z|)"])
+    },
+    get_pvalue_chisq = function(data) {
+      invisible(chisq.test(table(data))$p.value)
+    },
+    get_pvalue_fisher = function(data) {
+      invisible(fisher.test(table(data), hybrid = FALSE, conf.int = FALSE)$p.value)
+    },
+    gen_tests = function(lst) {
+      pvalue_lst <- lapply(X = 1:self$n_simulation, FUN = function(x) {
+        data <- self$sample_target_data(lst)
+        if (self$method == "glm") {
+          pvalue <- self$get_pvalue_glm(data)
+        } else if (self$method == "chisq") {
+          pvalue <- self$get_pvalue_chisq(data)
+        } else if (self$method == "fisher") {
+          pvalue <- self$get_pvalue_fisher(data)
+        } else {
+          pvalue <- NA
+        }
+      })
+      invisible(unlist(pvalue_lst) < self$alpha)
+    },
+    gen_power = function() {
+      require(parallel)
+      self$power_table <- parallel::mclapply(X = self$target_data, FUN = function(x) {
+        mean(self$gen_tests(x), na.rm = TRUE)
+      }, mc.cores = detectCores())
+      self$grid_table$alpha <- self$alpha
+      self$grid_table$method <- self$method
+      self$grid_table$power <- self$power_table
+      invisible(self)
+    }
+  )
+)
+
+
+sp <- SimProp$new(p_control = c(0.3), treatment_effect_or = 3, n_case = c(30, 50, 70))
+sp$n_simulation <- 5000
+sp$gen_target_data()
+
+
+sp$method <- "glm"
+sp$gen_power()
+kable(sp$grid_table, caption = "Power if test using glm") %>% kable_styling(full_width = FALSE)
+
+sp$method <- "chisq"
+sp$gen_power()
+kable(sp$grid_table, caption = "Power if chisq test") %>% kable_styling(full_width = FALSE)
+
+sp$method <- "fisher"
+sp$gen_power()
+kable(sp$grid_table, caption = "Power if using Fisher's exact test") %>% kable_styling(full_width = FALSE)
+```
