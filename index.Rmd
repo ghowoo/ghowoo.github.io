@@ -1,5 +1,5 @@
 ---
-title: "R Notes: Index"
+title: "Wu's R Notes: Index"
 author: "Wu Gong"
 date: "`r Sys.Date()`"
 output:
@@ -59,12 +59,15 @@ eval_slow <- FALSE
  * [Social Network with Gephi](network_Gephi.html)
  * [Hierarchical Newtork with visNetwork](network_visNetwork.html)
  * [Heatmaps for Correlation Matrix](heatmap_correlation.html)
+ * [Alluvium Plot](alluvium.html)
  * [Word Cloud](word_cloud.html)
+ * [plotly Symbols](plotly_symbols.html)
  * [RMarkdown Slides](rmarkdown_slides.html)
 
 # R Programming
  * [Intall R Packages](install_packages.html)
- * [rmarkdown HTML Output Style](style.html)
+ * [R Markdown HTML Output Style](style.html) 
+ * [R Markdown with Tabs](rmarkdown_tabs.html)
  * [R6 Object](R6.html) 
 
 # Modeling
