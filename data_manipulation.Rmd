@@ -33,7 +33,7 @@ eval_fast <- TRUE
 eval_slow <- FALSE
 ```
 
-# [Index](index.html)
+# [Back to Index](index.html)
 
 
 # Pull Data from REDCap
@@ -71,20 +71,22 @@ Wu::sv_desc(dt, file_name = "dt_variables.html")
  * dplyr::rename function renames variable names
 
 ```{r}
-match(1:5, c(4, 2))
+library(Wu)
+
+match(1:5, c(4, 2)) %>% prt()
 
 dt <- data.table(A=1:3, B=2:4)
-colnames(dt)
+colnames(dt) %>% prt(caption = "Original Column Names")
 colnames(dt) <- plyr::revalue(colnames(dt), c("A"="Variable_A"))
-colnames(dt)
+colnames(dt) %>% prt(caption = "Column Names Changed")
 
 
-dplyr::rename(dt, var_b=B)
+## dplyr::rename(dt, var_b=B)
 
 
 lst <- list("A"="Variable_A")
-names(lst)
-unlist(lst)
+## names(lst)
+## unlist(lst)
 
 colnames(dt)[colnames(dt) %in% names(lst)] <- unlist(lst)[colnames(dt)[colnames(dt) %in% names(lst)]]
 
@@ -97,14 +99,18 @@ lst <- c(
   , "C"="C+"
 )
 
-plyr::revalue(v, lst)
+plyr::revalue(v, lst) %>% prt(caption = "plyr::revalue function")
 
-names(lst)
+## names(lst)
 
 v[v %in% names(lst)] <- unlist(lst)[v[v %in% names(lst)]]
-print(v)
 
-class(v)
+v %>% prt()
+
+## class(v)
+
+dt <- data.table(var1 = 1, var2 = 2, var3 = 3)
+Wu::renameVariables(obj = dt, lst = c(var1 = "varA", var2 = "varB")) %>% prt()
 
 
 ```
@@ -114,7 +120,7 @@ class(v)
 ## Find Pattern
 
 ```{r}
-grepl("FiO2|High", c("Deliverd FiO2", "High FLow", "Low Flow"), fixed=FALSE)
+grepl("High", c(NA, "High", "Low"), fixed=FALSE)
 
 ```
 
@@ -286,12 +292,45 @@ split(df, df$gender)
 
 ```{r}
 library(data.table)
+library(Wu)
 dt <- data.table(name=letters[1:4])
-print(dt)
-dt <- dt[rep(1:.N, 3)][order(name)][, index := 1:.N, by = name]
-print(dt)
-```
+dt %>% prt()
 
+dt <- dt[rep(1:.N, 3)][order(name)][, index := 1:.N, by = name]
+dt %>% prt()
+
+dt <- data.table(
+    id = 1:6
+  , num = c(3, 5, 6, 3, 4, 5)
+)
+dt <- dt[rep(1:.N, times = num)][, sub_index := 1:.N, by = id]
+dt %>% prt()
+
+```
+# Generate Random Variables
+
+ * Vectorize function
+ * Generate random variables within data.table using values from another column
+ 
+```{r}
+library(Wu)
+library(data.table)
+
+dt <- data.table(
+    id = 1:6
+  , m = c(1:6)
+)
+
+rnorm_vec <- function(x){
+    rnorm(n = 1, mean = x)
+}
+rnorm_vec <- Vectorize(rnorm_vec)
+
+dt <- dt[, value := rnorm_vec(m)]
+
+dt %>% prt()
+
+```
 ## Pass Column Name to data.table within Function
 
 ```{r}
@@ -375,11 +414,20 @@ tw %>% prt()
 
 ```{r, eval=FALSE}
 
-setkey(t1, key1, key2)
+t1 <- data.table(id = 1:10, var1 = rnorm(10, 1))
+t2 <- data.table(id = 1:10, var2 = rnorm(10, 10))
+t3 <- data.table(id = 1:10, var3 = rnorm(10, 100))
+t4 <- data.table(id = 1:10, var4 = rnorm(10, 1000))
+
+setkey(t1, id)
+setkey(t2, id)
+setkey(t3, id)
+setkey(t4, id)
 
 t <- Reduce(function(...) merge(..., all = TRUE)
-            , list(t1, t2, t3))
+            , list(t1, t2, t3, t4))
 
+t %>% prt(caption = "Merge Multiple Tables by Key")
 
 ```
 # Date and Time

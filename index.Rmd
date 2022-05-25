@@ -1,5 +1,5 @@
 ---
-title: "Wu's R Notes: Index"
+title: "R Notes"
 author: "Wu Gong"
 date: "`r Sys.Date()`"
 output:
@@ -60,6 +60,7 @@ eval_slow <- FALSE
  * [Hierarchical Newtork with visNetwork](network_visNetwork.html)
  * [Heatmaps for Correlation Matrix](heatmap_correlation.html)
  * [Alluvium Plot](alluvium.html)
+ * [Spaghetti Plot](spaghetti_plot.html)
  * [Word Cloud](word_cloud.html)
  * [plotly Symbols](plotly_symbols.html)
  * [RMarkdown Slides](rmarkdown_slides.html)

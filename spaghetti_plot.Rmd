@@ -45,7 +45,7 @@ klippy::klippy(position = c('top', 'left')
 # [Back to Index](index.html)
 
 
-# Sphaghetti Plot with ggplot2
+# Spaghetti Plot with ggplot2
 
 
 ```{r}
@@ -111,9 +111,236 @@ dt2 %>% prt()
 ```
 
 
+
+# Spaghetti Plot with plotly by loop
+
+```{r}
+library(Wu)
+library(data.table)
+library(plotly)
+
+dt <- data.table(
+    id = 1:6
+  , num = c(10, 8, 6, 13, 14, 15)
+  , m = 1:6
+)
+
+rnorm_vec <- function(x){
+    rnorm(n = 1, mean = x)
+}
+rnorm_vec <- Vectorize(rnorm_vec)
+
+
+dt2 <- dt[rep(1:.N, times = num)]
+dt2 <- dt2[, value := rnorm_vec(m)
+           ][, times := 1:.N, by = .(id)]
+
+
+ids <- unique(dt2$id)
+p <- plot_ly(width = 1400, height = 600)
+for (i in 1:length(ids)){
+    p <- p %>% add_trace(
+                   data = dt2[id %in% ids[i]]
+                 , x = ~ times
+                 , y = ~ value
+                 , name = as.character(ids[i])
+                 , inherit = FALSE
+                 , type = "scatter"
+                 , mode = "lines"
+                   ## , hoverinfo = "text"
+                   ## , text = ~ str
+                   ## , marker = list(symbol = 2, size = 10)
+                 , line = list(alpha = 0.5)
+               ) 
+}
+
+
+p
+
+```
+
+# Spaghetti Plot with plotly with group_by
+
+ * To avoid plotly plot overflows, add the code to chunk option
+ ````
+ out.height='200%'
+ ````
+
+```{r, out.height='200%'}
+library(Wu)
+library(data.table)
+library(plotly)
+
+dt <- data.table(
+    id = 1:6
+  , num = c(10, 8, 6, 13, 14, 15)
+  , m = 1:6
+)
+
+rnorm_vec <- function(x){
+    rnorm(n = 1, mean = x)
+}
+rnorm_vec <- Vectorize(rnorm_vec)
+
+
+dt2 <- dt[rep(1:.N, times = num)]
+dt2 <- dt2[, value := rnorm_vec(m)
+           ][, times := 1:.N, by = .(id)
+             ][, id := factor(id)]
+
+
+get_colors <- function(x){
+    grDevices::colorRampPalette(RColorBrewer::brewer.pal(11, "RdBu")[-c(5,6,7)])(x)
+}
+
+dt2 %>%
+    group_by("id") %>%
+    plot_ly(x = ~ times
+          , y = ~ value
+          , type = "scatter"
+          , mode = "lines+marker"
+          , color = ~ id
+            , colors = get_colors(length(unique(dt2$id)))
+            ) %>%
+    layout(showlegend = FALSE
+         , xaxis = list(title = "Days")
+         , yaxis = list(title = "Value"
+                      ## , type = "log"
+                        )
+         , width = 1200
+         , height = 600
+           )
+
+```
+
+
+# Spaghetti Plot with Menus
+
+```{r, out.height='200%'}
+library(Wu)
+library(data.table)
+library(plotly)
+
+dt <- data.table(
+    id = 1:6
+  , num = c(10, 8, 6, 13, 14, 15)
+  , m = 1:6
+)
+
+rnorm_vec <- function(x){
+    rnorm(n = 1, mean = x)
+}
+rnorm_vec <- Vectorize(rnorm_vec)
+
+
+dt2 <- dt[rep(1:.N, times = num)]
+dt2 <- dt2[, value := rnorm_vec(m)
+           ][, times := 1:.N, by = .(id)
+             ][, str := paste0("ID: ", as.character(id), ", Times: ", as.character(times))
+               ][, type := case_when(
+                       id %in% c(1, 3, 5) ~ "Odd"
+                       , TRUE ~ "Even"
+                           )]
+
+
+ids <- unique(dt2$id)
+
+
+Colors4 <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(11, "RdBu")[-c(5,6,7)])(4)
+p <- plot_ly(width = 1200, height = 600)
+for (i in 1:length(ids)){
+    p <- p %>% add_trace(
+                   data = dt2[id %in% ids[i]]
+                 , x = ~ times
+                 , y = ~ value
+                   ## , color = ~ code_color
+                   ## , colors = Colors4
+                 , name = as.character(i)
+                 , inherit = FALSE
+                 , type = "scatter"
+                 , mode = "lines+markers"
+                 , hoverinfo = "text"
+                 , text = ~ str
+                 , transforms = list(
+                       list(
+                           type = "groupby"
+                         , groups = ~ type
+                         , styles = list(
+                               list(
+                                   target = "Odd"
+                                 , value = list(
+                                       marker = list(color = Colors4[1])
+                                     , line = list(color = Colors4[1])
+                                   )
+                               )
+                             , list(
+                                   target = "Even"
+                                 , value = list(
+                                       marker = list(color = Colors4[2])
+                                     , line = list(color = Colors4[2])
+                                   )
+                               )
+                           )
+                       )
+                   )
+               )
+}
+
+
+
+bts <- lapply(
+    1:length(ids)
+  , function(x){
+      list(
+          label = as.character(x)
+        , method = "update"
+        , args = list(list(
+              visible = 1:length(ids) %in% x
+          ))
+      )
+  }
+)
+
+
+updatemenus <- list(
+    list(
+        active = -1
+      , type = "buttons"
+      , xref = "paper"
+      , yref = "paper"
+      , x = 1
+      , y = 1
+      , align = "left"
+      , direction = "right"
+      , buttons = bts
+    )
+)
+
+
+p %>%
+    layout(title = "Charts"
+         , showlegend = FALSE
+         , updatemenus = updatemenus
+         , xaxis = list(title = "Multiple Lines"
+                      ## , tick0 = 0
+                      , dtick = 180
+                        )
+         , yaxis = list(title = "Value"
+                      , range = c(-3, 10)
+                      ## , tick0 = 0
+                      ## , dtick = 10
+                        )
+           )
+
+
+
+```
+
+
 # R sessionInfo
 
 ```{r}
+
 sessionInfo()
 
 ```
