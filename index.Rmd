@@ -68,7 +68,7 @@ eval_slow <- FALSE
 # R Programming
  * [Intall R Packages](install_packages.html)
  * [R Markdown HTML Output Style](style.html) 
- * [R Markdown with Tabs](rmarkdown_tabs.html)
+ * [R Markdown with Tabs](rmarkdown_with_tabs.html)
  * [R6 Object](R6.html) 
 
 # Modeling
