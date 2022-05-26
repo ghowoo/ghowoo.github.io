@@ -1,0 +1,280 @@
+---
+title: "LASSO: Least Absolute Shrinkage and Selection Operator"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+# Simulate data
+
+
+```{r}
+library(data.table)
+
+set.seed(123456)
+n <- 1000
+dt <- data.table(
+    p0 = rep(0.2, n)
+  , or1 = rep(1, n)
+  , var1 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.3, 0.7))
+  , or2 = rep(1.1, n)
+  , var2 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.4, 0.6))
+  , or3 = rep(1.2, n)
+  , var3 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.2, 0.8))
+  , or4 = rep(1.5, n)
+  , var4 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.3, 0.7))
+  , or5 = rep(1.7, n)
+  , var5 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.5, 0.5))
+  , or6 = rep(2, n)
+  , var6 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.4, 0.6))
+  , or7 = rep(5, n)
+  , var7 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.1, 0.9))
+)
+
+
+dt <- dt[, odds0 := p0 / (1 - p0)
+         ][, log_odds := log(odds0) +
+                 var1 * log(or1) +
+                 var2 * log(or2) +
+                 var3 * log(or3) +
+                 var4 * log(or4) +
+                 var5 * log(or5) +
+                 var6 * log(or6) +
+                 var7 * log(or7)
+           ][, p := exp(log_odds)/ (1 + exp(log_odds))]
+
+vsample <- function(p){
+    sample(c(1, 0), size = 1, replace = TRUE, prob = c(p, 1 - p))
+}
+vsample <- Vectorize(vsample)
+
+dt <- dt[, outcome := vsample(p)]
+
+unique(dt[, .(or1, or2, or3, or4, or5, or6, or7)]) %>% prt(caption = "Variables with Odds Ratios")
+
+```
+
+# GLM
+
+```{r}
+m <- glm(outcome ~ var1 + var2 + var3 + var4 + var5 + var6 + var7
+       , data = dt
+       , family = binomial
+         )
+
+library(sjPlot)
+
+tab_model(m)
+
+```
+
+# glmnet
+
+ * $min_{\beta_0, \beta} \frac{1}{N} \sum_{i=1}^N w_il(y_i, \beta_0 + \beta^Tx_i) + \lambda[(1 - \alpha)||\beta||_2^2 + \alpha||\beta||_1]$
+ * L1 penalty: $\alpha = 1$
+
+```{r}
+
+mx <- dt[, .(var1, var2, var3, var4, var5, var6, var7)]
+mx <- as.matrix(mx)
+## ss <- scale(mmx)
+## scale_scale <- attr(ss, 'scaled:scale') 
+
+set.seed(123456)
+library(glmnet)
+lss <- glmnet(x = mx
+            , y = dt$outcome
+            , family = "binomial"
+            , alpha = 1
+            , standardize = TRUE
+              )
+
+library(plotmo)
+
+plot_glmnet(lss, xvar = "rlambda")
+
+```
+
+# Cross Validation
+
+```{r}
+t1 <- Sys.time()
+library(doParallel)
+cl <- makePSOCKcluster(6)
+registerDoParallel(cl)
+set.seed(123456)
+cvfit <- cv.glmnet(x = mx
+                 , y = dt$outcome
+                 , type.measure = "auc"
+                 , family = "binomial"
+                 , standardize = TRUE
+                 , parallel = TRUE
+                   )
+stopCluster(cl)
+t2 <- Sys.time()
+print(t2 - t1)
+
+plot(cvfit)
+
+```
+
+# The Selected Model
+
+```{r}
+glmcoef <- coef(lss, cvfit$lambda.1se)
+betas <- data.table(Variable = glmcoef@Dimnames[[1]]
+                   , beta = as.matrix(glmcoef)
+                    )
+colnames(betas) <- c("Variable", "beta")
+betas <- betas[, OR := exp(beta)]
+
+
+ 
+betas %>% prt(digits = c(0, 6, 6, 6), caption = "Beta Coefficients of the LASSO Selected Model")
+
+```
+
+
+# AUC of The Selected Model
+
+ * For plotly output to set chunk option
+
+````
+ out.height='200%'
+````
+
+
+```{r,  out.height='200%'}
+pred <- predict(lss
+              , newx = mx
+              , type = "response"
+              , s = cvfit$lambda.1se
+                )
+library(pROC)
+r <- roc(dt$outcome, pred, ci = TRUE, direction = "<")
+plt_roc(r) %>% ann("LASSO AUC on the Dataset")
+
+```
+
+
+# Adaptive LASSO
+
+```{r}
+
+set.seed(123456)
+library(glmnet)
+ridge <- glmnet(x = mx
+              , y = dt$outcome
+              , family = "binomial"
+              , alpha = 0
+              , standardize = TRUE
+                )
+
+ridge_cv <- cv.glmnet(x = mx
+                    , y = dt$outcome
+                    , alpha = 0
+                    , type.measure = "auc"
+                    , family = "binomial"
+                    , standardize = TRUE
+                      )
+best_ridge_coef <- as.numeric(coef(ridge, s = ridge_cv$lambda.1se))[-1]
+
+
+t1 <- Sys.time()
+library(doParallel)
+cl <- makePSOCKcluster(6)
+registerDoParallel(cl)
+set.seed(20210817)
+cvfit <- cv.glmnet(x = mx
+                 , y = dt$outcome
+                 , alpha = 1
+                 , penalty.factor = 1 / abs(best_ridge_coef)
+                 , type.measure = "auc"
+                 , family = "binomial"
+                 , standardize=TRUE
+                 , parallel = TRUE
+                   )
+stopCluster(cl)
+t2 <- Sys.time()
+## print(t2 - t1)
+
+lss_adp <- glmnet(x = mx
+                , y = dt$outcome
+                , alpha = 1
+                , penalty.factor = 1 / abs(best_ridge_coef)
+                , family = "binomial"
+                , standardize = TRUE
+                  )
+
+
+cfs <- lapply(cvfit$lambda, function(x){
+  l <- coef(lss_adp, x)
+  invisible(l@Dimnames[[1]][l@i + 1])
+})
+
+ls <- do.call(c, cfs)
+ls <- unique(ls, fromLast = FALSE)[-1]
+
+ls %>% prt(caption = "Order of Variables Selected", col.name = "Variable Name")
+
+
+glmcoef <- coef(lss_adp, cvfit$lambda.1se)
+betas <- data.table(Variable = glmcoef@Dimnames[[1]]
+                   , beta = as.matrix(glmcoef)
+                    )
+colnames(betas) <- c("Variable", "beta")
+betas <- betas[, OR := exp(beta)]
+
+
+ 
+betas %>% prt(digits = c(0, 6, 6, 6), caption = "Beta Coefficients from Adaptive LASSO")
+
+```
+
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```
