@@ -59,7 +59,7 @@ eval_slow <- FALSE
 
  * [LASSO: Least Absolute Shrinkage and Selection Operation](lasso.html)
  * [CART: Classification And Regression Trees](cart.html)
- * [Random Forest with R & Python](random_forest.html)
+ * [Random Forest with R & Python](randomforest.html)
  * [Regression Method](regression.html)
  * [Cluster Analysis](clustering.html)
  * [Multi-State Process](multi_state.html)
