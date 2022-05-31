@@ -74,6 +74,7 @@ eval_slow <- FALSE
 # Modeling
 
  * [LASSO: Least Absolute Shrinkage and Selection Operation](lasso.html)
+ * [CART: Classification And Regression Trees](cart.html)
  * [Regression Method](regression.html)
  * [Cluster Analysis](clustering.html)
  * [Multi-State Process](multi_state.html)
