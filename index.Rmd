@@ -39,17 +39,6 @@ eval_slow <- FALSE
 
 
 
-# Data Wrangling
- * [Data Manipulation](data_manipulation.html)
- * [Data Description](data_description.html)
- * [R Notes](r_notes.html)
- * [Discretization](discretization.html)
-
-# Statistics
- * [Power and Sample Size Simulation for Two Proportions](simulation_proportion.html)
- * [Power Analysis: Non-inferiority Cluster Randomised Trial](power_analysis.html)
- * [Restricted Cubic Spline](restricted_cubic_spline.html)
- * [Jeffreys Interval for One-Sample Proportion with SAS/STAT® Software](https://support.sas.com/resources/papers/proceedings15/3020-2015.pdf)
 
 
 # Visualization
@@ -65,22 +54,37 @@ eval_slow <- FALSE
  * [plotly Symbols](plotly_symbols.html)
  * [RMarkdown Slides](rmarkdown_slides.html)
 
-# R Programming
- * [Intall R Packages](install_packages.html)
- * [R Markdown HTML Output Style](style.html) 
- * [R Markdown with Tabs](rmarkdown_with_tabs.html)
- * [R6 Object](R6.html) 
 
 # Modeling
 
  * [LASSO: Least Absolute Shrinkage and Selection Operation](lasso.html)
  * [CART: Classification And Regression Trees](cart.html)
+ * [Random Forest with R & Python](random_forest.html)
  * [Regression Method](regression.html)
  * [Cluster Analysis](clustering.html)
  * [Multi-State Process](multi_state.html)
  * [SHAP: SHapley Additive exPlanations](shap.html)
  * [Support Vector Machine (SVM)](support_vector_machine.html)
  * [Time to Event](time_to_event.html)
+
+# Data Wrangling
+ * [Data Manipulation](data_manipulation.html)
+ * [Data Description](data_description.html)
+ * [R Notes](r_notes.html)
+ * [Discretization](discretization.html)
+
+# Statistics
+ * [Power and Sample Size Simulation for Two Proportions](simulation_proportion.html)
+ * [Power Analysis: Non-inferiority Cluster Randomised Trial](power_analysis.html)
+ * [Restricted Cubic Spline](restricted_cubic_spline.html)
+ * [Jeffreys Interval for One-Sample Proportion with SAS/STAT® Software](https://support.sas.com/resources/papers/proceedings15/3020-2015.pdf)
+
+
+# R Programming
+ * [Intall R Packages](install_packages.html)
+ * [R Markdown HTML Output Style](style.html) 
+ * [R Markdown with Tabs](rmarkdown_with_tabs.html)
+ * [R6 Object](R6.html) 
 
 # [Python](python.html)
 
