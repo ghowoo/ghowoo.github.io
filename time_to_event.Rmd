@@ -34,6 +34,55 @@ eval_slow <- FALSE
 
 ```
 
+
+# Mixed-effect Cox Model
+
+
+## Simulate data with coxed
+
+ * Ref: https://stats.oarc.ucla.edu/r/dae/mixed-effects-cox-regression/
+ 
+
+```{r}
+library(coxed)
+set.seed(123456)
+
+N = 1000
+X <- data.frame(
+    con1 = rnorm(n = N, sd = 1)
+  , con2 = rnorm(n = N, sd = 1)
+  , con3 = rnorm(n = N, sd = 2)
+  , con4 = rnorm(n = N, sd = 2)
+  , fac1 = sample(x = c(0, 1), size = N, replace = TRUE, prob = c(0.3, 0.7))
+  , fac2 = sample(x = c(0, 1), size = N, replace = TRUE, prob = c(0.3, 0.7))
+  , fac3 = sample(x = c(0, 1), size = N, replace = TRUE, prob = c(0.7, 0.3))
+  , fac4 = sample(x = c(0, 1), size = N, replace = TRUE, prob = c(0.7, 0.3))
+)
+
+surv_obj <- sim.survdata(N = N
+                 , T = 500
+                 , X = X
+                 , beta = log(c(1, 0.5, 1, 0.5, 1, 2, 1, 2))
+                 , censor = .2
+                 , num.data.frames = 1
+                   )
+
+head(surv_obj$data) %>% prt()
+
+```
+
+
+## R survival package
+
+```{r}
+df <- surv_obj$data
+library(survival)
+m <- coxph(Surv(y, failed) ~ fac2, data = df)
+summary(m)
+
+
+```
+
 # Weibull AFT Regression in R
 
 [Sarah R Haile: Weibull AFT Regression Functions in R](https://cran.r-project.org/web/packages/SurvRegCensCov/vignettes/weibull.pdf "Sarah Haile: Weibull AFT Regression in R")

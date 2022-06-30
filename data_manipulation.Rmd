@@ -142,6 +142,7 @@ replace(x, list, value)
 ## Index of observations
 
 ```{r}
+
 dt <- data.table(
     group=c("A", "A", "B", "B", "B", "C", "C", "C", "C")
   , var1=1:9
