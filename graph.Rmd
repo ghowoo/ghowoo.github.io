@@ -472,6 +472,103 @@ ggplot(dt, aes(x=avg_daily_prone, fill=treatment)) +
 
 
 
+
+# ROC Curve
+
+
+## Simulate Data
+
+```{r}
+
+library(data.table)
+set.seed(123456)
+n <- 1000
+dt <- data.table(x = runif(n))
+p0 <- 0.2
+or <- 2
+dt <- dt[, odds0 := p0 / (1 - p0)
+         ][, log_odds := log(odds0) + x * log(or)
+           ][, p := exp(log_odds) / (1 + exp(log_odds))]
+
+hist(dt$p)
+
+vsample <- function(p){
+    sample(c(1, 0), size = 1, replace = TRUE, prob = c(p, 1 - p))
+}
+vsample <- Vectorize(vsample)
+dt <- dt[, outcome := vsample(p)]
+
+m <- glm(outcome ~ x, data = dt, family = binomial)
+
+
+library(sjPlot)
+tab_model(m)
+
+
+```
+
+## ggplot
+
+```{r}
+
+pred <- predict(m, newdata = dt, type = "response")
+library(pROC)
+r <- roc(dt$outcome, pred, ci = TRUE, direction = "<")
+
+
+dr <- data.table(
+    tpr = r$sensitivities
+  , fpr = 1 - r$specificities
+)
+dr <- dr[order(fpr, tpr)]
+
+ggplot(dr, aes(x = fpr, y = tpr)) +
+    geom_segment(x = 0, y = 0, xend = 1, yend = 1, size = 0.5, color = "#999999", linetype = "longdash") + 
+    geom_step(size = 1.5, color = "#333333", direction = "hv") +
+    xlab("FPR") + ylab("TPR") + 
+    theme_bw() +
+    theme(axis.ticks.x = element_blank()
+        , axis.ticks.y = element_blank()
+        , axis.text.x = element_blank()
+        , axis.text.y = element_blank()
+        , panel.grid.major = element_blank()
+        , panel.grid.minor = element_blank()
+          )
+
+
+
+```
+
+
+## plotly
+
+
+```{r}
+r <- roc(dt$outcome, pred, ci = TRUE, direction = "<")
+
+plt_roc(r) %>% ann("ROC Curve")
+
+```
+
+
+## Compare two AUCs
+
+```{r, eval = FALSE}
+
+plt_roc2(r1, r2)
+tst <- roc.test(r1, r2, method = "delong")
+
+t <- data.table(
+  test = tst$alternative
+  , compare = attr(tst$null.value, "names")
+  , method = tst$method
+  , pvalue = tst$p.value
+)
+
+
+```
+
+
 # Color
 
 ## Hue Saturation Luminance (HSL)
@@ -585,33 +682,6 @@ plot_ly(alpha = 0.5, xbins = list(start = 0, end = 1, size = 0.02)) %>%
                       zeroline = FALSE),
          yaxis = list(title = "Count",
                       zeroline = FALSE))
-
-```
-
-
-## ROC Curve
-
-```{r, eval = FALSE}
-
-library(pROC)
-
-r1 <- roc(dt$x, dt$y, ci = TRUE, direction = "<")
-plt_roc(r1) %>% ann("ROC Curve")
-
-plt_roc2(r1, r2)
-
-
-tst <- roc.test(r1, r2, method = "delong")
-
-
-t <- data.table(
-  test = tst$alternative
-  , compare = attr(tst$null.value, "names")
-  , method = tst$method
-  , pvalue = tst$p.value
-)
-
-
 
 ```
 

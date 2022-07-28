@@ -35,6 +35,350 @@ eval_slow <- FALSE
 ```
 
 
+# Log-rank Test
+
+
+
+## A simplest example
+
+
+ * Ref: https://towardsdatascience.com/survival-analysis-in-clinical-trials-log-rank-test-8f1229e7f0f0
+ * Ref: https://www.real-statistics.com/survival-analysis/kaplan-meier-procedure/kaplan-meier-comparison-tests/
+ * Ref: https://ncss-wpengine.netdna-ssl.com/wp-content/themes/ncss/pdf/Procedures/NCSS/Kaplan-Meier_Curves-Logrank_Tests.pdf
+ * The test is based on $K - 1$ statistics, where $k$ represents one of the $K$ population (groups be compared)
+ $$Z_k (\tau) = \sum_{T} W(T_i) r_{ik} (\frac{d_{ik}}{r_{ik}} - \frac{d_i}{r_i})$$
+ 
+ where $r_i$ is the number of subjects at risk at time $T_i$, $r_{ik}$ is the subjects from group $k$
+ and $d_i$ is the number of events at the time,
+ When $W(T_I) = 1$, it is the log-rank test.
+ 
+ * The $Z$s have a covariance matrix
+ 
+ $$\sigma = \sum_T W(T_I)^2 (\frac{r_{ik}}{r_i})(\delta_{kg} - \frac{r_{ig}}{r_i})(\frac{r_i - d_i}{r_i - 1})d_i$$
+ 
+ 
+ * Mantel-Haenszel Logrank Test
+ Formula of log-rank statistic with two exposure groups $i = A, B$
+ $$\chi^2_{MHL} = (\frac{O_A - E_A}{\sqrt{Var}})^2 \approx \chi_1^2$$
+  Variance of hypergeometric distribution, if there are two groups:
+ $$Var = \frac{n_{rowsum1} \cdot n_{rowsum2} \cdot n_{colsum1} \cdot n_{colsum2} }{N^2 \cdot (N - 1)}$$
+
+ * Cox-Mantel Logrank Test for two groups
+ $$\chi^2_{CM} = \frac{(O_A - E_A)^2}{E_A} + \frac{(O_B - E_B)^2}{E_B}$$
+
+
+```{r}
+
+library(survival)
+df <- data.frame(
+    treatment = c(0, 1)
+  , time = c(1, 2)
+  , event = c(1, 1)
+)
+
+survdiff(Surv(time, event) ~ treatment, data = df, rho = 0)
+
+
+library(nph)
+
+logrank.test(time = df$time, event = df$event, group = df$treatment)
+
+
+library(survival)
+df <- data.frame(
+    treatment = c(0, 1)
+  , time = c(1, 2)
+  , event = c(1, 0)
+)
+
+survdiff(Surv(time, event) ~ treatment, data = df, rho = 0)
+
+
+
+pchisq(q = 1, df = 1, lower.tail = TRUE)
+
+
+
+```
+
+## A normal example
+
+ * Ref: https://web.stanford.edu/~lutian/coursepdf/survweek3.pdf
+
+```{r}
+dt <- data.table(
+    group = c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+  , time = c(3.1, 6.8, 9, 9, 11.3, 16.2, 8.7, 9, 10.1, 12.1, 23.1)
+  , event = c(0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1)
+)
+
+dt <- dt[order(group, time, event)
+         ][, seq_i := 1:.N, by = .(group)
+           ][, n_ij := .N, by = .(group, time)
+             ][, n_group := .N, by = .(group)]
+
+
+
+dtt <- dt[, .(n_group = max(n_group)
+            , n_ij = max(n_ij)
+              , n_at_risk_ij = max(n_group) - max(seq_i) + max(n_ij)
+            , o_ij = sum(event, na.rm = TRUE)
+              ), by = .(time, group)]
+
+print(dtt)
+
+
+dtt <- dtt[, n_j := sum(n_ij, na.rm = TRUE), by = .(time)
+           ][, o_j := sum(o_ij, na.rm = TRUE), by = .(time)
+             ][, e_j := o_j]
+
+
+
+
+```
+
+# Kaplan-Meier
+
+## Simulating Data
+
+```{r}
+library(coxed)
+set.seed(123456)
+
+N = 1000
+X <- data.frame(
+    fac1 = sample(x = c(0, 1), size = N, replace = TRUE, prob = c(0.6, 0.4))
+  , fac2 = rep(c(0, 1), each = N / 2)
+  , group = rep(1:(N / 2), 2)
+)
+
+surv_obj <- sim.survdata(N = N
+                 , T = 500
+                 , X = X
+                 , hazard.fun = NULL
+                 , beta = log(c(2, 2, 1))
+                 , censor = .2
+                 , num.data.frames = 1
+                   )
+
+surv_obj$data[1:10, ] %>% prt()
+
+```
+
+
+## Kaplan Meier Plot by survminer
+
+
+```{r}
+library(survival)
+library(survminer)
+library(sjPlot)
+
+dt <- surv_obj$data
+setDT(dt)
+dt$group <- X$group
+dt <- dt[, fac1 := factor(fac1, levels = c(0, 1))]
+
+
+S <- survival::Surv(time = dt$y, event = dt$failed)
+km <- survfit(S ~ fac1, type="kaplan-meier", conf.type="log", data = dt)
+
+
+plot(survfit(Surv(dt$y, dt$failed) ~ dt$fac1))
+
+ggsurvplot(km
+         , xlab = "time"
+         , xscale = 1
+         , break.x.by = 100
+         , title = "Kaplan-Meier Plot"
+         , conf.int = TRUE
+         , surv.median.line = "hv"
+         , risk.table = TRUE
+           )
+
+
+```
+
+
+## Logrank Test
+
+
+
+```{r}
+survdiff(Surv(y, failed) ~ fac2, data = dt)
+
+
+m_cox <- coxph(S ~ fac1, data = dt, ties = "exact")
+ms_cox <- summary(m_cox)
+ms_cox$sctest
+
+
+
+```
+
+## Stratified Log-rank Test
+
+```{r}
+survdiff(Surv(y, failed) ~ fac2 + strata(group), data = dt)
+
+library(nph)
+
+logrank.test(dt$y, dt$failed, dt$group)
+
+dt[group %in% c(1, 2, 3)][order(group)]
+
+```
+
+
+# Proportional Hazard
+
+## Simulating Data
+
+
+```{r}
+library(coxed)
+library(data.table)
+library(survminer)
+set.seed(123456)
+
+N = 1000
+X <- data.frame(
+    fac1 = sample(x = c(0, 1), size = N, replace = TRUE, prob = c(0.6, 0.4))
+  , fac2 = rep(c(0, 1), each = N / 2)
+  , group = rep(1:(N / 2), 2)
+)
+
+surv_obj <- sim.survdata(N = N
+                 , T = 500
+                 , X = X
+                 , hazard.fun = NULL
+                 , beta = log(c(2, 2, 1))
+                 , censor = .2
+                 , num.data.frames = 1
+                   )
+dt <- surv_obj$data
+setDT(dt)
+dt$group <- X$group
+dt <- dt[, fac1 := factor(fac1, levels = c(0, 1))]
+
+
+```
+
+## Cox Model
+
+```{r}
+S <- survival::Surv(time = dt$y, event = dt$failed)
+m_cox <- coxph(S ~ fac1, data = dt)
+
+tab_model(m_cox)
+
+```
+
+## Testing proportional Hazards Assumption
+
+
+ * cox.zph() tests corresponding scaled Schoenfeld residuals with time
+ * The Schoenfeld residuals are the differences between one individual's covariates values at the event time and the corresponding risk-weighted average of covariate values among all then at risk.
+ * Schoenfeld's residuals are defined as
+ $$\hat{r}_{(i)} = Z_{(i)} - \frac{\sum Z_j exp(\hat{\beta} Z_j)}{\sum exp(\hat{\beta}Z_j)}$$
+
+ where $Z_{i}$ is the covaraite vector at time $i$, and the weight is the risk at the time (hazard) considering all covaraites (each individual has different hazard at the time)
+
+```{r}
+test.ph <- cox.zph(m_cox)
+test.ph
+
+ggcoxzph(test.ph)
+
+```
+
+
+## Cox Model with mgcv
+
+
+```{r}
+library(mgcv)
+
+m_gam <- gam(y ~ fac1
+           , data = dt
+           , family = cox.ph()
+           , weights = failed
+             )
+beta <- m_gam$coefficients
+se <- summary(m_gam)$se
+
+exp(c(beta, beta - qnorm(.975) * se, beta + qnorm(0.975) * se))
+
+
+```
+
+
+# Sample Size
+
+## Sample size for the proportional hazards model
+
+
+ * Schoenfeld: Sample-Size Formula for the Proportional-Hazards Regression Model
+ * The total number of events required:
+ $$(Z_{\beta} + z_{1 - \alpha})^2/(P_A P_B log_e^2\delta)$$
+ * $P_A$ is the proportion of the patients randomized to the treatment A group
+ * $\delta$ is the hazard ratio (A as reference)
+
+
+```{r}
+alpha = 0.05
+beta = 0.8
+q1 = 0.66
+q0 = 0.34
+hr = 0.4
+
+z_beta <- qnorm(beta)
+z_1_alpha <- qnorm(1 - alpha / 2)
+
+
+
+ceiling((z_beta + z_1_alpha) ^ 2 / (q1 * q0 * (log(hr)) ^ 2))
+
+library(powerSurvEpi)
+
+expected_proportion_of_events <- 0.03
+ssizeEpi.default(power = 0.8
+               , theta = 0.4
+               , p = 0.66
+               , psi = expected_proportion_of_events
+               , rho2 = 0
+               , alpha = 0.05) * expected_proportion_of_events
+
+
+library(npsurvSS)
+
+arm0 <- create_arm(size = 200, accr_time = 1, surv_scale = 0.06, loss_scale = 0.001, follow_time = 12)
+arm1 <- create_arm(size = 400, accr_time = 1, surv_scale = 0.03, loss_scale = 0.001, follow_time = 12)
+
+power_two_arm(arm0, arm1, alpha = 0.05, sides = 2, test = list(test = "weighted logrank"))
+
+
+```
+
+# Example from mgcv
+
+ * https://rdrr.io/cran/mgcv/man/coxph.html
+
+```{r}
+library(mgcv)
+library(survival) ## for data
+col1 <- colon[colon$etype==1,] ## concentrate on single event
+col1$differ <- as.factor(col1$differ)
+col1$sex <- as.factor(col1$sex)
+
+b <- gam(time~sex,
+         family=cox.ph(),data=col1,weights=status)
+
+summary(b) 
+
+
+```
+
 # Mixed-effect Cox Model
 
 
@@ -337,7 +681,7 @@ t
 
 m <- glmer(event ~ trt + (1 | id)
          , data=dt
-         , family = binomial(link=logit)
+         , family = binomial(link="logit")
            )
 
 
