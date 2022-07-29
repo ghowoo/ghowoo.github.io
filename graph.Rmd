@@ -539,6 +539,72 @@ ggplot(dr, aes(x = fpr, y = tpr)) +
 
 ```
 
+## Two AUC Curves
+
+
+```{r}
+set.seed(654321)
+n <- 800
+dt2 <- data.table(x = runif(n))
+p0 <- 0.2
+or <- 3
+dt2 <- dt2[, odds0 := p0 / (1 - p0)
+         ][, log_odds := log(odds0) + x * log(or)
+           ][, p := exp(log_odds) / (1 + exp(log_odds))]
+
+hist(dt2$p)
+
+vsample <- function(p){
+    sample(c(1, 0), size = 1, replace = TRUE, prob = c(p, 1 - p))
+}
+vsample <- Vectorize(vsample)
+dt2 <- dt2[, outcome := vsample(p)]
+
+m2 <- glm(outcome ~ x, data = dt2, family = binomial)
+
+
+pred <- predict(m, newdata = dt, type = "response")
+library(pROC)
+r <- roc(dt$outcome, pred, ci = TRUE, direction = "<")
+dr <- data.table(
+    tpr = r$sensitivities
+  , fpr = 1 - r$specificities
+)
+dr <- dr[order(fpr, tpr)][, group := 1]
+
+
+
+pred2 <- predict(m2, newdata = dt2, type = "response")
+library(pROC)
+r2 <- roc(dt2$outcome, pred2, ci = TRUE, direction = "<")
+
+dr2 <- data.table(
+    tpr = r2$sensitivities
+  , fpr = 1 - r2$specificities
+)
+dr2 <- dr2[order(fpr, tpr)][, group := 2]
+
+ggplot(dr, aes(x = fpr, y = tpr)) +
+    geom_segment(x = 0, y = 0, xend = 1, yend = 1, size = 0.5, color = "#999999", linetype = "longdash", alpha = 0.8) + 
+    geom_step(size = 1.5, color = "#666666", direction = "hv", alpha = 0.6) +
+    geom_step(data = dr2, aes(x = fpr, y = tpr), size = 1.5, color = "#000000", direction = "hv", inherit = FALSE) +
+    xlab("FPR") + ylab("TPR") + 
+    theme_bw() +
+    theme(axis.ticks.x = element_blank()
+        , axis.ticks.y = element_blank()
+        , axis.text.x = element_blank()
+        , axis.text.y = element_blank()
+        , panel.grid.major = element_blank()
+        , panel.grid.minor = element_blank()
+          )
+
+
+## png(file = "p.png", width = 1000, height = 1000, res = 300)
+## p
+## dev.off()
+
+```
+
 
 ## plotly
 

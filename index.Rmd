@@ -45,6 +45,7 @@ eval_slow <- FALSE
  * [R Graphics](graph.html)
  * [Flow Chart](flowchart.html)
  * [Map: Hydraulic Dams around the World](hydraulic_dams_around_the_world.html)
+ * [Map: highcharter](map_highcharter.html)
  * [Social Network with Gephi](network_Gephi.html)
  * [Hierarchical Newtork with visNetwork](network_visNetwork.html)
  * [Heatmaps for Correlation Matrix](heatmap_correlation.html)
@@ -84,6 +85,7 @@ eval_slow <- FALSE
 # R Programming
  * [Intall R Packages](install_packages.html)
  * [R Markdown HTML Output Style](style.html) 
+ * [flexdashboard Template](template_flexdashboard.html)
  * [R Markdown with Tabs](rmarkdown_with_tabs.html)
  * [R6 Object](R6.html) 
 

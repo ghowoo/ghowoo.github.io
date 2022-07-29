@@ -1,0 +1,288 @@
+---
+title: "flexdashboard Template"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+    social: [ "twitter", "facebook", "menu"]
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(knitr)
+library(DT)
+library(rpivotTable)
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(openintro)
+library(highcharter)
+library(ggvis)
+library(shiny)
+```
+
+
+```{r}
+library(data.table)
+n <- 1000
+dt <- data.table(
+    id = 1:n
+  , score = rnorm(n, mean = 200, sd = 40)
+  , group = sample(c("A", "B", "C"), size = n, replace = TRUE, prob = c(0.2, 0.5, 0.3))
+  , grade = sample(1:15, size = n, replace = TRUE)
+    , state = sample(c("Tennessee", "Georgia", "Kentucky", "Alibama"), size = n, replace = TRUE)
+)
+
+```
+
+```{r}
+mycolors <- c("blue", "#FFC125", "darkgreen", "darkorange")
+```
+
+Interactive Data Visualization
+=====================================
+
+Row
+-------------------------------------
+
+### Project A Analysis
+
+```{r}
+valueBox(paste("Project A"), color = "#448833")
+```
+
+### Number of Enrollments
+
+```{r}
+valueBox(length(dt$id), icon = "fa-user")
+```
+
+### **Average Score**
+
+```{r}
+gauge(round(mean(dt$score),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+### Group A
+
+```{r}
+valueBox(sum(dt$group == "A"), icon = 'fa-building')
+```
+
+### Group B
+
+```{r}
+valueBox(sum(dt$group == "B"), icon = 'fa-building')
+```
+
+### Group C
+
+```{r}
+valueBox(sum(dt$group == "C"), icon = 'fa-building')
+```
+
+
+Row
+-------------------------------
+
+### Enrollments By Group: Bar Plot
+
+```{r}
+p1 <- dt %>%
+         group_by(group) %>%
+         summarise(count = n()) %>%
+         plot_ly(x = ~group,
+                 y = ~count,
+                 color = "blue",
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Number by Group"),
+yaxis = list(title = 'Count'))
+p1
+```
+
+### Pie Plot
+
+```{r}
+
+colors <- c("#009999", "#990099", "#999900")
+p2 <- dt %>%
+         group_by(group) %>%
+         summarise(count = n()) %>%
+         filter(count>50) %>%
+         plot_ly(labels = ~group,
+                 values = ~count,
+                 marker = list(colors = colors)) %>%
+         add_pie(hole = 0.2) %>%
+         layout(xaxis = list(zeroline = F,
+                             showline = F,
+                             showticklabels = F,
+                             showgrid = F),
+                yaxis = list(zeroline = F,
+                             showline = F,
+                             showticklabels=F,
+                             showgrid=F))
+p2
+```
+
+### Histogram/Bar Plot
+
+```{r}
+p3 <- plot_ly(dt,
+              x = ~grade,
+              y = ~score,
+              text = paste("Grade:", dt$grade,
+                           "Score:",
+                           dt$score),
+              type = "bar") %>%
+         layout(xaxis = list(title="Grade"),
+                yaxis = list(title = "Score"))
+p3
+```
+
+Row
+------------------------------------
+### Scatter Plot
+
+```{r}
+p4 <- plot_ly(dt, x=~grade) %>%
+         add_markers(y = ~score,
+                     text = ~paste("score: ", score),
+                     showlegend = F) %>%
+         add_lines(y = ~fitted(loess(score ~ grade)),
+                   name = "Loess Smoother",
+                   color = I("#119999"),
+                   showlegend = T,
+                   line = list(width=5)) %>%
+         layout(xaxis = list(title = "Grade"),
+                yaxis = list(title = "Score"))
+p4
+```
+
+### Box Plot
+
+```{r}
+dt %>%
+         group_by(group) %>%
+         ggvis(~group, ~score, fill = ~group) %>%
+         layer_boxplots()
+```
+
+Map
+========================================
+
+### Map
+
+```{r}
+library("dplyr")
+library(highcharter)
+
+data("USArrests", package = "datasets")
+data("usgeojson")
+
+USArrests <- mutate(USArrests, state = rownames(USArrests))
+
+highchart() %>%
+  hc_title(text = "Violent Crime Rates by US State") %>%
+  hc_subtitle(text = "Source: USArrests data") %>%
+  hc_add_series_map(usgeojson, USArrests,
+    name = "Murder arrests (per 100,000)",
+    value = "Murder", joinBy = c("woename", "state"),
+    dataLabels = list(
+      enabled = TRUE,
+      format = "{point.properties.postalcode}"
+    )
+  ) %>%
+  hc_colorAxis(stops = color_stops()) %>%
+  hc_legend(valueDecimals = 0, valueSuffix = "%") %>%
+  hc_mapNavigation(enabled = TRUE)
+
+
+
+```
+
+Data Table
+========================================
+
+```{r}
+datatable(dt,
+          caption = "Data",
+          rownames = T,
+          filter = "top",
+          options = list(pageLength = 25))
+```
+
+Pivot Table
+=========================================
+
+```{r}
+rpivotTable(dt,
+            aggregatorName = "Count",
+            cols= "grade",
+            rows = "group",
+            rendererName = "Heatmap")
+```
+
+Summary {data-orientation=columns} 
+===========================================
+
+Column 
+-----------------------------------
+
+### Max Grade
+
+```{r}
+valueBox(max(dt$grade),
+         icon = "fa-user" )
+```
+
+### Average Score
+```{r}
+valueBox(round(mean(dt$score),
+               digits = 2),
+         icon = "fa-area-chart")
+```
+
+### Average Grade
+
+```{r}
+valueBox(round(mean(dt$grade), digits = 2),
+         icon = "fa-area-chart")
+```
+
+Column
+---------------------------
+
+Report
+
+* This is a report on `r length(dt$grade)` enrollments.
+
+* The average score was `r mean(dt$score)`.
+
+* The average grade was `r mean(dt$grade)`.
+
+This report was generated on `r format(Sys.Date(), format = "%B %d, %Y")`.
+
+About Report
+========================================
+
+Created by: 
+
+
+```{r}
+sessionInfo()
+
+```
+
+
+
+
+
+

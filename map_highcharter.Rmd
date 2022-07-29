@@ -1,0 +1,85 @@
+---
+title: "Map highcharter"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+
+
+# highcharter: add a map series
+
+```{r}
+
+library("dplyr")
+library(highcharter)
+
+data("USArrests", package = "datasets")
+data("usgeojson")
+
+USArrests <- mutate(USArrests, state = rownames(USArrests))
+
+highchart() %>%
+  hc_title(text = "Violent Crime Rates by US State") %>%
+  hc_subtitle(text = "Source: USArrests data") %>%
+  hc_add_series_map(usgeojson, USArrests,
+    name = "Murder arrests (per 100,000)",
+    value = "Murder", joinBy = c("woename", "state"),
+    dataLabels = list(
+      enabled = TRUE,
+      format = "{point.properties.postalcode}"
+    )
+  ) %>%
+  hc_colorAxis(stops = color_stops()) %>%
+  hc_legend(valueDecimals = 0, valueSuffix = "%") %>%
+  hc_mapNavigation(enabled = TRUE)
+
+```
+
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```
