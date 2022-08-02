@@ -94,6 +94,7 @@ dt <- dt[, odds0 := p0 / (1 - p0)
 vsample <- function(p){
     sample(c(1, 0), size = 1, replace = TRUE, prob = c(p, 1 - p))
 }
+
 vsample <- Vectorize(vsample)
 
 dt <- dt[, outcome := vsample(p)]
@@ -177,6 +178,12 @@ rpart.plot(tr, type = 2, extra = 106, tweak = 2, under = TRUE)
 
 
 ```{r}
+
+
+tr$cptable %>% prt(caption = "CP Table")
+
+
+
 plotcp(tr)
 
 
@@ -189,6 +196,9 @@ rpart.plot(trp, type = 2, extra = 106, tweak = 2, under = TRUE)
 ## fancyRpartPlot(trp, uniform=TRUE, main="Pruned Classification Tree")
 
 bestcp2 <- tr$cptable[9,"CP"]
+
+
+fancyRpartPlot(trp, caption = "fancyRpartPlot")
 
 ```
 

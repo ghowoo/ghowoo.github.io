@@ -1,0 +1,127 @@
+---
+title: "Rolling Average"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+
+# Seven-day Rolling Average
+
+ * Use [zoo](https://cran.r-project.org/web/packages/zoo/index.html) package to calculate rolling average
+
+```{r}
+
+dates <- seq(
+    from = as.Date("2018-01-01", format = "%Y-%m-%d")
+  , to = as.Date("2020-12-31", format = "%Y-%m-%d")
+  , by = 1
+)
+
+
+dt <- data.table(
+    date = rep(dates, 3)
+  , site = rep(c("A", "B", "C"), each = length(dates))
+  , daily_volume = rpois(n = length(dates) * 3, lambda = 10)
+)
+
+library(zoo)
+dt <- dt[order(site, date)
+         ][, rolling_avg_7days := rollmean(daily_volume, k = 7, na.pad = TRUE, align = "right"), by = .(site)]
+
+
+dt <- dt[, period := case_when(
+               date <= as.Date("2018-08-31", format = "%Y-%m-%d") ~ "I"
+             , date > as.Date("2020-03-31", format = "%Y-%m-%d") ~ "III"
+               , TRUE ~ "II"
+           )]
+
+
+clrs <- c(
+  "#333333"
+ ,"#cccccc"
+, "#666666"
+)
+
+
+brks <- as.Date(c("2018-01-01", "2018-07-01", "2019-01-01", "2019-07-01", "2020-01-01", "2020-07-01")
+              , format = "%Y-%m-%d")
+
+p1 <- ggplot(dt, aes(x = date, y = daily_volume, fill = period)) +
+    geom_bar(stat = "identity", alpha = 0.6) +
+    ## geom_line(data = sm2, aes(x = date_procedure, y = mv7, group = period, color = period), size = 1, alpha = 1) +
+    geom_line(data = dt, aes(x = date, y = rolling_avg_7days), size = 1, alpha = 0.8) +
+    scale_x_continuous(breaks=brks, labels = format(brks, "%b %d")) +
+    scale_fill_manual(values = clrs) +
+    ## scale_color_manual(values = clrs) +
+    theme(panel.background = element_rect(fill = "transparent")
+        , plot.background = element_rect(fill = "transparent", color = NA)
+        , panel.grid.major = element_blank()
+        , panel.grid.minor = element_blank()
+        , axis.title.y = element_text(size = 12)
+          ## , legend.background = element_rect(fill = "transparent")
+          ## , legend.box.background = element_rect(fill = "transparent")
+        , strip.background =element_rect(fill="transparent")
+        , strip.text.x = element_text(size = 15)
+        , legend.position = 'top'
+        , legend.title = element_blank()
+          ## , plot.margin=unit(c(1,2,1,2),"cm")
+          ) +
+    ## theme(axis.text.x = element_text(angle = 45)) + 
+    facet_wrap(~ site, nrow = 3, scales = "free") +
+    xlab("") +
+    ylab("Daily Numbers")
+
+
+## png(filename = "p1.png", width = 12, height = 6, units = "in", res = 300)
+p1
+## dev.off()
+
+```
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

@@ -1,0 +1,102 @@
+---
+title: "Template Notebook Style"
+author: "Wu Gong"
+date: " `r Sys.Date() ` "
+output:
+  html_document:
+    toc: yes
+    toc_depth: 4
+    toc_float: 
+      collapsed: true
+    code_folding: hide
+    theme: cerulean
+    number_sections: true
+    fig_caption: true
+---
+
+
+
+```{r setup, include = FALSE}
+rm(list = ls())
+library(Wu)
+knitr::opts_chunk$set(
+  echo = FALSE
+  , message = FALSE
+  , tidy = TRUE
+  , results = "asis"
+  , warning = FALSE
+  , code_folding = "hide"
+  , fig.width = 12
+  , fig.height = 8
+)
+
+options(knitr.kable.NA = "")
+
+theme_update(
+  axis.text = element_text(size = 10)
+  , axis.title = element_text(size = 10)
+	     ) 
+```
+
+
+`r Hmisc::hidingTOC(buttonLabel="Table of Contents", tocSide = c("left"), buttonSide = "left") `
+
+
+```{r}
+css()
+```
+
+
+# Variable Definition
+
+ * It uses Hmisc TOC style
+ * Variable A
+ * Variable B
+ * Variable C
+ 
+# Datatable
+
+
+```{r}
+dt <- data.table(var1 = 1:26, var2 = letters[1:26])
+Wu::DT(dt)
+
+```
+
+# Table I
+
+	
+```{r}
+
+
+n <- 1000
+dt <- data.table(
+    trt = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.4, 0.6))
+  , var1 = rnorm(n)
+  , var2 = sample(c("A", "B", "C"), size = n, replace = TRUE, prob = c(0.2, 0.3, 0.5))
+  , var3 = exp(rnorm(n))
+)
+Vars <- c("var1", "var2", "var3")
+FactorVars <- c("var2")
+Strata <- "trt"
+NonNormals <- c("var3")
+prt <- Table1(
+    data = dt
+  , Vars = Vars
+  , FactorVars = FactorVars
+  , NonNormals = NonNormals
+  , Strata = Strata
+  , Test = TRUE
+)
+
+
+knitr::kable(prt, align = "lrrrrrrrrr") %>% pvalue_description() %>% styling()
+
+```
+
+# R Session
+
+```{r}
+sessionInfo()
+
+```

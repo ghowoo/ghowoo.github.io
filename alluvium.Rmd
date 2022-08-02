@@ -49,18 +49,19 @@ klippy::klippy(position = c('top', 'left')
 # Alluvium Plot with ggplot2
 
  * Use [ggplot2](https://cran.r-project.org/web/packages/ggplot2/index.html) and [ggalluvial](https://cran.r-project.org/web/packages/ggalluvial/index.html) package, plus [ggrepel](https://cran.r-project.org/web/packages/ggrepel/index.html) package
-
-```{r}
-library(data.table)
-library(ggplot2)
-library(ggalluvial)
-library(ggrepel)
-dt <- data.table(
-    col1 = factor(sample(c("I", "II"), size = 150, replace = TRUE, prob = c(0.4, 0.6)))
-  , col2 = factor(sample(c("A", "B"), size = 150, replace = TRUE, prob = c(0.3, 0.7)))
-  , col3 = factor(sample(c("alpha", "beta"), size = 150, replace = TRUE, prob = c(0.8, 0.2)))
-  , group = rep(c("T", "C"), 50)
-)
+ 
+ ```{r}
+ library(data.table)
+ library(ggplot2)
+ library(ggalluvial)
+ library(ggrepel)
+ dt <- data.table(
+     id = 1:150
+   , col1 = factor(sample(c("I", "II"), size = 150, replace = TRUE, prob = c(0.4, 0.6)))
+   , col2 = factor(sample(c("A", "B"), size = 150, replace = TRUE, prob = c(0.3, 0.7)))
+   , col3 = factor(sample(c("alpha", "beta", "gamma", "lambda"), size = 150, replace = TRUE, prob = c(0.3, 0.5, 0.1, 0.1)))
+   , group = rep(c("T", "C"), 75)
+ )
 
 fq <- dt[, .(count = .N), by = .(col1, col2, col3, group)]
 
@@ -88,6 +89,32 @@ ggplot(as.data.frame(fq),
 ```
 
 
+# geom_flow
+
+```{r}
+
+ggplot(data = fq 
+     , aes(
+           y = count
+         , axis1 = col1
+         , axis2 = col2
+         , axis3 = col3
+       )) +
+    geom_flow(
+        aes(fill = group), stat = "alluvium"
+      , lode.guidance = "rightleft"
+      , color = "white"
+      , na.rm = TRUE
+    ) +
+    scale_x_discrete(limits = c("col1", "col2", "col3")) + 
+    geom_stratum(alpha = .5, na.rm = TRUE, color = "grey") +
+    geom_text(stat = "stratum", size = 3, aes(label = after_stat(stratum))) +
+    ggtitle("") + 
+    xlab("") + 
+    theme_minimal()
+## theme(legend.position = "none")
+
+```
 
 
 

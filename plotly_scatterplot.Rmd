@@ -1,0 +1,240 @@
+---
+title: "Plotly Scatter Plot"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+
+
+
+
+# Scatter Plot
+
+ * Scatter plot with histogram on both sides
+ * Use subplot to combine several plots together
+
+```{r}
+n <- 100
+dt <- data.table(
+    id = 1:n
+  , x = sample(1:25, size = n, replace = TRUE)
+  , y = sample(1:15, size = n, replace = TRUE)
+  , group = sample(c("A", "B", "C"), size = n, replace = TRUE, prob = c(0.5, 0.3, 0.2))
+)
+
+dt <- dt[, str := paste0("ID: ", id, "\n", "Group:", group)]
+dt <- dt[, jitter := runif(n)][, y_jitter := y + jitter / 10]
+
+fq_x <- dt[,.(count = .N), by = list(group, x)]
+p1 <- plot_ly(
+    fq_x
+  , color = ~ group
+  , x = ~ x
+  , y = ~ count
+  , type = 'bar'
+) %>%
+    layout(showlegend = FALSE, barmode = "stack")
+
+
+p2 <- plotly_empty() %>% style(showlegend = FALSE)
+p3 <-  plot_ly(
+    data = dt
+  , x = ~ x
+  , y = ~ y_jitter
+  , type = 'scatter'
+  , mode = 'markers'
+  , symbol = ~ group
+  , color = ~ group
+  , text = ~ str
+  , hoverinfo = "text"
+  , size = 3
+  , alpha = 1
+) %>% style(showlegend = FALSE)
+
+fq_y <- dt[,.(count = .N), by = list(group, y)]
+p4 <- plot_ly(
+    fq_y
+  , color = ~ group
+  , y = ~ y
+  , x = ~ count
+  , type = 'bar'
+  , orientation = 'h'
+) %>%
+    layout(showlegend = FALSE, barmode = "stack")
+
+plotly::subplot(
+            p1
+          , p2
+          , p3
+          , p4
+          , nrows = 2
+          , heights = c(.2, .8)
+          , widths = c(.8, .2)
+          , margin = 0
+          , shareX = TRUE
+          , shareY = TRUE
+    )
+
+
+```
+
+
+# Boxplot
+
+ * Box and whiskers
+
+```{r}
+
+p <- ggplot(dt, aes(x=group, y=y, colour = group)) + 
+  geom_boxplot(outlier.shape=NA) +
+    geom_jitter(position=position_jitter(width=.1, height=0)) +
+    theme(legend.position = "none") + xlab("") + ylab("Box Plot with Jitter")
+
+ggplotly(p)
+
+
+```
+
+
+
+# Scatter Plot with Fitted Line
+
+```{r}
+dt <- data.table(x = rnorm(200))
+dt <- dt[, err := rnorm(200) / 20][, y := (x + err) * (2 + err)][x > -2][x < 2][y > -4][y < 4]
+
+m <- lm(y ~ x, data = dt)
+
+prd <- predict(m, newdata = dt, interval = "confidence", exclude = FALSE)
+
+prd <- as.data.table(prd)
+prd$x <- dt$x
+
+
+
+u <- dt$x
+u <- sort(u)
+
+
+plt_ci(data = prd
+     , x = x
+     , u = u
+     , xlabel = "x"
+     , ylabel = "y"
+     , fit = fit
+     , lower = lwr
+     , upper = upr
+     , xrange = c(-2, 2)
+     , xtick0 = -2
+     , xdtick = 0.5
+     , yrange = c(-4, 4)
+     , ytick0 = -4
+      ,ydtick = 0.5
+       ) %>%
+    add_markers(
+        data = dt
+      , x = ~ x
+      , y = ~ y
+      , inherit = FALSE
+    )
+
+
+```
+
+
+# Scatter Plot with Segmented Median Lines
+
+```{r}
+dt <- data.table(x = rnorm(200))
+dt <- dt[order(x)]
+gp <- sample(c("A", "B", "C"), replace = TRUE, size = 200)
+gp <- sort(gp)
+dt <- dt[, group := gp]
+dt <- dt[, err := rnorm(200) / 20][, y := (x + err) * (2 + err)][x > -2][x < 2][y > -4][y < 4]
+
+mds <- dt[, .(mdn = median(x)), by = .(group)][, txt := paste0("Median of ", group)][order(group)]
+
+
+plot_ly(data =dt
+      , x = ~ x
+      , y = ~ y, type = "scatter", 
+        mode = "markers", marker = list(opacity = 0.9, colors = Wu::Blues(5))
+      ## , hoverinfo = "text", text = txt
+      , showlegend = FALSE) %>%
+    add_segments(
+        x = min(dt[group == "A"]$x)
+      , xend = max(dt[group == "A"]$x)
+      , y = mds$mdn[1]
+      , yend = mds$mdn[1]
+      , name = as.character(mds$txt[1])
+      , line = list(color = Blues(1), alpha = 0.5)
+      , inherit = FALSE
+    ) %>%
+    add_segments(
+        x = min(dt[group == "B"]$x)
+      , xend = max(dt[group == "B"]$x)
+      , y = mds$mdn[2]
+      , yend = mds$mdn[2]
+      , name = as.character(mds$txt[2])
+      , line = list(color = Blues(1), alpha = 0.5)
+      , inherit = FALSE
+    ) %>%
+        add_segments(
+        x = min(dt[group == "C"]$x)
+      , xend = max(dt[group == "C"]$x)
+      , y = mds$mdn[3]
+      , yend = mds$mdn[3]
+      , name = as.character(mds$txt[3])
+      , line = list(color = Blues(1), alpha = 0.5)
+      , inherit = FALSE
+    )
+
+```
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

@@ -1,0 +1,100 @@
+---
+title: "Contour Plot"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+
+
+# Contour Plot
+
+```{r}
+set.seed(654321)
+n <- 1800
+dt <- data.table(x = rnorm(n), y = rnorm(n))
+dt <- dt[x > - 2][x < 2][y > -2][y < 2]
+
+p0 <- 0.2
+or <- 2
+dt <- dt[, odds0 := p0 / (1 - p0)
+         ][, log_odds := log(odds0) + (x * x + y * y) * log(or)
+           ][, p := exp(log_odds) / (1 + exp(log_odds))]
+
+
+vsample <- function(p){
+    sample(c(1, 0), size = 1, replace = TRUE, prob = c(p, 1 - p))
+}
+vsample <- Vectorize(vsample)
+dt <- dt[, outcome := vsample(p)]
+
+library(mgcv)
+b <- gam(outcome ~ s(x, y), data = dt, family = "binomial")
+
+newdata <- expand.grid(
+    seq(-2, 2, 0.01)
+  , seq(-2, 2, 0.01)
+)
+newdata <- as.data.table(newdata)
+colnames(newdata) <- c("x", "y")
+p <- predict(b, newdata, type = "link")
+newdata$fit <- p
+
+
+v <- ggplot(newdata, aes(x, y, z = fit))
+v + geom_contour(bins = 20, aes(colour = stat(level)))
+
+v + geom_raster(aes(fill = fit)) +
+    geom_contour(colour = "white", binwidth = 0.5) -> p
+
+ggplotly(p)
+
+```
+
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

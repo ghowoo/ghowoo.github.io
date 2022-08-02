@@ -1,0 +1,89 @@
+---
+title: "Collapsible Tree"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+
+
+# collapsibleTree
+
+ * [data.tree](https://cran.r-project.org/web/packages/data.tree/vignettes/data.tree.html)
+ * [collapsibleTree](https://github.com/AdeelK93/collapsibleTree)
+
+```{r}
+library(data.tree)
+library(treemap)
+data(GNI2014)
+GNI2014$pathString <- paste("world", 
+                            GNI2014$continent, 
+                            GNI2014$country, 
+                            sep = "/")
+population <- as.Node(GNI2014)
+
+library(collapsibleTree)
+
+collapsibleTree(population)
+
+```
+
+
+# ggtree
+
+
+```{r}
+library(ggtree)
+set.seed(123456)
+tr <- rtree(50)
+
+ggtree(tr, layout = "circular")
+
+```
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

@@ -36,7 +36,9 @@ eval_slow <- FALSE
 # [Back to Index](index.html)
 
 
-# Pull Data from REDCap
+# Read Data
+
+## Pull Data from REDCap
 
  * Pull data from REDCap using API and save the csv file
 
@@ -54,6 +56,16 @@ csv_file <- RCurl::postForm(
 )
 write(csv_file, file='../csv/filename.csv')
 
+```
+
+## Read Data from SAS/SPSS
+
+
+```{r, eval=FALSE, echo=TRUE}
+library(foreign)
+## dt <- read.spss("filename",to.data.frame = TRUE)
+library(haven)
+## dt <- read_sas(data_file = "filename")
 ```
 
 # General Data Description
