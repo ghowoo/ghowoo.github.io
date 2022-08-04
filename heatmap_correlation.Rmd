@@ -127,6 +127,10 @@ corrgram::corrgram(mtx)
 ```
 
 
+
+
+
+
 # treemap
 
 
@@ -140,6 +144,27 @@ treemap(GNI2014,
        vSize="population",
        vColor="GNI",
        type="value")
+
+```
+
+
+# Variable Clustering
+
+```{r}
+library(data.table)
+
+dt <- data.table(
+    var1 = 1:20 + rnorm(20)
+  , var2 = 1:20 + rnorm(20) * 2
+  , var3 = 1:20 + rnorm(20) * 4
+  , var4 = 1:20 + rnorm(20) * 8
+  , var5 = 1:20 + rnorm(20) * 16
+)
+
+library(ClustOfVar)
+
+tree <- hclustvar(X.quanti = as.data.frame(dt))
+plot(tree)
 
 ```
 

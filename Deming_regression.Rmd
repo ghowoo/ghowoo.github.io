@@ -1,0 +1,338 @@
+---
+title: "Deming Regression"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+# Simulate Data
+
+```{r}
+n <- 200
+dt <- data.table(x = rnorm(n)
+                 , noise = rnorm(n)
+                 )
+dt <- dt[, y := x * 1.2 + noise / 5]
+
+ggplot(dt, aes(x = x, y = y)) +
+geom_point(color="#1c70c8", size = 2) +
+labs(x = "x", y="y",title="")
+```
+
+# Spearman's Rho
+
+```{r}
+
+crt <- cor.test(x = dt$x, y = dt$y, method = "spearman", exact = FALSE)
+stat <- crt$estimate
+stat <- as.character(round(stat, 2))
+pvalue <- crt$p.value
+pvalue <- as.character(round(pvalue, 3))
+title <- expression("Spearman'" ~ rho ~ "= " ~ stat ~ " p-value = " ~ pvalue)
+title <- bquote(atop("Urine Sodium Concentration & eGFR", "Spearman'" ~ rho ~ "= " ~ .(stat) ~ " p-value = " ~ .(pvalue)))
+
+
+ggplot(data = dt
+     , aes(x = x
+         , y = y
+           )) +
+    ggtitle(title) + 
+    geom_point(
+        alpha = 0.8
+      , size = 1.2
+      , color = "#111111"
+    ) +
+    geom_smooth(method = "lm", alpha = 0.5, se = FALSE, color = "#999999") + 
+    ## annotate("text", label = title, x = 40, y = 200)+ 
+    xlab("x") +
+    ## scale_x_continuous(breaks = c(1, 2, 3), labels = c(1, 2, 3)) +
+    ylab("y") +
+    ## scale_y_continuous(breaks = c(0, 25, 50, 75, 100, 125, 150), labels = c(0, 25, 50, 75, 100, 125, 150)) +
+    theme_bw() +
+    theme(axis.ticks = element_blank()
+        , panel.grid.major = element_blank()
+        , panel.grid.minor = element_blank()
+          , plot.title = element_text(hjust = 0.5)
+          ) +
+    ## scale_fill_manual(values = Colors) +
+    ## scale_y_log10() +
+    ## annotation_logticks() +
+    ## coord_cartesian(xlim = c(-90, 900)) +
+    theme(legend.position = "none", axis.ticks = element_blank()) -> p
+p
+
+
+## library(gridExtra)
+## p <- grid.arrange(p1, p2, p3, p4, nrow = 2)
+## ggsave(file = "cor.pdf", p, width = 12, height = 6)
+
+```
+
+# Bland-Altman Plot
+
+```{r}
+
+
+dt <- dt[, delta := y - x]
+Mean <- mean(dt$delta)
+Sd <- sd(dt$delta)
+
+
+ps <- 0.02
+ggplot(dt, aes(x=x, y=delta)) +
+    geom_point(color="#1c70c8", size = 2) +
+    ## geom_rug(alpha = 0.2, color="#1c70c8")+
+    geom_hline(yintercept = Mean, linetype = 2, size = 1, color="grey") +
+    geom_hline(yintercept = Mean + qnorm(.975)*Sd, linetype = 2, size = 1, color="grey") +
+    geom_hline(yintercept = Mean - qnorm(.975)*Sd, linetype = 2, size = 1, color="grey") +
+    annotate("text", x = 1, y = Mean + ps, label = "Mean") +
+    annotate("text", x = 1, y = Mean - ps, label = round(Mean,2)) +
+    annotate("text", x = 1, y = Mean + qnorm(.975)*Sd + ps, label = "+1.96 SD") +
+    annotate("text", x = 1, y = Mean + qnorm(.975)*Sd - ps, label = round(Mean + qnorm(.975)*Sd,2)) +
+    annotate("text", x = 1, y = Mean - qnorm(.975)*Sd + ps, label = "-1.96 SD") +
+    annotate("text", x = 1, y = Mean - qnorm(.975)*Sd - ps, label = round(Mean - qnorm(.975)*Sd,2)) +
+    labs(x = "Mean of x", y="Difference(y-x)",title="")
+
+```
+
+# Deming Regression
+
+```{r}
+library(mcr)
+
+ErrorRatio <- var(dt$y)/var(dt$x)
+
+fit.mcr <- mcreg(
+  dt$x
+  , dt$y
+  , error.ratio = 1
+  , mref.name   = "x"
+  , mtest.name = "y"
+  , method.reg = "Deming"
+  ## , method.reg = "WDeming"
+  , method.ci = "bootstrap"
+  , nsamples = 10000
+  , method.bootstrap.ci = "quantile"
+  )
+
+
+t <- as.data.frame(fit.mcr@para)
+
+knitr::kable(
+  t[,c(1,3,4)]
+  ,col.names = c("estimate","95% Lower CI", "95% Upper CI")
+  ,digits = c(2,2,2)
+)%>%
+    kable_styling(full_width = FALSE,bootstrap_options = c("striped", "hover", "condensed", "responsive"), position = "left")
+
+```
+
+# Fit Plot
+
+```{r}
+MCResult.plot(
+    fit.mcr
+   ,points.col = Blues(25)
+  , reg.col = Blues(5)
+  , ci.area.col =  "grey"
+  , identity.col =Blues(20)
+  , identity.lwd = 3
+)
+
+```
+
+
+# Bias Plot
+
+```{r}
+MCResult.plotBias(
+    fit.mcr
+  , bias.col = Blues(5)
+  , zeroline=TRUE
+  , zeroline.col= Blues(25)
+  , zeroline.lty=2
+  , zeroline.lwd = 2
+  , ci.area=TRUE
+  , ci.border=FALSE
+  , ci.area.col= "grey"
+  , main = "Bias Plot"   
+)
+
+```
+
+
+# The Model
+
+```{r}
+get_formula <- function(obj){
+    paste(
+        "y"
+     , " ~ "
+     ,  round(obj@para["Intercept", "EST"], 2)
+     , " + "
+     , round(obj@para["Slope", "EST"], 2)
+     , " * "
+     , "x"
+     , sep = ""
+    )
+}
+
+get_n <- function(obj){
+    paste(
+        "n = "
+      , nrow(obj@data)
+      , sep = ""
+    )
+}
+
+
+get_r <- function(obj){
+    cor_coef <- round(cor(
+        obj@data[, "x"]
+      , obj@data[, "y"]
+      , use = "pairwise.complete.obs"
+      , method = "pearson")
+      , 3
+        )
+    paste(
+        "r = "
+      , cor_coef
+      , sep = ""
+    )
+}
+
+
+
+plot_deming <- function(
+                        obj
+                      , xbreaks = seq(-3.5, 3.5, by = 0.5)
+                      , xlimits = c(-3.5, 3.5)
+                      , ybreaks = seq(-4.5, 4.5, by = 0.5)
+                      , ylimits = c(-4.5, 4.5)
+                      , color_blue = "#000080"
+                      , size_d = 0.5
+                      , size_i = 0.5
+                      , font_tick_size = 10
+                      , font_axis_size = 10
+                        , text_annotate_size = 10
+                      , plot_margin = c(0,0,2,0.5)
+                        , size_point = 0.2
+                        ){
+    a <- obj@para[, "EST"][1]
+    b <- obj@para[, "EST"][2]
+    x_start <- min(obj@data$x)
+    x_end <- max(obj@data$x)
+    y_start <- a + x_start * b
+    y_end <- a + x_end * b
+    text_x <- xlimits[1] + (xlimits[2] - xlimits[1]) * 0.05
+    text_y <- ylimits[2] - (ylimits[2] - ylimits[1]) * 0.05
+    text_height <- (ylimits[2] - ylimits[1]) / 9
+    text_x2 <- xlimits[1] + (xlimits[2] - xlimits[1]) * 0.3
+    text_y2 <- ylimits[1] + text_height * 0.5
+    if (y_end > ylimits[2]){
+        y_end <- max(obj@data$y)
+        x_end <- (y_end - a) / b
+    }
+    bounds <- as.data.frame(mcr::calcResponse(obj, alpha = 0.05, x.levels = seq(x_start, x_end, length.out = 100)))
+    colnames(bounds) <- c("x", "y", "se", "lci", "uci")
+    ggplot(data = obj@data, aes(x = x, y = y)) +
+        geom_point(color = color_blue, shape = 1, size = size_point, alpha = 0.3) +
+        labs(x = obj@mnames[1], y = obj@mnames[2]) +
+        scale_x_continuous(breaks = xbreaks, limits = xlimits, expand = c(0, 0)) +
+        scale_y_continuous(breaks = ybreaks, limits = ylimits, expand = c(0, 0)) +
+        annotate("text", x = text_x2, y = text_y2, label = get_formula(obj), hjust = 0, size = text_annotate_size) +
+        annotate("text", x = text_x, y = text_y,  label = get_r(obj), hjust = 0, size = text_annotate_size) +
+        annotate("text", x = text_x, y = text_y - text_height, label = get_n(obj), hjust = 0, size = text_annotate_size) +
+                        geom_ribbon(data = bounds
+          ,  aes(ymin = lci, ymax = uci)
+          , fill = "grey70"
+            , alpha = 0.7) +
+        geom_segment(
+            aes(
+                x = x_start
+              , xend = x_end
+              , y = x_start
+              , yend = x_end)
+          , size = size_i
+          , color = color_blue
+          , linetype = "dashed") +
+        geom_segment(
+            aes(
+                x = x_start
+              , xend = x_end
+              , y = y_start
+              , yend = y_end
+            )
+         ,  color = color_blue
+         , size = size_d
+         , linetype = "solid") +
+        ## geom_hline(yintercept=0, size = size_i) +
+        ## geom_vline(xintercept=0, size = size_i) +
+        ## expand_limits(x = 0, y = 0) +
+        theme(
+            axis.text.x = element_text(size = font_tick_size)
+          , axis.text.y = element_text(size = font_tick_size)
+          , axis.title.x = element_text(size = font_axis_size)
+          , axis.title.y = element_text(size = font_axis_size)
+         ,  plot.margin = unit(plot_margin, "cm")
+           ## , axis.line = element_line(colour = "grey")
+         , axis.ticks = element_blank()
+         , panel.grid.major = element_line(colour = "#DDDDDD", size = size_i)
+           ## , panel.grid.minor = element_blank()
+         , panel.background = element_blank(),
+           )
+}
+
+
+plot_deming(fit.mcr)
+
+
+```
+
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

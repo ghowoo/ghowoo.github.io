@@ -1,0 +1,93 @@
+---
+title: "Factor Analysis"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+# Exploratory Factor Analysis
+
+
+```{r}
+
+n <- 500
+dt <- data.table(
+    x1 = rnorm(n)
+  , x2 = rnorm(n) + 1
+  , x3 = rnorm(n) + 2
+)
+
+dt <- dt[, x4 := x1 + x2 * 3
+         ][, x5 := x2 + x3 ^ 2
+           ][, x6 := x3 * 4 + x1 * x2]
+  
+  
+
+
+library(psych)
+fa3 <- fa(dt, nfactors=3, rotate="oblimin", fm="minres")
+
+fa_table <- function(obj){
+    t <- unclass(obj$loadings)
+    rtn <- data.table(t)
+    colnames(rtn) <- dimnames(t)[[2]]
+    rtn$variable <- dimnames(t)[[1]]
+    vars <- c("variable", dimnames(t)[[2]])
+    invisible(rtn[, ..vars])
+}
+
+ fa_table(fa3) %>%
+    prt(caption="Loadings with Three Factors")
+
+fa3$Vaccounted %>% unclass %>% prt(caption="Variance Explained")
+
+
+```
+
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

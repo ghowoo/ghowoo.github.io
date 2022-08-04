@@ -1,0 +1,271 @@
+---
+title: "Area Under the ROC Curve (AUC)"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+
+# Simulate Data
+
+```{r}
+
+library(data.table)
+set.seed(123456)
+n <- 1000
+dt <- data.table(x = runif(n))
+p0 <- 0.2
+or <- 2
+dt <- dt[, odds0 := p0 / (1 - p0)
+         ][, log_odds := log(odds0) + x * log(or)
+           ][, p := exp(log_odds) / (1 + exp(log_odds))]
+
+
+vsample <- function(p){
+    sample(c(1, 0), size = 1, replace = TRUE, prob = c(p, 1 - p))
+}
+
+vsample <- Vectorize(vsample)
+dt <- dt[, outcome := vsample(p)]
+
+m <- glm(outcome ~ x, data = dt, family = binomial)
+
+
+library(sjPlot)
+tab_model(m)
+
+
+```
+
+# ggplot
+
+```{r}
+
+pred <- predict(m, newdata = dt, type = "response")
+library(pROC)
+r <- roc(dt$outcome, pred, ci = TRUE, direction = "<")
+
+
+dr <- data.table(
+    tpr = r$sensitivities
+  , fpr = 1 - r$specificities
+)
+dr <- dr[order(fpr, tpr)]
+
+ggplot(dr, aes(x = fpr, y = tpr)) +
+    geom_segment(x = 0, y = 0, xend = 1, yend = 1, size = 0.5, color = "#999999", linetype = "longdash") + 
+    geom_step(size = 1.5, color = "#333333", direction = "hv") +
+    xlab("FPR") + ylab("TPR") + 
+    theme_bw() +
+    theme(axis.ticks.x = element_blank()
+        , axis.ticks.y = element_blank()
+        , axis.text.x = element_blank()
+        , axis.text.y = element_blank()
+        , panel.grid.major = element_blank()
+        , panel.grid.minor = element_blank()
+          )
+
+
+
+```
+
+
+# Two AUC Curves
+
+
+```{r}
+set.seed(654321)
+n <- 800
+dt2 <- data.table(x = runif(n))
+p0 <- 0.2
+or <- 3
+dt2 <- dt2[, odds0 := p0 / (1 - p0)
+         ][, log_odds := log(odds0) + x * log(or)
+           ][, p := exp(log_odds) / (1 + exp(log_odds))]
+
+
+vsample <- function(p){
+    sample(c(1, 0), size = 1, replace = TRUE, prob = c(p, 1 - p))
+}
+
+vsample <- Vectorize(vsample)
+dt2 <- dt2[, outcome := vsample(p)]
+
+m2 <- glm(outcome ~ x, data = dt2, family = binomial)
+
+
+pred <- predict(m, newdata = dt, type = "response")
+library(pROC)
+r <- roc(dt$outcome, pred, ci = TRUE, direction = "<")
+dr <- data.table(
+    tpr = r$sensitivities
+  , fpr = 1 - r$specificities
+)
+dr <- dr[order(fpr, tpr)][, group := 1]
+
+
+
+pred2 <- predict(m2, newdata = dt2, type = "response")
+library(pROC)
+r2 <- roc(dt2$outcome, pred2, ci = TRUE, direction = "<")
+
+dr2 <- data.table(
+    tpr = r2$sensitivities
+  , fpr = 1 - r2$specificities
+)
+dr2 <- dr2[order(fpr, tpr)][, group := 2]
+
+ggplot(dr, aes(x = fpr, y = tpr)) +
+    geom_segment(x = 0, y = 0, xend = 1, yend = 1, size = 0.5, color = "#999999", linetype = "longdash", alpha = 0.8) + 
+    geom_step(size = 1.5, color = "#666666", direction = "hv", alpha = 0.6) +
+    geom_step(data = dr2, aes(x = fpr, y = tpr), size = 1.5, color = "#000000", direction = "hv", inherit = FALSE) +
+    xlab("FPR") + ylab("TPR") + 
+    theme_bw() +
+    theme(axis.ticks.x = element_blank()
+        , axis.ticks.y = element_blank()
+        , axis.text.x = element_blank()
+        , axis.text.y = element_blank()
+        , panel.grid.major = element_blank()
+        , panel.grid.minor = element_blank()
+          )
+
+
+## png(file = "p.png", width = 1000, height = 1000, res = 300)
+## p
+## dev.off()
+
+```
+
+
+# plotly
+
+
+```{r}
+r <- roc(dt$outcome, pred, ci = TRUE, direction = "<")
+
+plt_roc(r) %>% ann("ROC Curve")
+
+```
+
+
+# Compare Two AUCs
+
+```{r, eval = FALSE}
+
+plt_roc2(r, r2)
+tst <- roc.test(r, r2, method = "delong")
+
+t <- data.table(
+  test = tst$alternative
+  , compare = attr(tst$null.value, "names")
+  , method = tst$method
+  , pvalue = tst$p.value
+)
+
+t %>% prt()
+```
+
+
+# Put Multiple AUCs Together
+
+```{r}
+
+p1 <- plt_roc(r) %>% ann("I")
+p2 <- plt_roc(r) %>% ann("II")
+p3 <- plt_roc(r2) %>% ann("III")
+p21 <- plt_roc2(r, r2) %>% ann("I vs II")
+p22 <- p21
+p23 <- p21
+p33 <- p21
+
+subplot(p1 %>% hide_axis()
+      , p2 %>% hide_axis()
+      , p3 %>% hide_axis()
+      ## , plotly_empty()
+      , p21 %>% hide_axis()
+      , p22 %>% hide_axis()
+      , p23 %>% hide_axis()
+      , p33 %>% hide_axis()
+      , nrows = 3
+      , shareX = FALSE
+      , shareY = FALSE
+      , titleX = TRUE
+      , titleY = TRUE
+      , margin = 0.02
+      , widths = c(1, 1, 1)/3
+      , heights = c(1, 1, 1)/3
+        ) %>% layout(autosize = TRUE)
+```
+
+
+
+# Hosmer and Lemeshow Goodness-of-fit Test
+
+```{r}
+library(ResourceSelection)
+hl <- hoslem.test(m$y, m$fitted.values, g = 10)
+
+t <- data.table(
+    statistic = hl$statistic
+  , df = hl$parameter
+  , p.value = hl$p.value
+  , method = hl$method
+)
+
+t %>% prt(caption = "HL Test with 10 bins")
+
+```
+
+# Calibration Plot
+
+```{r}
+plt_calibration(m$y, m$fitted.values, 100)
+
+```
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

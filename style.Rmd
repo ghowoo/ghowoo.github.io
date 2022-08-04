@@ -222,6 +222,7 @@ attach_docx <- function(obj, file = "table1.docx"){
 attach_docx(ttt)
 
 
+attach_csv(ttt)
 
 ## library(officer)
 ## library(flextable)

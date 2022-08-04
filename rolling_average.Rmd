@@ -65,6 +65,9 @@ dt <- data.table(
   , daily_volume = rpois(n = length(dates) * 3, lambda = 10)
 )
 
+
+dt <- dt[, daily_volume := daily_volume + as.numeric(date - as.Date("2018-01-01", format = "%Y-%m-%d")) / 60]
+
 library(zoo)
 dt <- dt[order(site, date)
          ][, rolling_avg_7days := rollmean(daily_volume, k = 7, na.pad = TRUE, align = "right"), by = .(site)]
@@ -117,6 +120,91 @@ p1 <- ggplot(dt, aes(x = date, y = daily_volume, fill = period)) +
 p1
 ## dev.off()
 
+```
+
+# Rolling Average with plotly
+
+```{r}
+
+dt[site == "A"] %>%
+    plot_ly(x = ~ date, y = ~ daily_volume) %>%
+    add_lines(name="Daily Volume") %>%
+    add_trace(x= ~ date, y= ~ rolling_avg_7days
+            , type="scatter"
+            , mode="line"
+              , name="Seven-Days Rolling Average")
+
+```
+
+# Rolling Average by Site
+
+```{r}
+
+sites <- unique(dt$site)
+p <- plot_ly(width = 1400, height = 600)
+for (i in 1:length(sites)){
+    p <- p %>% add_trace(
+                  data = dt[site %in% sites[i]]
+                , x = ~ date
+                , y = ~ rolling_avg_7days
+                , name = as.character(sites[i])
+                , inherit = FALSE
+                , type = "scatter"
+                , mode = "lines"
+                  ## , hoverinfo = "text"
+                  ## , text = ~ str
+                ## , marker = list(symbol = 2, size = 10)
+                , line = list(alpha = 0.5)
+              ) 
+}
+
+
+p
+
+```
+
+
+# Date Grid Plot
+
+
+```{r}
+dates <- seq(
+    from = as.Date("2018-01-01", format = "%Y-%m-%d")
+  , to = as.Date("2020-12-31", format = "%Y-%m-%d")
+  , by = 1
+)
+
+
+dt <- data.table(
+    date = rep(dates, 3)
+  , site = rep(c("A", "B", "C"), each = length(dates))
+  , type = sample(c("I", "II", "III"), size = length(dates) * 3, replace = TRUE, prob = c(0.8, 0.15, 0.05))
+)
+
+
+clrs <- c("#EEEEEE"
+        , "#BBBBBB"
+        , "#000000"
+          )
+
+ggplot(dt, aes(x=date, y=site)) +
+geom_tile(aes(fill=type, height=(1.2)), size=1) +
+    scale_y_discrete() +
+    scale_fill_manual(values = clrs, name = "") +
+    ## scale_x_date(limits = NA) + 
+    labs(y = "site", x = "") + 
+    ## facet_wrap( ~ site, ncol = 1) + 
+    theme_bw() +
+    theme(
+        ## axis.ticks = element_blank()
+          ## , axis.text.y = element_blank()
+        panel.grid.major = element_blank()
+        , panel.grid.minor = element_blank()
+        , panel.background = element_blank()
+        , strip.background =element_rect(fill="#FFFFFF")
+          , legend.position="top"
+        )
+        
 ```
 
 # R sessionInfo

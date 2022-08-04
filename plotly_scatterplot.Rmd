@@ -232,6 +232,42 @@ plot_ly(data =dt
 
 ```
 
+# Correlation Grid
+
+```{r}
+dt <- data.table(x = rnorm(30), y = rnorm(30), z = rnorm(30))
+dt <- dt[x < 2 & x > -2 & y < 2 & y > -2 & z > -2 & y < 2]
+
+label(dt$x) <- "X"
+label(dt$y) <- "Y"
+label(dt$z) <- "Z"
+
+p11 <- plt_scatter(data = dt, xvar = x, yvar = z)
+p12 <- plt_scatter(data = dt, xvar = x, yvar = y)
+p13 <- plt_hist(dt$x)
+p21 <- plt_scatter(data = dt, xvar = y, yvar = x)
+p22 <- plt_hist(dt$y)
+p23 <- plt_scatter(data = dt, xvar = y, yvar = z)
+p32 <- plt_scatter(data = dt, xvar = z, yvar = x)
+p33 <- plt_scatter(data = dt, xvar = z, yvar = y)
+p31 <- plt_hist(dt$z)
+
+
+subplot(
+    p13, p12, p11, p21, p22, p23, p31, p32, p33
+  , nrows = 3
+  , shareX = FALSE
+  , shareY = FALSE
+  , titleX = TRUE
+  , titleY = TRUE
+  , margin = 0.01
+  , heights = c(1/3, 1/3, 1/3)
+  , widths = c(1/3, 1/3, 1/3)
+) %>% layout(width = 800, height = 800)
+
+```
+
+
 # R sessionInfo
 
 ```{r}
