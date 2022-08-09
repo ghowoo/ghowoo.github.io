@@ -5,35 +5,40 @@ date: "`r Sys.Date()`"
 output:
   rmdformats::readthedown:
     self_contained: true
-    thumbnails: true
+    thumbnails: false
     code_folding: hide
     toc_depth: 6
     lightbox: true
     gallery: false
-    highlight: tango
+    highlight: monochrome
+    css: Wu.css
 ---
 
 
+	
 ```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
 library(knitr)
 library(rmdformats)
 library(Wu)
-## Global options
-options(max.print="2000")
-opts_chunk$set(echo=TRUE,
-               eval=TRUE,
-               cache=FALSE,
-               results="asis",
-               prompt=FALSE,
-               tidy=TRUE,
-               comment=NA,
-               message=FALSE,
-               warning=FALSE)
-opts_knit$set(width=75)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
 eval_fast <- TRUE
 eval_slow <- FALSE
-
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
 ```
+
 
 
 # Cubic Spline Function
@@ -70,6 +75,9 @@ In case of four knots $t_1, t_2, t_3, t_4$ which means that there are four cutpo
 * For $j = 1,...,k-2$, when $k = 4$, $j$ has values of $1$ and $2$.
     + When $j = 1, k = 4$: $X_2 = (X - t_1)_+^3 - (X - t_3)_+^3(t_4 - t_1)/(t_4 - t_3) + (X - t_4)_+^3(t_3 - t_1)/(t_4 - t_3)$
     + When $j = 2, k = 4$: $X_3 = (X - t_2)_+^3 - (X - t_3)_+^3(t_4 - t_2)/(t_4 - t_3) + (X - t_4)_+^3(t_3 - t_2)/(t_4 - t_3)$
+* Reference: [Frank Harrel, Hmisc Package, "rscpline.eval" Function](https://cran.r-project.org/web/packages/Hmisc/Hmisc.pdf)
+
+
 
 
 ```{r}
@@ -81,8 +89,8 @@ t <- quantile(x,c(0.05,0.35,0.65,0.95))
 
 y <- rcspline.eval(x,nk=4,inclx = TRUE)
 y <- as.data.frame(y)
-str(y)
-dim(y)
+## str(y)
+## dim(y)
 
 y$y2 <- (x >= t[1])*(x - t[1])^3 - (x >= t[3])*(x - t[3])^3*(t[4]-t[1])/(t[4]-t[3]) + (x >= t[4])*(x-t[4])^3*(t[3]-t[1])/(t[4]-t[3])
 y$y3 <- (x >= t[2])*(x - t[2])^3 - (x >= t[3])*(x - t[3])^3*(t[4]-t[2])/(t[4]-t[3]) + (x >= t[4])*(x-t[4])^3*(t[3]-t[2])/(t[4]-t[3])
@@ -93,19 +101,200 @@ y$V2b <- y$V2*tau
 y$V3b <- y$V3*tau
 # View(y)
 
-sum(y$V3b - y$y3)
-sum(y$V2b - y$y2)
+## sum(y$V3b - y$y3)
+## sum(y$V2b - y$y2)
 
 plot(y$x, y$V2)
 plot(y$x, y$V3)
 
 ```
 
+# gam Package
 
-# Reference
+```{r}
+set.seed(123456)
+dt <- data.table(x = y$x, y = y$V3)
+ids <- sample(1:nrow(dt), size = 250, replace = TRUE)
 
-[Frank Harrel, Hmisc Package, "rscpline.eval" Function](https://cran.r-project.org/web/packages/Hmisc/Hmisc.pdf)
+dt <- dt[ids, ]
+p0 <- 0.2
+dt <- dt[, odds0 := p0 / (1 - p0)
+         ][, log_odds := log(odds0) + log(y)
+           ][, p := exp(log_odds) / (1 + exp(log_odds))]
 
+vsample <- function(p){
+    sample(c(1, 0), size = 1, replace = TRUE, prob = c(p, 1 - p))
+}
+
+vsample <- Vectorize(vsample)
+
+dt <- dt[, outcome := vsample(p)]
+
+library(mgcv)
+library(sjPlot)
+m <- gam(
+    outcome ~ s(x, bs = "cr", k = 10)
+  , data=dt
+  , method="REML"
+  , family = binomial
+)
+
+
+prt_coef.gam <- function(obj, exp = FALSE, digits = 2){
+    obj_summary <- summary(obj)
+    rtn <- data.table(
+        coef_name = names(obj_summary$p.coeff)
+      , coef_value = obj_summary$p.coeff
+      , df = sum(obj$edf)
+    )
+    rtn <- merge(
+        x = rtn
+      , y = data.table(coef_name = names(obj_summary$se), se = obj_summary$se)
+      , on = "coef_name"
+      , all.x = TRUE
+      , all.y = FALSE
+    )
+    rtn[, coef_value_lower := coef_value + qt(0.025, 999) * se
+        ][, coef_value_upper := coef_value + qt(0.975, 999) * se
+          ]
+    if (exp == TRUE){
+        rtn[, coef_value := exp(coef_value)
+            ][, coef_value_lower := exp(coef_value_lower)
+              ][, coef_value_upper := exp(coef_value_upper)]
+    }
+    rtn[, ci := paste0(
+              format(round(coef_value, digits), nsmall = digits)
+            , "("
+            , format(round(coef_value_lower, digits), nsmall = digits)
+            , ","
+            , format(round(coef_value_upper, digits), nsmall = digits)
+            , ")")
+        ]
+    ## print(rtn)
+
+    if (obj$family$family == "multinom"){
+        ## print(obj$family$family)
+    }
+    return(rtn)
+}
+
+get_coef.gam <- function(obj, exp=FALSE, digits=2){
+    obj_summary <- summary(obj)
+    rtn <- obj_summary$p.table
+    rtn <- as.data.table(rtn)
+    colnames(rtn) <- c("coef_value", "se", "t_value", "p_value")
+    rtn$coef_name <- rownames(obj_summary$p.table)
+    rtn <- rtn[, list(coef_name, coef_value, se, t_value, p_value)]
+    rtn <- rtn[, coef_value_lower := coef_value + qnorm(0.025) * se
+               ][, coef_value_upper := coef_value + qnorm(0.975) * se
+                 ]
+    if (exp == TRUE) {
+        rtn <- rtn[, coef_value := exp(coef_value)
+                   ][, coef_value_lower := exp(coef_value_lower)
+                     ][, coef_value_upper := exp(coef_value_upper)]
+    }
+    rtn <- rtn[, ci := paste0(
+                     format(round(coef_value, digits), nsmall = digits)
+                   , "("
+                   , format(round(coef_value_lower, digits), nsmall = digits)
+                   , ","
+                   , format(round(coef_value_upper, digits), nsmall = digits)
+                   , ")")
+               ]
+}
+
+t <- get_coef.gam(m)
+t[, list(coef_name, ci, p_value)] %>%
+    prt(caption="Fixed Effects", col.names=c("Variable", "Effect (95% CI)", "p-value"))
+
+
+t2 <- anova(m)$s.table
+t2 <- as.data.table(t2, keep.rownames = T)
+t2[-2, -(3:4)] %>% prt(caption="Wald tests of the smooth term (experience)")
+
+
+
+get_pred <- function(obj){
+    m_age <- median(dt$age)
+    ## 59;
+    m_bmi <- median(dt$bmi, na.rm = TRUE)
+    ## 27.4
+    m_apacheiiscore <- median(dt$apacheiiscore)
+    ## 21
+    m_baselinesat_dcs <- median(dt$baselinesat_dcs, na.rm = TRUE)
+    ## 99
+    newdata <- data.table(
+        x = dt$x
+    )
+    prd <- predict(obj, newdata, type = "link", se.fit = TRUE)
+    newdata$fit <- prd$fit
+    newdata$se <- prd$se.fit
+    newdata <- newdata[
+      , lower := fit - qnorm(0.975) * se
+    ][, upper := fit + qnorm(0.975) * se]
+    return(newdata)
+}
+
+prd_m1 <- get_pred(m)
+
+x_breaks <- prd_m1[x %in% seq(0, 100, 25)]$x
+x_labels <- prd_m1[x %in% seq(0, 100, 25)]$x
+
+
+dtm <- m$model
+dtm$ystart <- -30
+dtm$yend <- -28
+
+xj <- jitter(dtm$x, 0.5)
+
+bd <- ggplot(data = prd_m1
+           , aes(x = x
+               , y = fit)) +
+    geom_line(color = "#666666") +
+    geom_ribbon(aes(ymin = lower, ymax = upper, linetype = NA)
+              , color = "#666666"
+              , alpha = 0.2
+              , inherit.aes = TRUE
+              , show.legend = FALSE
+                ) +
+    geom_segment(data=dtm
+               , x=xj
+               , xend=xj
+               , y=dtm$ystart
+               , yend=dtm$yend
+               , alpha=0.3
+               , color = "#666666"
+                 ) +
+    labs(x = "x"
+       , y = "Linear Predictor") +
+    scale_x_continuous(breaks = x_breaks
+                     , labels = x_labels
+                     , limits = c(0, 100)
+                     , expand = c(0, 0)) +
+    scale_y_continuous(breaks = seq(-30, 5, by=5)
+                     , limits = c(-30, 5)
+                     , expand = c(0, 0)) +
+    theme(
+        ## panel.grid.major = element_blank()
+        ## , panel.grid.minor = element_blank()
+        panel.background = element_blank()
+        ## , axis.ticks.x = element_blank()
+          )
+bd
+
+
+
+```
+
+
+# Plot Nonlinear Relationship
+
+
+```{r}
+plot_nonlinear(x = x, y = outcome, data = dt)
+
+
+```
 
 
 

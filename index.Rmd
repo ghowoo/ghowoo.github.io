@@ -57,6 +57,7 @@ eval_slow <- FALSE
  * [Word Cloud](word_cloud.html)
  * [plotly Symbols](plotly_symbols.html)
  * [plotly Scatter Plot](plotly_scatterplot.html)
+ * [Radar Plot](radar_plot.html)
  * [Plot AUC](plot_auc.html)
  * [RMarkdown Slides](rmarkdown_slides.html)
 
@@ -75,7 +76,9 @@ eval_slow <- FALSE
  * [Time to Event](time_to_event.html)
  * [Mediation Analysis](mediation_analysis.html)
  * [Factor Analysis](factor_analysis.html)
+ * [Ordinal Regression](ordinal_regression.html)
  * [Deming Regression](Deming_regression.html)
+ * [Bayesian Model](Bayesian_model.html)
 
 # Data Wrangling
  * [Data Manipulation](data_manipulation.html)
@@ -87,6 +90,7 @@ eval_slow <- FALSE
  * [Power and Sample Size Simulation for Two Proportions](simulation_proportion.html)
  * [Power Analysis: Non-inferiority Cluster Randomised Trial](power_analysis.html)
  * [Restricted Cubic Spline](restricted_cubic_spline.html)
+ * [Reliability and Consistency](reliability_and_consistency.html)
  * [Jeffreys Interval for One-Sample Proportion with SAS/STAT® Software](https://support.sas.com/resources/papers/proceedings15/3020-2015.pdf)
 
 
@@ -94,6 +98,7 @@ eval_slow <- FALSE
  * [Intall R Packages](install_packages.html)
  * [R Markdown HTML Output Style](style.html) 
  * [flexdashboard Template](template_flexdashboard.html)
+ * [PDF Template](template_pdf.pdf)
  * [Notebook Template](template_notebook.html)
  * [R Markdown with Tabs](rmarkdown_with_tabs.html)
  * [R6 Object](R6.html) 

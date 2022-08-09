@@ -1,0 +1,138 @@
+---
+title: "Radar Chart"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+
+## Radar Chart
+
+```{r}
+
+set.seed(123456)
+n <- 25
+dt <- data.table(
+    dimension_1 = rpois(n = n, lambda = 20)
+  , dimension_2 = rpois(n = n, lambda = 10) + 2
+  , dimension_3 = rpois(n = n, lambda = 30) + 8
+  , dimension_4 = rpois(n = n, lambda = 40) + 13
+  , dimension_5 = rpois(n = n, lambda = 5) + 19
+  , group = rep(LETTERS[1:5], times = 5)
+)
+
+
+rl <- dt[, .(mdn1 = median(dimension_1)
+           , mdn2 = median(dimension_2)
+           , mdn3 = median(dimension_3)
+           , mdn4 = median(dimension_4)
+           , mdn5 = median(dimension_5))
+       , by = list(group)
+         ][order(group)]
+
+lbls <- c("I", "II", "III", "IV", "V")
+
+
+opc <- 0.5
+fig <- plot_ly(
+    type = 'scatterpolar',
+    fill = 'toself'
+)
+fig <- fig %>%
+    add_trace(
+        r = t(rl[1, 2:6, drop = TRUE])
+      , theta = lbls
+      , name = "A"
+      , opacity = opc
+    )
+fig <- fig %>%
+  add_trace(
+    r = t(rl[2, 2:6, drop = TRUE])
+  , theta = lbls
+  , name = "B"
+  , opacity = opc
+  )
+fig <- fig %>%
+  add_trace(
+    r = t(rl[3, 2:6, drop = TRUE])
+  , theta = lbls
+  , name = "C"
+  , opacity = opc
+  )
+fig <- fig %>%
+  add_trace(
+    r = t(rl[4, 2:6, drop = TRUE])
+  , theta = lbls
+  , name = "D"
+  , opacity = opc
+  )
+fig <- fig %>%
+  add_trace(
+    r = t(rl[5, 2:6, drop = TRUE])
+  , theta = lbls
+  , name = "E"
+  , opacity = opc
+  )
+fig <- fig %>%
+  layout(
+    polar = list(
+      radialaxis = list(
+        visible = T,
+        range = c(0, 60)
+      )
+    )
+  )
+
+fig
+
+
+```
+
+
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

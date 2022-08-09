@@ -456,6 +456,10 @@ as.POSIXct(
 
 as.Date(data$diag_ecg_date_time, format='%Y-%m-%d')
 
+build_date <- function(year, month, date){
+    as.Date(ISOdate(year, month, date))
+}
+
 get_datetime <- function(text){
     as.POSIXct(
         trimws(text)

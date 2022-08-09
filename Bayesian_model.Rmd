@@ -1,0 +1,261 @@
+---
+title: "Bayesian Model"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+
+# Simulate Data
+
+```{r}
+set.seed(123456)
+n <- 1000
+dt <- data.table(
+    p0 = rep(0.2, n)
+  , or1 = rep(1, n)
+  , var1 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.3, 0.7))
+  , or2 = rep(1.1, n)
+  , var2 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.4, 0.6))
+  , or3 = rep(1.2, n)
+  , var3 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.2, 0.8))
+  , or4 = rep(1.5, n)
+  , var4 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.3, 0.7))
+  , or5 = rep(1.7, n)
+  , var5 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.5, 0.5))
+  , or6 = rep(2, n)
+  , var6 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.4, 0.6))
+  , or7 = rep(5, n)
+  , var7 = sample(c(0, 1), size = n, replace = TRUE, prob = c(0.1, 0.9))
+)
+
+
+dt <- dt[, odds0 := p0 / (1 - p0)
+         ][, log_odds := log(odds0) +
+                 var1 * log(or1) +
+                 var2 * log(or2) +
+                 var3 * log(or3) +
+                 var4 * log(or4) +
+                 var5 * log(or5) +
+                 var6 * log(or6) +
+                 var7 * log(or7)
+           ][, p := exp(log_odds)/ (1 + exp(log_odds))]
+
+vsample <- function(p){
+    sample(c(1, 0), size = 1, replace = TRUE, prob = c(p, 1 - p))
+}
+
+vsample <- Vectorize(vsample)
+
+dt <- dt[, outcome := vsample(p)]
+
+```
+
+# brms Package
+
+ * The function to report brms model needs to be modified to reflect the logistic model
+
+```{r}
+library(brms)
+library(bayestestR)
+library(sjstats)
+
+m <- brm(formula = outcome ~ var1 + var2 + var3 + var4 + var5 + var6 + var7,  
+                   data = dt, 
+                   family = bernoulli(link = "logit"),
+                   warmup = 500, 
+                   iter = 2000, 
+                   chains = 2, 
+                   inits = "0", 
+                   cores = 2,
+                   seed = 123)
+
+
+
+report_brms <- function(obj, digits=2, equiv=0.1){
+    pe <- unique(point_estimate(obj))
+    colnames(pe) <- tolower(colnames(pe))
+    pe <- pe[, -1]
+    he <- unique(hdi(obj, ci=0.89))
+    colnames(he) <- paste0("hdi_", tolower(colnames(he)))
+    et <- unique(eti(obj, ci=0.95))
+    colnames(et) <- paste0("eti_", tolower(colnames(et)))
+    pd <- unique(pd(obj))
+    colnames(pd) <- tolower(colnames(pd))
+    pd <- pd[, 1:2]
+    rtn <- cbind(pe, he, et, pd)
+    rtn <- as.data.table(rtn)
+    rtn$equivalence_l <- -equiv
+    rtn$equivalence_r <- equiv
+    rtn <- as.data.table(rtn)
+    rtn <- rtn[, hdi := paste0(
+                     as.character(round(median, digits))
+                   , " ["
+                   , as.character(round(hdi_ci_low, digits))
+                   , ", "
+                   , as.character(round(hdi_ci_high, digits))
+                   , "]"
+                 )]
+    rtn <- rtn[, eti := paste0(
+                     as.character(round(mean, digits))
+                   , "["
+                   , as.character(round(eti_ci_low, digits))
+                   , ", "
+                   , as.character(round(eti_ci_high, digits))
+                   , "]"
+                 )]
+    rtn <- rtn[, pd_n := pd][, pd := Wu::percent(pd, digits=digits)]
+    for(i in 1:nrow(rtn)){
+        rp <- equivalence_test(
+            obj
+          , range = as.numeric(rtn[i, list(equivalence_l, equivalence_r)])
+          , ci=0.89
+          , parameters=rtn$parameter[i])
+        rtn$rope_n[i] <- rp$ROPE_Percentage
+        rtn$rope[i] <- Wu::percent(rp$ROPE_Percentage, digits=digits)
+    }
+    label(rtn$parameter) <- "Parameter"
+    label(rtn$hdi) <- "Median [89% HDI]"
+    label(rtn$eti) <- "Mean [95% ETI]"
+    label(rtn$pd) <- "Probability of Direction"
+    label(rtn$rope) <- "ROPE"
+    invisible(rtn)
+}
+
+t <- report_brms(m, digits=2, equiv = 0.06)
+t2 <- t[-1, ]
+
+
+t2[, list(parameter, hdi, eti, pd, rope)] %>%
+    prt(col.names=c("Parameter", "Median [89% HDI]", "Mean [95% ETI]", "Probability of Direction", "ROPE")) %>%
+    footnote(symbol=c("HDI: High Density Credible Interval"
+                      , "ETI: Equal-Tailed Credible Interval")
+        , number=c(
+                 "Probability of Direction (pd) describes effect existence. It represents the certainty associated with the most probable direction (positive or negative) of the effect."
+                 , "pd <= 95%: uncertain"
+                 , "pd > 95%: possibly existing"
+                 , "pd > 97%: likely existing"
+                 , "pd > 99%: probably existing"
+                 , "pd > 99.9%: certainly existing"
+          )
+        , alphabet=c("ROPE: Region of Practical Equivalence with range $[-0.1*SD_{Y},0.1*SD_Y]$"
+              , "> 99%: negligible (we can accept the null hypothesis)"
+              , "> 97.5%: probably negligible"
+              , "<= 97.5% & >= 2.5%: undecided significance"
+              , "< 2.5%: probably significant"
+              , "< 1%: significant (we can reject the null hypothesis)"
+          )
+             )
+
+
+
+```
+
+# rmsb Package
+
+ * Multiple imputation
+
+```{r}
+library(rmsb)
+
+dt <- dt[, missing_indicator := sample(c(0, 1), size = n, replace = TRUE, prob = c(0.9, 0.1))
+         ][, var3 := case_when(
+                 missing_indicator == 1 ~ as.numeric(NA)
+               , TRUE ~ var3)
+           ]
+
+
+dd <- datadist(dt)
+options(datadist = "dd")
+set.seed(123456)
+
+mi <- aregImpute( ~ var1 + var2 + var3 + var4 + var5 + var6 + var7
+               , data = dt
+               , n.impute = 5
+               , pr = FALSE)
+
+m <- stackMI(outcome ~ var1 + var2 + var3 + var4 + var5 + var6 + var7
+           , fitter=blrm
+           , iter=2000
+           ## , warmup=1000
+           , chain=2
+           ## , cores=2
+           , data=dt
+           , xtrans=mi
+           , loo=TRUE
+             )
+
+
+get_post_m <- function(mod){
+    mu_draws <- as.data.table(mod$draws)
+    coef1 <- lapply(mu_draws, median)
+    coef2 <- lapply(mu_draws, function(x){HPDint(x, prob = 0.95)[1]})
+    coef3 <- lapply(mu_draws, function(x){HPDint(x, prob = 0.95)[2]})
+    coef4 <- lapply(mu_draws, function(x){sum(x > 0) / length(x)})
+    rtn <- cbind(names(coef1)
+               , as.data.table(unlist(coef1))
+               , as.data.table(unlist(coef2))
+               , as.data.table(unlist(coef3))
+               , as.data.table(unlist(coef4))
+                 )
+    colnames(rtn) <- c("coef", "median", "lower", "upper", "probgt0")
+    rtn <- rtn[, hdi := ci_to_str(fit=exp(median), lower=exp(lower), upper=exp(upper), digits=2)
+               ]
+    invisible(rtn[-1, .(coef, hdi, probgt0)])
+}
+
+hdi <- get_post_m(m)
+
+hdi %>% prt(caption="Multivariable Model"
+                , col.names=c("Variable", "Odds Ratio (HDI)", "Probability > 1"))
+
+
+```
+
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

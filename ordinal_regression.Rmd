@@ -52,7 +52,7 @@ eval_slow <- FALSE
 library(Wu)
 dt <- acs2018_nashville
 
-hist(dt$agep)
+## hist(dt$agep)
 
 ## dt[, .N, by = .(schl)][order(schl)]
 
@@ -74,13 +74,85 @@ dt <- dt[, education_level3 := case_when(
                ][, wagp_log := log(wagp)]
 dt[, .N, by = .(education_level3)][order(education_level3)] %>% prt()
 
-dt[, .N, by = .(sex, gender)][order(gender)]
 
-hist(dt$wagp)
+## hist(dt$wagp)
 ## summary(dt$wagp)
 dt <- dt[!is.na(wagp) & wagp > 0 & !is.na(wagp_log)]
-hist(dt$wagp_log)
+## hist(dt$wagp_log)
 ```
+
+# Plot
+
+```{r}
+gt_cdf <- function (data, ordinal, group){
+    rtn <- data[, .(n = .N), by = setNames(list(get(ordinal), get(group)), c(ordinal, group))
+                ][order(get(ordinal), get(group))
+                  ][, `:=`(df, n/sum(n)), by = list(get(group))
+                    ][, `:=`(cdf, cumsum(df)), by = list(get(group))
+                      ][, `:=`(lcdf,  qlogis(cdf))
+                        ][cdf < 1
+                          ][order(get(ordinal), get(group))]
+    tw <- copy(rtn)[1:2, ]
+    tw[[ordinal]] <- 0
+    ## [, get(ordinal) := 0]
+    ## [, `:=`(get(ordinal), 0)]
+    ## rtn <- rbind(tw, rtn)
+    rtn[[paste0(ordinal, "_n")]] <- as.numeric(rtn[[ordinal]])
+    return(rtn)
+}
+
+
+dt <- dt[, education_n := as.numeric(education_level3)]
+cdf <- gt_cdf(dt, ordinal = "education_n", group="gender")
+
+gg_cdf <- function (data, ordinal, group) {
+    cdf <- gt_cdf(data = data, ordinal = ordinal, group = group)
+    ## cdf <- cdf[, `:=`(size, n/max(n))][, size := 1]
+    brks <- c(0.1, 0.5, 0.8, 0.9, 0.95, 0.98)
+    lbrks <- qlogis(brks)
+    group_label <- ifelse(label(data[[group]]) %in% c(""), group, 
+                          label(data[[group]]))
+    p <- ggplot(data = cdf
+              , aes_string(x = ordinal
+                         , y = "lcdf"
+                         , group = group
+                         , color = group
+                         ## , alpha = "size"
+                           )) +
+        geom_step(size=1, direction = "mid") +
+        theme_bw() +
+        theme(panel.grid.major = element_blank()
+            , panel.grid.minor = element_blank()
+            , legend.position = c(0.99, 0.4)
+            , legend.justification = c("right", "top")
+            , legend.title=element_text(size=15)
+            , legend.text=element_text(size=10)
+              ) + 
+        guides(alpha = FALSE) +
+        scale_x_continuous(breaks=1:9, labels=1:9, limits = c(0.5, 9.5)) +
+        scale_y_continuous(breaks=lbrks, labels = scales::percent(brks, 1), limits = qlogis(c(0.05, 0.99))) + 
+        labs(y = "", x = "", color = group_label)
+    return(p)
+}
+
+label(dt$gender) <- "Gender"
+gg_cdf(dt, ordinal = "education_n", group="gender")
+
+
+```
+
+# Plot using rmsb
+
+
+```{r}
+library(rmsb)
+x <- as.numeric(dt$education_level3)
+y <- factor(dt$gender)
+
+Ecdf( ~ x, group = y, fun = qlogis, ylab = "Logit of Proportions of Values < X")
+
+```
+
 
 # Ordinal with MASS package
 
@@ -90,8 +162,8 @@ m <- polr(education_level3 ~ gender + wagp_log
         , data = dt
         , Hess = TRUE)
 
-coef(m)
-summary(m)
+library(sjPlot)
+
 
 ```
 
@@ -104,8 +176,8 @@ m_ordinal <- clm(education_level3 ~ gender + wagp_log
         , data = dt
         , link = "logit")
 
-summary(m_ordinal)
-coef(m_ordinal)
+tab_model(m_ordinal)
+
 ```
 
 # rms package
@@ -115,10 +187,11 @@ library(rms)
 dd <- datadist(dt); options(datadist='dd')
 m_lrm <- lrm(education_level3 ~ gender + wagp_log
         , data = dt
-        )
+          )
+
+
 summary(m_lrm)
-coef(m_lrm)
-vcov(m_lrm)
+
 
 ```
 
@@ -192,5 +265,6 @@ m_brm_recoded <- brm(y ~ lvl1 + gender + wagp_log
            , family = binomial
              )
 summary(m_brm_recoded)
+
 
 ```

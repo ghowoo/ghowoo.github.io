@@ -187,7 +187,8 @@ ggplot(dt, aes(y = value, x=sex)) +
       , panel.background = element_blank()
       , strip.background =element_rect(fill="#FFFFFF")
         , strip.text.x = element_text(size = font_axis_size)
-        )
+        ) +
+    annotate("text", y=2.86,x=1.5, label="p(KW) < 0.0001")
 
 
 ## p <- ggplot(dt, aes(y = relative, x=sex)) +
@@ -534,64 +535,6 @@ ggplot(dt, aes(x=Saturation, y=Luminance, colour=clr)) +
 
 # plotly
 
-## Radar Chart
-
-```{r, eval=FALSE}
-dt <- readRDS(file="df.RDS")
-
-rl <- dt[, .(m_mmdhp=median(sqrt(mmdhp_score_imp), na.rm = TRUE)
-           , m_js=median(edmcq_js_score_imp, na.rm = TRUE)
-           , ms_clt=median(edmcq_js_score_imp, na.rm = TRUE)
-           , ms_ldr=median(edmcq_ldr_score_imp, na.rm = TRUE)
-           , m_eol=median(edmcq_eol_score_imp, na.rm = TRUE)
-             )
-       , by = list(gender_q3.factor)
-         ][order(gender_q3.factor)]
-
-rl$m_mmdhp2 <- rl$m_mmdhp
-
-
-dms <- c("MMD-HP", "Job Strain"
-       , "Safety Culture"
-       , "Leadership Culture"
-       , "End of Life"
-       , "MMD-HP"
-         )
-
-opc <- 0.5
-fig <- plot_ly(
-    type = 'scatterpolar',
-    fill = 'toself'
-  )
-fig <- fig %>%
-  add_trace(
-    r = t(rl[1, 2:7, drop = TRUE])
-    , theta = dms
-  , name = rl$gender_q3.factor[1]
-  , opacity = opc
-  )
-
-fig <- fig %>%
-  add_trace(
-    r = t(rl[2, 2:7, drop = TRUE])
-  , theta = dms
-  , name = rl$gender_q3.factor[2]
-  , opacity = opc
-  )
-fig <- fig %>%
-  layout(
-    polar = list(
-      radialaxis = list(
-        visible = T,
-        range = c(0, 4)
-      )
-    )
-  )
-
-fig
-
-
-```
 
 ## Overlay Histogram
 

@@ -54,9 +54,17 @@ dt <- data.table(x = rnorm(n)
                  )
 dt <- dt[, y := x * 1.2 + noise / 5]
 
-ggplot(dt, aes(x = x, y = y)) +
-geom_point(color="#1c70c8", size = 2) +
-labs(x = "x", y="y",title="")
+
+plt_scatter(data = dt
+          , xvar = x
+          , yvar = y
+          , xlabel = "X"
+          , ylabel = "Y"
+          , marker_size = 5)
+
+## ggplot(dt, aes(x = x, y = y)) +
+## geom_point(color="#1c70c8", size = 2) +
+## labs(x = "x", y="y",title="")
 ```
 
 # Spearman's Rho
@@ -69,8 +77,10 @@ stat <- as.character(round(stat, 2))
 pvalue <- crt$p.value
 pvalue <- as.character(round(pvalue, 3))
 title <- expression("Spearman'" ~ rho ~ "= " ~ stat ~ " p-value = " ~ pvalue)
-title <- bquote(atop("Urine Sodium Concentration & eGFR", "Spearman'" ~ rho ~ "= " ~ .(stat) ~ " p-value = " ~ .(pvalue)))
-
+title <- bquote(atop("Concentration vs eGFR", "Spearman'" ~ rho ~ "= " ~ .(stat) ~ " p-value = " ~ .(pvalue)))
+title_x <- expression(L/min/m^2)
+title_y <- expression("ml/min/1.73" * m^2)
+title_y <- bquote( "ml/min/1.73" * m ^ 2)
 
 ggplot(data = dt
      , aes(x = x
@@ -84,9 +94,9 @@ ggplot(data = dt
     ) +
     geom_smooth(method = "lm", alpha = 0.5, se = FALSE, color = "#999999") + 
     ## annotate("text", label = title, x = 40, y = 200)+ 
-    xlab("x") +
+    xlab(title_x) +
     ## scale_x_continuous(breaks = c(1, 2, 3), labels = c(1, 2, 3)) +
-    ylab("y") +
+    ylab(title_y) +
     ## scale_y_continuous(breaks = c(0, 25, 50, 75, 100, 125, 150), labels = c(0, 25, 50, 75, 100, 125, 150)) +
     theme_bw() +
     theme(axis.ticks = element_blank()

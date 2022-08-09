@@ -81,7 +81,7 @@ factorVars <- c(
 , "embarked"
 )
 
-tbl1n(data = titanic_train) %>% prt()
+tbl1n(data = titanic_train, vars = Vars, factorVars = factorVars) %>% prt()
 
 ```
 
@@ -104,12 +104,11 @@ varImpPlot(model_rf)
 
 ```
 
+
 ## shapper
 
 ```{r}
 
-
-## reticulate::py_module_available("shap")
 
 library("DALEX")
 exp_rf <- explain(model_rf, data = titanic_train[,-1], y = as.numeric(titanic_train[,1])-1)
@@ -127,9 +126,9 @@ ive_rf <- individual_variable_effect(
 , nsamples = 50
 )
 
-## ive_rf %>% prt()
+ive_rf %>% prt()
 
-plot(ive_rf)
+## plot(ive_rf)
 
 
 
@@ -144,7 +143,7 @@ plot(ive_rf)
 
 ## Parameter Searching
 
-```{r}
+```{r, eval = FALSE}
 library(SHAPforxgboost)
 suppressPackageStartupMessages({
 library("SHAPforxgboost"); library("ggplot2"); library("xgboost")
@@ -155,7 +154,7 @@ y_var <-  "diffcwv"
 dataX <- as.matrix(dataXY_df[,-..y_var])
 dataX <- xgb.DMatrix(dataX)
 
-cv1 <- xgb.cv(data = dataX, label = )
+## cv1 <- xgb.cv(data = dataX )
 
 library(rBayesianOptimization)
 cv_folds <- KFold(y_var, nfolds = 5, stratified = FALSE, seed = 123456)
@@ -232,7 +231,7 @@ xgb_model <- xgb.train (params = best_param, data = dtrain, nrounds = nrounds)
 ## Model
 
 
-```{r}
+```{r, eval = FALSE}
 library(SHAPforxgboost)
 suppressPackageStartupMessages({
 library("SHAPforxgboost"); library("ggplot2"); library("xgboost")
@@ -273,7 +272,7 @@ hist(shap_values$shap_score$forestProp_1km)
 ## SHAP Summary Plot
 
 
-```{r}
+```{r, eval = FALSE}
 
 shap_long <- shap.prep(xgb_model = mod, X_train = dataX)
 # is the same as: using given shap_contrib
@@ -288,7 +287,7 @@ shap.plot.summary.wrap2(shap_score = shap_values$shap_score, X = dataX)
 
 ## Dependence Plot
 
-```{r}
+```{r, eval = FALSE}
 
 g1 <- shap.plot.dependence(data_long = shap_long
                          , x = "dayint"
@@ -305,7 +304,10 @@ g2 <- shap.plot.dependence(data_long = shap_long
 gridExtra::grid.arrange(g1, g2, ncol = 2)
 ```
 
-```{r}
+
+## Interaction Effects
+
+```{r, eval = FALSE}
 fig_list <- lapply(names(shap_values$mean_shap_score)[1:9]
                  , shap.plot.dependence
                  , data_long = shap_long
@@ -314,9 +316,184 @@ gridExtra::grid.arrange(grobs = fig_list, ncol = 3)
 
 ```
 
-## Interaction Effects
 
-```{r}
+
+# XGBoost with Python
+
+
+
+## Data
+
+```{r, eval = FALSE}
+import pandas as pd
+import feather
+
+
+import os
+print(os.getcwd())
+os.chdir("/home/gongw/Works/VICTR/Patrick Doyle/R")
+print(os.listdir())
+print(os.getcwd())
+
+path = "2yrs_matrix_train.feather"
+
+df = pd.read_feather(path)
+
+
+
+print(df.columns.values.tolist())
+
+print(df.columns.values.tolist())
+
+train_label = df['recurrence2yrs']
+train_features = df.drop('recurrence2yrs',1)
+
+print(train_features.columns.values.tolist())
+
+print(train_features.shape)
+
+patht = "2yrs_matrix_test.feather"
+
+dft = pd.read_feather(patht)
+
+print(dft.columns.values.tolist())
+
+test_label = dft['recurrence2yrs']
+test_features = dft.drop('recurrence2yrs',1)
+
+
+
+```
+
+
+## Model
+
+
+```{r, eval = FALSE}
+
+import xgboost as xgb
+from datetime import datetime
+from sklearn.model_selection import GridSearchCV
+from sklearn import metrics
+import matplotlib.pyplot as plt
+import pickle
+
+
+xgb_cl_best = xgb.XGBClassifier(
+    booster = "gbtree",
+    objective = "binary:logistic",
+    # eval_metric = "auc",
+    n_estimators = 133,
+    colsample_bytree = 0.85,
+    subsample = 0.53,
+    learning_rate = 0.16,
+    max_depth = 4,
+    gamma = 2.9,
+    reg_lambda = 1,
+    reg_alpha = 0.58,
+    n_jobs = -1
+)
+
+
+eval_set = [(test_features, test_label)]
+
+xgb_cl_best.fit(train_features,
+                train_label,
+                eval_metric = "auc",
+                eval_set=eval_set,
+                early_stopping_rounds = 50,
+                verbose = True
+                )
+
+
+with open('xgb_2yrs.pkl', 'wb') as outp:
+    pickle.dump(xgb_cl_best, outp, pickle.HIGHEST_PROTOCOL)
+
+    
+
+xgb_cl_best
+
+
+```
+
+
+## AUC & Variable Importance
+
+
+```{r, eval = FALSE}
+
+from sklearn import metrics
+pred_train = xgb_cl_best.predict_proba(train_features)[:,1]
+pred_train_pd = pd.DataFrame({'prob':pred_train})
+pred_train_pd.to_feather("pred_train_2yrs_xgb.feather")
+
+
+fpr, tpr, threshold = metrics.roc_curve(train_label, pred_train)
+roc_auc = metrics.auc(fpr, tpr)
+roc_auc
+
+
+pred_test = xgb_cl_best.predict_proba(test_features)[:,1]
+pred_test_pd = pd.DataFrame({'prob':pred_test})
+pred_test_pd.to_feather("pred_test_2yrs_xgb.feather")
+
+
+fpr, tpr, threshold = metrics.roc_curve(test_label, pred_test)
+roc_auc = metrics.auc(fpr, tpr)
+roc_auc
+
+
+
+importances_weight = xgb_cl_best.get_booster().get_score(importance_type = 'weight')
+
+# importances = xgb_cl_best.feature_importances_
+print(importances_weight)
+
+importance_weight_xgb_2yrs = pd.DataFrame([importances_weight]).transpose()
+importance_weight_xgb_2yrs.index.name = "variable"
+importance_weight_xgb_2yrs.reset_index(inplace=True)
+importance_weight_xgb_2yrs.rename(columns={0: "importance_weight"}, inplace=True)
+
+
+print(importance_weight_xgb_2yrs)
+print(importance_weight_xgb_2yrs.shape)
+
+
+
+# importance_weight_xgb_2yrs = pd.DataFrame({'value':importances_weight, "variable":train_features.columns.values})
+
+importance_weight_xgb_2yrs.to_feather("importance_weight_xgb_2yrs.feather")
+
+
+print(xgb_cl_best.feature_importances_)
+
+
+# permutation importance
+from sklearn.inspection import permutation_importance
+importance_permutation = permutation_importance(xgb_cl_best, train_features, train_label)
+print(importance_permutation.importances_mean)
+
+importance_permutation_xgb_2yrs = pd.DataFrame({'value':importance_permutation.importances_mean, "variable":train_features.columns.values})
+
+
+importance_permutation_xgb_2yrs.to_feather("importance_permutation_xgb_2yrs.feather")
+
+
+```
+
+
+## SHAP
+
+```{r, eval = FALSE}
+import shap
+
+explainer = shap.TreeExplainer(xgb_cl_best)
+shap_values = explainer.shap_values(train_features)
+print(shap_values)
+
+shap.summary_plot(shap_values, train_features, plot_type="bar")
+
+shap.summary_plot(shap_values, train_features)
 
 
 ```

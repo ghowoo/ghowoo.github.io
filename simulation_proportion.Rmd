@@ -273,3 +273,126 @@ sp$method <- "fisher"
 sp$gen_power()
 kable(sp$grid_table, caption = "Power if using Fisher's exact test") %>% kable_styling(full_width = FALSE)
 ```
+# Power for ANOVA
+
+```{r, eval = FALSE}
+## install.packages("pwr")
+
+library(pwr)
+
+N <- 1354
+k <- 4
+
+
+t <- pwr.anova.test(k = 2, n = 110, sig.level = 0.05, power = 0.8)
+
+
+N <- 220
+N <- 100
+for (k in 2:7) {
+    print(k)
+    pwri <- pwr.anova.test(k = k, n = round(N / k), sig.level = 0.05, power = 0.8)
+    ti <- c(k, pwri$f)
+    if (k == 2) {
+        rtn <- ti
+    } else {
+        rtn <- rbind(rtn, ti)
+    }
+}
+
+rtn
+
+rtn2 <- rtn
+rtn * 2
+
+str(ti)
+
+
+N <- 220
+N <- 100
+for (k in 2:7) {
+    print(k)
+    print(round(N / k))
+    x <- pwr.t.test(n = round(N / k), d = NULL, sig.level = 0.05, power=0.8, 
+    type = c("two.sample"),
+    alternative = c("two.sided")
+    )
+    ti <- c(k, x$d)
+        if (k == 2) {
+        rtn <- ti
+    } else {
+        rtn <- rbind(rtn, ti)
+    }
+}
+
+rtn
+
+
+citation("pwr")
+
+x <- pwr.t.test(n = 50, d = NULL, sig.level = 0.05, power=0.8, 
+    type = c("two.sample"),
+    alternative = c("two.sided")
+    )
+str(x)
+x
+
+
+pwr.anova.test(f = 0.1, k = 2, n = 675, sig.level = 0.05)
+
+
+library(Superpower)
+
+a1b1:0
+a1b2:0.2
+a2b1:0.2
+a2b2:0.4
+
+design_result <- ANOVA_design(design = "2w*2w",
+                              n = round(1354 / 4),
+                              mu = c(0, 0.1, 0.1, 0.4),
+                              sd = 1,
+                              r=0, 
+                              plot = FALSE)
+
+
+power_result <- ANOVA_power(design_result, alpha_level = 0.05,
+      p_adjust = "none", seed = 2019, nsims = 100)
+
+
+
+
+
+
+## compare t-test and anova
+
+pwr.anova.test(k = 2,
+               n = NULL,
+               f = 0.2, 
+               sig.level = 0.05, 
+               power = 0.8) 
+
+
+pwr.t.test(n = NULL,
+           d = 0.2,
+           sig.level = 0.05,
+           type = "two.sample",  
+           alternative = "two.sided", 
+           power = 0.8)
+
+pwr.anova.test(k = 2,
+               n = NULL,
+               f = 0.1, 
+               sig.level = 0.05, 
+               power = 0.8)
+
+pwr.t.test(n = NULL,
+           d = 0.2,
+           sig.level = 0.05,
+           type = "two.sample",  
+           alternative = "greater", 
+           power = 0.8)
+
+
+
+```

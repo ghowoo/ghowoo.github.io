@@ -1,0 +1,173 @@
+---
+title: | 
+    | \LARGE Template&trade; Export&reg; to PDF with rmarkdown
+header-includes: 
+    \usepackage[nottoc]{tocbibind} 
+    \usepackage{caption} 
+    \usepackage{graphics} 
+    \renewcommand{\rmdefault}{ptm} 
+    \usepackage{booktabs} 
+    \usepackage{longtable}
+    \usepackage{array}
+    \usepackage{multirow} 
+    \pagenumbering{gobble} 
+    \usepackage{float}
+    \usepackage{wrapfig}
+    \usepackage{colortbl}
+    \usepackage{pdflscape}
+    \usepackage{tabu}
+    \usepackage[normalem]{ulem}
+author: | 
+    | \vspace{1cm} 
+    | Wu Gong
+date: | 
+    | \vspace {9cm} `r format(Sys.Date(), format = "%B %d, %Y")`
+output:
+  pdf_document:
+    toc: yes
+    fig_caption: yes
+fontsize: 12pt
+geometry: margin = 1in
+include-before:
+  - '\newpage'
+---
+
+
+
+
+```{r setup, include=FALSE}
+rm(list=ls())
+library(Wu)
+
+knitr::opts_chunk$set(echo = FALSE
+                      ,message = FALSE
+                      ,tidy=TRUE
+                      ,results="asis"
+                      ,warning=FALSE
+                     ,out.width = "7in"
+                    , dpi = 300)
+theme_set(theme_get() + theme(text = element_text(family = 'Times')))
+## opts_knit$set(eval.after='fig.cap')
+## cap <- function () {
+##     p <- last_plot()
+##     if (!is.null(p) && !is.null(p$labels$title)) {
+##         paste('Figure:', p$labels$title)
+##     } else {
+##         NULL # null caption
+##     }
+## }
+
+## theme(text = element_text())$text[ c("family", "size") ]
+## windowsFonts()
+## X11Fonts()
+## theme_get()
+```
+
+
+\newpage
+
+\listoftables
+
+
+\newpage
+
+\listoffigures
+
+
+
+\newpage
+\pagenumbering{arabic}
+
+
+# Section I
+
+
+```{r}
+n <- 20
+dt <- data.table(id = 1:n
+                 , group_id = rep(LETTERS[1:5], each = n / 5)
+               , name = sample(1000:3000, size = n, replace = TRUE))
+
+group_index <- auto_index(dt$group_id)
+kbl(dt
+    , caption = "Table I"
+    , align = c("l", "r")
+    , format = "latex"
+    , booktabs = TRUE) %>%
+    pack_rows(index = group_index
+            , hline_before = TRUE
+            , hline_after = FALSE
+            ## , label_row_css = "border-bottom: 1px solid;"
+              ) %>%
+    kable_styling(latex_options = c("HOLD_position", "repeat_header"), font_size = 12, full_width = FALSE) %>%
+    add_footnote(label = "This is a Latex table output."
+                 , notation = "symbol")
+```
+
+\newpage
+
+
+# Section II
+## Subsection A
+
+```{r, fig.cap="Figure A"}
+plot(1:10, 1:10)
+
+```
+
+\newpage
+
+## Subsection B
+
+
+```{r, fig.cap="Figure B"}
+
+plot(1:10, (1:10) ^ 2)
+
+```
+
+
+
+
+
+
+\newpage
+
+
+\newpage
+# Section III
+
+
+```{r}
+n <- 100
+dt <- data.table(id = 1:n
+                 , group_id = rep(LETTERS[1:5], each = n / 5)
+               , var1 = sample(1000:3000, size = n, replace = TRUE)
+                 , var2 = sample(100:300, size = n, replace = TRUE)
+                 )
+
+group_index <- auto_index(dt$group_id)
+kbl(dt
+    , caption = "Table II Spanning Multiple Pages"
+    , align = c("l", "r")
+    , format = "latex"
+  , booktabs = TRUE
+    , longtable = TRUE) %>%
+    pack_rows(index = group_index
+            , hline_before = TRUE
+            , hline_after = FALSE
+            ## , label_row_css = "border-bottom: 1px solid;"
+              ) %>%
+    column_spec(1, "1in", latex_valign = "m") %>%
+    column_spec(2, "1.5in", latex_valign = "m") %>%
+    column_spec(2, "1.5in", latex_valign = "m") %>%
+    column_spec(2, "1.5in", latex_valign = "m") %>%
+    kable_styling(latex_options = c("HOLD_position", "repeat_header")
+                , font_size = 12
+                , protect_latex = TRUE
+                , full_width = FALSE) %>%
+    add_footnote(label = "This is a Latex table output."
+                 , notation = "symbol")
+```
+
+\newpage

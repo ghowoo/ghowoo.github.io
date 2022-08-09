@@ -1,0 +1,114 @@
+---
+title: "Reliability and Consistency"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+
+
+# Cronbach's $\alpha$
+
+
+ * It measures inter-correlation among items
+
+```{r}
+n <- 100
+dt <- data.table(
+    var1 = rnorm(n)
+  , noise = rnorm(n)
+)
+dt <- dt[, var2 := var1 * (2 + noise / 5) + noise ^ 2
+         ][, var3 := var1 * (noise / 10) + var1 ^ (noise)]
+
+
+library(psych)
+get_cronbach <- function(data){
+    a <- psych::alpha(data, warnings = FALSE)
+    return(a$total$raw_alpha)
+}
+
+
+ttl <- expression(alpha + beta)
+get_cronbach(dt) %>% prt(caption = "Cronbach's $\\alpha$")
+
+```
+
+
+# Krippendorff's $\alpha$
+
+
+* Citation
+    -  Matthias Gamer, Jim Lemon and Ian Fellows Puspendra Singh
+  <puspendra.pusp22@gmail.com> (2019). irr: Various Coefficients of
+  Interrater Reliability and Agreement. R package version 0.84.1.
+  https://CRAN.R-project.org/package=irr
+    - Krippendorff, K. (2011). Computing Krippendorff's Alpha-Reliability. Retrieved from https://repository.upenn.edu/asc_papers/43
+
+
+
+```{r}
+n <- 50
+dt <- data.table(
+    var1 = factor(sample(x = 1:5, size = n, replace = TRUE), levels = 1:5, ordered = TRUE)
+  , var2 = factor(sample(x = 1:5, size = n, replace = TRUE), levels = 1:5, ordered = TRUE)
+  , var3 = factor(sample(x = 1:5, size = n, replace = TRUE), levels = 1:5, ordered = TRUE)
+)
+
+library(irr)
+
+t <- data.matrix(dt)
+t <- t(t)
+tkp <- irr::kripp.alpha(t, method = "ordinal")
+
+data.table(subjects = tkp$subjects, raters = tkp$raters, alpha = tkp$value) %>% prt()
+
+```
+
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

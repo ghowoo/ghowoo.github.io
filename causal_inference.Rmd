@@ -93,6 +93,41 @@ tab_model(m_trt)
 ```
 
 
+# Distribution of Propensity Score
+
+```{r}
+dt$pred <- m_trt$fitted.values
+
+p1 <- dt[trt == 1]$pred
+p0 <- dt[trt == 0]$pred
+
+plot_ly(alpha = 0.5, xbins = list(start = 0, end = 1, size = 0.02)) %>%
+  add_histogram(x = ~ p1
+              , name = "Treated"
+              , inherit = TRUE
+              ## , xbins = seq(0, 1, 0.05)
+                ) %>%
+  add_histogram(x = ~ p0
+              , name = "Not Treated"
+              , inherit = TRUE
+              ## , xbins = seq(0, 1, 0.05)
+                ) %>%
+    layout(barmode = "overlay"
+         , xaxis = list(title = paste0("Predicted Probabilities of Being Treated"),
+                      zeroline = FALSE),
+         yaxis = list(title = "Count",
+                      zeroline = FALSE))
+
+
+ggplot(data=dt, aes(x=pred, colour=factor(trt))) +
+  geom_density(alpha=0.5) +
+  labs(y="Density",x="pred") +
+  scale_y_continuous(breaks=NULL,label=c("")) +
+    theme(legend.position=c(0.8,0.2))
+
+```
+
+
 # Multivarible Outcome Model
 
 
