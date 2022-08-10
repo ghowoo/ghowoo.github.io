@@ -396,3 +396,46 @@ pwr.t.test(n = NULL,
 
 
 ```
+
+# Statistics for Stratified Systematic Sampling
+
+* $N$ is the number of total houses.
+* $L$ is the number of strata (sub-districts within the survey area).
+* $N_h$ is the number of total houses within the stratum $h$.
+* $n_h$ is the number of sampled houses within the stratum $h$.
+* $s^2_h$ is the estimated variance of the stratum $h$.
+* $x_{h,i}$ is the value of $x$ for the element $i$ within the stratum $h$.
+* $\bar{x}_h$ is the mean of $x$ within the stratum $h$.
+* $\bar{x}_{str}$ is the mean estimate for entire population.
+* $p_{y,str}$ is the proportion estimate for entire population.
+
+Estimated mean of the stratum $h$:
+$$ \bar{x}_h = \frac{\sum_{i=1}^{n_h}(x_{h,i})}{n_h}$$
+
+Estimated proportion of the stratum $h$:
+$$ P_{hy} = \frac{\sum_{i=1}^{n_h}(Y_{h,i})}{n_h}$$
+
+
+Variance estimate of the stratum $h$:
+
+$$ s^2_h = \frac{\sum_{i=1}^{n_h}(x_{h,i} - \bar{x}_h)^2}{n_h - 1}$$
+$$ s^2_h = \frac{n_h}{n_h - 1}P_{py}(1 - P_{py})$$
+
+Design Effect
+$$\rho=1 + \delta_x(n-1)$$
+
+Estimate Mean for Entire Population
+
+$$\bar{x}_{str} = \frac{\sum_{h=1}^LN_h\bar{x}_h}{N}$$
+
+Standard Error of Mean Estimate
+$$\hat{SE}(\bar{x}_{str}) = \sqrt{\sum_{h=1}^L(\frac{N_h}{N})^2\frac{s_{hx}^2}{n_h}(\frac{N_h-n_h}{N_h})} $$
+
+Estimate Proportion for Entire Population
+
+$$p_{y,str}=\frac{\sum_{h=1}^LN_hP_h}{N}$$
+
+Standard Error for Proportion Estimate
+
+$$\hat{SE}(p_{y,str}) = \sqrt{\sum_{h=1}^L(\frac{N_h}{N})^2\frac{p_{hy}(1-p_{hy})}{n_h-1}(\frac{N_h-n_h}{N_h})} $$
+

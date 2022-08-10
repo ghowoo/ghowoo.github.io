@@ -120,6 +120,471 @@ pnorm(z_beta)
 
 
 
+
+# Hazard Ratio
+
+
+ * Under the hypothesis that a higher death rate (60%) on in the SOC arm
+ * A lower death rate (25%) in the treatment arm ($HR \approx 0.42$)
+ * With 90 patients per arm, we will have  power with a 5% type I error.
+
+
+```{r}
+alpha <- 0.05
+SOC <- .6
+trt <- .25
+n_arm <- seq(10,100,1)
+L <- (SOC + trt)*n_arm
+hr0 <- .42
+beta0 <- log(hr0)
+hr1<-1
+beta1<-log(hr1)
+p1<-.5
+p0<-1-p1
+PG_power <- pnorm(sqrt(p0*p1*L)*(beta1-beta0) - qnorm(1-alpha/2))
+
+HarzardRatio <- trt/SOC
+
+
+plot(n_arm,PG_power,type='l'
+     ,xlab='Sample Size (per arm)', ylab='Power'
+     ,xaxt='n',yaxt='n'
+     ,lwd=2)
+axis(1, at=c(20,40,60,80,100),
+     labels=c(20,40,60,80,100))
+axis(2, at=c(0.4,0.6,0.8,1), labels=c(40,60,80,100))
+segments(0, PG_power[which.min(abs(PG_power - .8))]
+         , n_arm[which.min(abs(PG_power - .8))], PG_power[which.min(abs(PG_power - .8))]
+         , lty=2, lwd=1)
+segments(n_arm[which.min(abs(PG_power - .8))], 0
+         , n_arm[which.min(abs(PG_power - .8))], PG_power[which.min(abs(PG_power - .8))]
+         , lty=2, lwd=1)
+segments(0, PG_power[which.min(abs(PG_power - .9))]
+         , n_arm[which.min(abs(PG_power - .9))], PG_power[which.min(abs(PG_power - .9))]
+         , lty=3, lwd=1)
+segments(n_arm[which.min(abs(PG_power - .9))], 0
+         , n_arm[which.min(abs(PG_power - .9))], PG_power[which.min(abs(PG_power - .9))]
+         , lty=3, lwd=1)
+#segments(0, PG_power[81], 90, PG_power[81], lty=3, lwd=1)
+#segments(90, 0, 90, PG_power[81], lty=3, lwd=1)
+legend(60,0.6,c("SOC = 60%","trt = 25%", "5% type I error"),bty='n')
+
+
+```
+
+
+
+
+# Power with ICC
+
+Assuming the proportion of outcome in the treatment arm is 0.3, then by enrolling 292 people into our study (approximately 124 in the treatment arm and 168 in the control arm), we anticipate having 80% power to detect a 60% increase in outcome in the treatment arm (i.e., relative risk [RR]=1.6, proportion outcome in treatment arm=0.48).  These and all other power calculations assume a type I error rate of 0.05.  These calculations treat people who are lost to follow-up (LTFU) as non-adherent, which is how they will be handled in the analyses.  The sensitivity of these calculations to varying intraclass correlations, effects sizes, and levels of outcome in the treatment arm is shown in the table.  Again, it should be noted that these are approximate calculations that will be made more precise during the pilot phase of the funding period.
+
+With n=292 where we compute the power, we vary the effect size from 1.5, 1.6, 1.7; vary the intraclass correlation in the treatment group from 0.2, 0.25, 0.3; and vary the levels of outcome in the control arm from 0.2, 0.3, 0.4.
+
+
+* n_total: Total number of participants
+* n_0 & n_1: Number of participants on individual PrEP arm and group PrEP arm
+* rho_0 & rho_1: ICC assumption on individual PrEP arm and group PrEP arm
+* deff_0 & deff_1: Design effect
+* n_0_s & n_1_s: Sample size under individual randomization
+* pi_0: Proportion assumption for the individual PrEP arm
+* RR: Relative risk
+* Power
+
+
+```{r}
+m <- 3
+n_0 <- 124
+n_1 <- 168
+n_total <- n_0 + n_1
+pi_0 <- c(0.2,0.3,0.4)
+RR <- c(1.5,1.6,1.7)
+rho_0 <- 0.05
+rho_1 <- c(0.2,0.25,0.3)
+
+grd <- as.data.frame(expand.grid(RR,pi_0,rho_0,rho_1))
+colnames(grd) <- c("RR","pi_0","rho_0","rho_1")
+grd <- grd[order(grd$RR,grd$pi_0,grd$rho_0,grd$rho_1),]
+
+RR <- grd$RR
+pi_0 <- grd$pi_0
+rho_0 <- grd$rho_0
+rho_1 <- grd$rho_1
+
+deff_0 <- 1 + (m-1)*rho_0
+deff_1 <- 1 + (m-1)*rho_1
+
+pi_1 <- pi_0*RR
+
+n_0_s <- floor(n_0/deff_0)
+n_1_s <- floor(n_1/deff_1)
+
+z <- (pi_1 - pi_0)/sqrt((pi_1*(1-pi_1)/n_1_s + pi_0*(1-pi_0)/n_0_s))
+z <- abs(z)
+
+alpha <- .05
+Z_a <- qnorm(1-alpha/2)
+
+Power <- pnorm(-Z_a + z) + pnorm(-Z_a - z)
+RowNumber <- 1:length(Power)
+Power1 <- as.data.frame(cbind(RowNumber,n_total
+                              ,RR,pi_0
+                              ,n_0,rho_0,deff_0,n_0_s
+                              ,n_1,rho_1,deff_1,n_1_s
+                              ,Power))
+
+knitr::kable(
+  Power1
+  ,digits = 2
+)
+
+
+```
+
+# Matched Pair Design
+
+Individual-Randomization
+$$n_I=\frac{(z_{\alpha/2}+z_\beta)^2(\pi_0(1-\pi_0)+\pi_1(1-\pi_1))}{(\pi_0-\pi_1)^2}$$
+
+
+Design Effect
+$$Deff=1+(m-1)\rho$$
+
+Relationship between ICC and Coefficient of Variance (k)
+$$\rho = \frac{k^2\pi}{1-\pi}$$
+
+
+Matched-Pair Cluster-Randomization
+$$c_m=2 + (z_{\alpha/2} + z_{\beta})^2\frac{\pi_0(1-\pi_0)/m + \pi_1(1-\pi_1)/m + k_m^2(\pi_0^2 + \pi_1^2)}{(\pi_0-\pi_1)^2}$$
+
+
+Reference: Richard J. Hayes, Lawrence H. Moulton. Cluster Randomised Trials, 2nd Edition. Chapman & Hall/CRC Biostatistics Series
+
+
+```{r}
+## given 14 pairs and 27 patients per cluster
+## given .65 on SOC arm
+## power for RR from 1.2 to 1.3, on ICC of 0.03,0.05,0.07
+p1 <- 0.65
+rr <- seq(1.2,1.4,0.02)
+c <- c(14)
+n <- 27
+icc <- c(0.03,0.05,0.07)
+df <- expand.grid(n,p1,rr,c,icc)
+df <- as.data.table(as.data.frame(df))
+colnames(df) <- c("n","p1","rr","c","icc")
+
+# k is calculated on p1
+df <- df[
+  ,p2 := p1*rr
+][p2 < 0.98
+][,k := sqrt(icc*(1-p1)/p1)
+][,alpha := 0.05
+][,z_alpha := qnorm(1-alpha/2)
+][,z_beta := sqrt((c - 2)*(p1-p2)^2/(p1*(1-p1)/n + p2*(1-p2)/n + k^2*(p1^2 + p2^2))) - z_alpha
+][z_beta > 0
+][,power:= pnorm(z_beta)
+][,ni := (qnorm(1-0.05/2) + qnorm(0.8))^2*(p1*(1-p1) + p2*(1-p2))/(p1-p2)^2
+][,deff := n*c/ni
+][,deff2 := 2 + icc*(n-1)
+# ][power >= 0.8
+# ][,diff := power - 0.8
+# ][order(c,n,p1,rr,icc,abs(diff))
+# ][,rnb := 1:.N,by=list(c,n,p1,rr,icc)
+# ][rnb == 1
+][order(rr,icc)
+# ][,rnb2 :=1:.N,by=list(c,p1,rr,icc)
+# ][rnb2 == 1
+# ][order(p1,rr,icc,n,c)
+][,rn:=1:.N]
+
+# View(df) dim(df)
+knitr::kable(
+  df[,list(rn,c,n,p1,rr,p2,icc,power)]
+  ,col.names = c("#","Matched Pairs","Patients per Clinic","Rate on SOC", "RR","Rate on TRT", "ICC","Power")
+  ,digits = c(0,0,0,2,2,2,3,3,1)
+  ,caption = "Sample Size and Power"
+)
+
+
+```
+
+
+```{r}
+p1 <- 0.65
+rr <- seq(1.1,1.4,0.01)
+c <- c(14)
+n <- 27
+icc <- c(0.03,0.05,0.07)
+alpha <- c(0.05)
+df <- expand.grid(n,p1,rr,c,icc,alpha)
+df <- as.data.table(as.data.frame(df))
+colnames(df) <- c("n","p1","rr","c","icc","alpha")
+
+# k is calculated on p1
+df <- df[
+  ,p2 := p1*rr
+][p2 < 0.95
+][,k := sqrt(icc*(1-p1)/p1)
+][,z_alpha := qnorm(1-alpha/2)
+][,z_beta := sqrt((c - 2)*(p1-p2)^2/(p1*(1-p1)/n + p2*(1-p2)/n + k^2*(p1^2 + p2^2))) - z_alpha
+# ][z_beta > 0
+][,power:= pnorm(z_beta)
+]
+# dim(df)
+# [,ni := (qnorm(1-0.05/2) + qnorm(0.8))^2*(p1*(1-p1) + p2*(1-p2))/(p1-p2)^2
+# ][,deff := n*c/ni
+# ][,deff2 := 2 + icc*(n-1)
+# ][power >= 0.8
+# ][,diff := power - 0.8
+# ][order(c,n,p1,rr,icc,abs(diff))
+# ][,rnb := 1:.N,by=list(c,n,p1,rr,icc)
+# ][rnb == 1
+# ][order(c,p1,rr,icc,n)
+# ][,rnb2 :=1:.N,by=list(c,p1,rr,icc)
+# ][rnb2 == 1
+# ][order(p1,rr,icc,n,c)
+# ][,rn:=1:.N]
+
+# View(df) dim(df)
+df$alpha <- factor(df$alpha)
+df$icc <- factor(df$icc)
+df_p80 <- as.data.frame(cbind(x1=0,y1=0.8,x2=1.26,y2=0.8))
+# colnames(df_p80)
+
+Color.Line <- "#666666"
+
+p <- ggplot(data=df, aes(x=rr, y=power, group = icc, colour = icc))
+p <- p + geom_line(size=2)
+p <- p + geom_segment(aes(x = 1.26
+                          , y = 0
+                          , xend = 1.26
+                          , yend = 0.90),linetype=2,colour= Color.Line)
+p <- p + geom_segment(aes(x = 1.1
+                          , y = 0.7
+                          , xend = 1.26
+                          , yend = 0.7),linetype=2,colour= Color.Line)
+p <- p + geom_segment(aes(x = 1.1
+                          , y = 0.8
+                          , xend = 1.26
+                          , yend = 0.8),linetype=2,colour= Color.Line)
+p <- p + geom_segment(aes(x = 1.1
+                          , y = 0.9
+                          , xend = 1.26
+                          , yend = 0.9),linetype=2,colour= Color.Line)
+p <- p + labs(x = "Relative Risk"
+              ,y="Power"
+              ,title="Power of Study Design"
+              )
+p <- p + scale_colour_manual(values=c("#15274F","#115F11","#764115"))
+p <- p + scale_x_continuous(breaks=c(1.1,1.2,1.26,1.3,1.4))
+p <- p + scale_y_continuous(breaks=c(0.2,0.4,0.7,0.8,0.9)
+                            ,labels = c("20%","40%","70%","80%","90%"))
+p <- p + theme(legend.position="top")
+p <- p + theme(panel.background = element_rect(fill = '#FFFFFF'
+                                               , colour = '#EEEEEE'))
+p
+
+
+
+```
+
+# Power on Harzard
+
+
+With design effect 1.1 on the control arm and design effect 1.4, 1.5, and 1.6 on the treatment arm, we calucalte power for the allocation of 124 on the control arm and 168 on the treatment arm, assuming 20% - 50% reduction on hazard (HR 0.8 to 0.5) for the treatment arm, and the proportion of LTFU for the control arm 20%, 30%, or 40%.
+
+
+
+* HR: Hazard Ratio
+* n_0, n_1, & n_total: Number of participants on the individual arm, group arm, and total 
+* L_0, L_1, & L: Number of Events from individual PrEP arm, group arm, and total
+* pi_0: Proportion of LTFU on the individual PrEP arm
+* rho_0 and rho_1: ICC
+* deff_0 and deff_1: Design effect
+* Power
+
+
+
+```{r}
+m <- 3
+n_0 <- 124
+n_1 <- 168
+n_total <- n_0 + n_1
+pi_0 <- c(0.2,0.3,0.4)
+HR <- c(0.5,0.6,0.7,0.8)
+rho_0 <- 0.05
+rho_1 <- c(0.2,0.25,0.3)
+
+grd <- as.data.frame(expand.grid(HR,pi_0,rho_0,rho_1))
+colnames(grd) <- c("HR","pi_0","rho_0","rho_1")
+grd <- grd[order(grd$HR,grd$pi_0,grd$rho_0,grd$rho_1),]
+
+HR <- grd$HR
+pi_0 <- grd$pi_0
+rho_0 <- grd$rho_0
+rho_1 <- grd$rho_1
+
+deff_0 <- 1 + (m-1)*rho_0
+deff_1 <- 1 + (m-1)*rho_1
+
+pi_1 <- pi_0*HR
+
+n_0_s <- floor(n_0/deff_0)
+n_1_s <- floor(n_1/deff_1)
+pi_a <- n_0_s/(n_0_s + n_1_s)
+pi_b <- n_1_s/(n_0_s + n_1_s)
+
+L_0 <- n_0_s*pi_0
+L_0 <- floor(L_0)
+L_1 <- n_1_s*pi_1
+L_1 <- floor(L_1)
+L <- L_0 + L_1
+
+
+
+alpha<-.05
+Power <- pnorm(sqrt(pi_a*pi_b*L)*abs(log(HR)) - qnorm(1-alpha/2))
+RowNumber <- 1:length(Power)
+
+PCoxH <- as.data.frame(cbind(RowNumber, HR, pi_0
+                             ,n_0, n_0_s,L_0
+                             ,n_1,rho_1,deff_1,n_1_s,L_1
+                             ,L,Power))
+knitr::kable(
+  PCoxH
+  ,digits = 2
+)
+
+m1 <- log(1/2)/log(1-0.4)
+m2 <- log(1/2)/log(1 - 0.4*0.5)
+library(powerSurvEpi)
+pw <- powerCT.default(nE = 120
+                , nC = 112
+                , pE = 0.28
+                , pC = 0.4
+                , RR = 0.7
+                , alpha = 0.05)
+
+
+```
+
+# Count Negative Binomial
+
+Because of the fact that the variance is much larger than the mean, we believe there exists overdispertion in the distribution of the count data -- the number of times for events. Therefore, we assume it follows a negative binomial distribution. By fitting a negative binomial model on the previous survey results, we have attained an estimate for the dispersion parameter of .
+
+$$ P(X=x) = \binom{x+r-1}{x}p^r(1-p)^x$$
+
+$$\mu = \frac{r(1-p)}{p}$$
+
+
+$$ p = \frac{r}{u+r}$$
+
+$$\sigma^2 = \frac{r(1-p)}{p^2}$$
+$$\sigma^2 = \mu + \frac{\mu^2}{r}$$
+$$ r = \frac{\mu^2}{\sigma^2-\mu}$$
+
+$$ Deff = 1 + (m-1)\rho$$
+
+
+
+Given the dispersion parameter of , in case we prolong the obersavation period to one month, the negative binomial distribution will give us a monthly dispersion parameter of  which is 4.36 times of the weekly dispersion parameter. 
+
+All participants will be followed up for 15 months, and their monthly exposures will be recorded. The way negative binomial works is that there exists significant large difference across individual healers. we assume that even though most of variance on exposure is due to individual practice pattern, some of variance should be due to seasonal and other monthly factors. Therefore conservatively we assume 60% to 80% (70% in average) of variance is due to individual practice pattern, with 15 repeated measures on each participant, we will expect a design effect of 10.8.
+
+With 100 participants enrolled on each arm and 10% lost of follow up, 15 repeated measures for each participant with design effect of 10.8, we calculate power under 1% and 5% type I error based on negative binomial regression with 1000 simulation for each level of treatment effect size, from 40% to 80% rate ratio on blood exposure. The simulation is conducted in R.
+
+
+```{r, eval=FALSE}
+
+library(MASS)
+ng_power <- function(eff){
+  set.seed(654321)
+  for(rep in 1:1000) {
+    # print(rep)
+    n <- 90*1.388889
+    r_week <- 0.075
+    mu_week <- 0.88
+    p <- r_week/(r_week+mu_week)
+    mu_month <- mu_week*4.36
+    r_month <- mu_month*p/(1-p)
+    size <- r_month
+    
+    # rnbinom(n=103,size=0.06852744,prob=0.07206736)
+    S_c <- rnbinom(
+      n = n
+      , size = size
+      # , prob = p
+      , mu = mu_month
+      )
+    S_t <- rnbinom(
+      n = n
+      , size = size
+      # , prob = p*eff
+      , mu = mu_month*eff
+      )
+    
+    d1 <- rbind(
+      data.frame(count=S_c,treatment=0)
+      ,data.frame(count=S_t,treatment=1))
+    M1 <- glm.nb(
+      count ~ treatment
+      ,data = d1
+    )
+    SM1 <- summary(M1)
+    SM1 <- SM1[["coefficients"]]
+    p1 <- SM1[2,4]
+    p2 <- p1 < 0.01
+    p1 <- p1 < 0.05
+    if(rep==1){pv <- p1}else{pv <- c(pv,p1)}
+    
+    if(rep==1){pv2 <- p2}else{pv2 <- c(pv2,p2)}
+    # return(pv)
+  }
+  return(c(sum(pv)/length(pv),sum(pv2)/length(pv)))
+}
+
+seq_eff <- seq(0.4,0.8,by=0.025)
+# x <- ng_power(0.5)
+## length(seq_eff)
+
+power_exp <- data.frame(
+  reduction = seq_eff
+  ,power = rbind(
+    ng_power(seq_eff[1])
+    ,ng_power(seq_eff[2])
+    ,ng_power(seq_eff[3])
+    ,ng_power(seq_eff[4])
+    ,ng_power(seq_eff[5])
+    ,ng_power(seq_eff[6])
+    ,ng_power(seq_eff[7])
+    ,ng_power(seq_eff[8])
+    ,ng_power(seq_eff[9])
+    ,ng_power(seq_eff[10])
+    ,ng_power(seq_eff[11])
+    ,ng_power(seq_eff[12])
+    ,ng_power(seq_eff[13])
+    ,ng_power(seq_eff[14])
+    ,ng_power(seq_eff[15])
+    ,ng_power(seq_eff[16])
+    ,ng_power(seq_eff[17])
+  )
+)
+
+
+power_exp$reduction <- WuPercent(power_exp$reduction,1)
+power_exp$power.1 <- WuPercent(power_exp$power.1,1)
+power_exp$power.2 <- WuPercent(power_exp$power.2,1)
+
+knitr::kable(
+  power_exp
+  ,caption = "Power Calculation for Blood Exposure, 90 per arm"
+  ,col.names = c("Rate Ratio","Power with 5% Type I Error", "Power with 1% Type I Error")
+  ,align = c("r","r","r")
+)
+
+```
+
 # R sessionInfo
 
 

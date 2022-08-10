@@ -77,6 +77,69 @@ highchart() %>%
 ```
 
 
+
+# ggmap
+
+```{r, eval = FALSE}
+
+library(ggmap)
+MapLocation <-c(mean(M3$Longitude),mean(M3$Latitude))
+MapType <- "roadmap"
+MapSource <- "google"
+Box <- c(min(M3$Longitude),min(M3$Latitude),max(M3$Longitude),max(M3$Latitude))
+mapImageData3 <- get_map(location = Box
+                         ,color = "bw",
+                         source = MapSource,
+                         maptype = MapType,
+                         zoom = 8)
+M3$IDc <- as.character(M3$ID)
+
+## Join assignment to the table
+M4 <-  sqldf::sqldf("
+  select a.*
+    ,b.assignment
+  from M3 a
+  left join MP3 b on a.ID = b.ID
+             ")
+
+assign.color <- function(x){
+  if(x == 1){return("cornflowerblue")}else{return("bisque3")}
+     }
+
+M4$Color <- sapply(M4$Assignment,assign.color)
+
+
+M4 <- M4[order(M4$pair_id),]
+M4$Group <- rep(c(0,1),12)
+Line.x <- M4[M4$Group == 0,c("ID","pair_id","Longitude")]
+Line.y <- M4$Latitude[M4$Group == 0]
+Line.xend<- M4[M4$Group == 1,c("ID","Longitude")]
+Line.yend <- M4$Latitude[M4$Group == 1]
+M4.seg <- as.data.frame(cbind(Line.x,Line.y,Line.xend,Line.yend))
+colnames(M4.seg) <- c("ID","pair_id","x","y","ID2","xend","yend")
+
+png(filename = "Map_final.png", width = 9, height = 6.7, units = "in", res=240)
+ggmap(mapImageData3,
+      extent = "device",
+      ylab = "Latitude",
+      xlab = "Longitude")+
+geom_point(aes(x =Longitude, y = Latitude),data=M4,
+           alpha = .8, color=M4$Color, size = 5) +
+geom_curve(aes(x=x,y=y
+             ,xend=xend,yend=yend,colour="curve")
+           ,data=M4.seg
+              ,curvature= 0.4
+           ,lineend="square"
+             ,alpha = .8, color="darkblue", size = 0.5) +
+annotate("text"
+         ,label=M4$IDc
+         , x =M4$Longitude
+         , y = M4$Latitude
+         )+
+coord_cartesian()
+dev.off()
+
+```
 # R sessionInfo
 
 ```{r}

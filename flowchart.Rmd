@@ -115,6 +115,57 @@ svg <- export_svg(flowchart)
 
 
 
+# Flowchart Diagram LR
+
+```{r}
+
+mermaid('graph LR
+A("<b>Enrollment</b>") === B1("<b>No Compliance</b>")
+A === B2("<b>Treatment</b>")
+A === B3("<b>Placebo</b>")
+
+B1 --> C12("<b>Survival</b>")
+B1  --> C11(("<b>Death</b>"))
+B2  --> C22("<b>Survival</b>")
+B2 --> C21(("<b>Death</b>"))
+B3 == "probability" ==> C32("<b>Survival</b>")
+B3 --> C31(("<b>Death</b>"))
+
+C32 == "probability" ==> D1["<b>Initiated New Treatment</b>"]
+C32 ==> D2["<b>No New Treatment</b>"]
+
+D1 --> E2("<b>Survival</b>")
+D1 --> E1(("<b>Death</b>"))
+
+D2 --> E22("<b>Survival</b>")
+D2 --> E21(("<b>Death</b>"))
+
+style A fill:#99ffff,stroke:#333,stroke-width:0px
+style B1 fill:#99ffff,stroke:#333,stroke-width:0px
+style B2 fill:#99ffff,stroke:#333,stroke-width:0px
+style B3 fill:#99ffff,stroke:#333,stroke-width:0px
+
+style D1 fill:#99ffff,stroke:#333,stroke-width:0px
+style D2 fill:#99ffff,stroke:#333,stroke-width:0px
+
+style C11 fill:#ff9999,stroke:#333,stroke-width:0px
+style C21 fill:#ff9999,stroke:#333,stroke-width:0px
+style C31 fill:#ff9999,stroke:#333,stroke-width:0px
+style E1 fill:#ff9999,stroke:#333,stroke-width:0px
+style E21 fill:#ff9999,stroke:#333,stroke-width:0px
+
+style C12 fill:#99ffff,stroke:#333,stroke-width:0px
+style C22 fill:#99ffff,stroke:#333,stroke-width:0px
+style C32 fill:#99ffff,stroke:#333,stroke-width:0px
+style E2 fill:#99ffff,stroke:#333,stroke-width:0px
+style E22 fill:#99ffff,stroke:#333,stroke-width:0px;
+style C32 weigth:bold;
+')
+
+
+```
+
+
 # Confounding Diagram
 
 ```{r}

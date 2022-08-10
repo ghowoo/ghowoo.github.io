@@ -899,6 +899,29 @@ cav3.msm <- msm( state ~ years, subject=PTNUM
 qmatrix.msm(cav3.msm)$estimates %>% prt()
 ```
 
+# Competing Risk
+
+```{r, eval = FALSE}
+library(cmprsk)
+
+cuminc1 <- cuminc(
+  ftime = e2$days_1yr_cm
+  , fstatus = e2$status_1yr
+  , cencode = "Censored"
+  , rho=0)
+
+png(file="",width=12,height=8,units = "in",res=600)
+plot(0,0, type="n", xlim=c(0, 365), ylim=c(0, 1)
+     , main="Cumulative curves with death as a competing risk",
+     xlab= "Days in after Enrollment", ylab= "Cumulative incidence of and Death"
+     , col=c("red", "blue", "red", "blue"))
+# lines(cuminc1$`1 Censored`$time, cuminc1$`1 Censored`$est, lwd=1,col="black")
+lines(cuminc1$`1 Death`$time, cuminc1$`1 Death`$est, lwd=2,col="red")
+lines(cuminc1$`1 ARV Pick up`$time, cuminc1$`1 ARV Pick up`$est, lwd=2,col="blue")
+legend('topright', c("Event", "Death"), col=c("blue", "red"), lty=2)
+dev.off()
+
+```
 # Computing Environment
 
 

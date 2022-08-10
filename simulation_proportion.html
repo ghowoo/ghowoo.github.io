@@ -7,7 +7,7 @@
 
         <meta name="author" content="Wu Gong" />
     
-        <meta name="date" content="2022-08-08" />
+        <meta name="date" content="2022-08-09" />
     
     <title>Power and Sample Size Simulation for Two Proportions</title>
 
@@ -2956,11 +2956,12 @@ overflow-x: visible;
       </ul></li>
       <li><a href="#a-function-for-power-simulation">A Function for Power Simulation</a></li>
       <li><a href="#power-for-anova">Power for ANOVA</a></li>
+      <li><a href="#statistics-for-stratified-systematic-sampling">Statistics for Stratified Systematic Sampling</a></li>
       </ul>
     </div>
     <div id="postamble" data-toggle="wy-nav-shift" class="status">
                   <p class="author"><span class="glyphicon glyphicon-user"></span> Wu Gong</p>
-                        <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2022-08-08</p>
+                        <p class="date"><span class="glyphicon glyphicon-calendar"></span> 2022-08-09</p>
           </div>
    </div>
    
@@ -3023,7 +3024,7 @@ Rate of the Simulated Control Population
 <tbody>
 <tr>
 <td style="text-align:right;">
-0.299301
+0.299048
 </td>
 </tr>
 </tbody>
@@ -3040,7 +3041,7 @@ Rate of the Simulated Treatment Population
 <tbody>
 <tr>
 <td style="text-align:right;">
-0.562783
+0.56325
 </td>
 </tr>
 </tbody>
@@ -3081,10 +3082,10 @@ Rate of the Simulated Treatment Population
 0
 </td>
 <td style="text-align:right;">
-38
+37
 </td>
 <td style="text-align:right;">
-12
+13
 </td>
 </tr>
 <tr>
@@ -3092,10 +3093,10 @@ Rate of the Simulated Treatment Population
 1
 </td>
 <td style="text-align:right;">
-23
+19
 </td>
 <td style="text-align:right;">
-27
+31
 </td>
 </tr>
 </tbody>
@@ -3114,7 +3115,7 @@ P-value for Fisher’s Exact Test
 <tbody>
 <tr>
 <td style="text-align:right;">
-0.0038295
+0.000543
 </td>
 </tr>
 </tbody>
@@ -3153,7 +3154,7 @@ FALSE
 <div id="simulate-10000-times" class="section level2">
 <h2>Simulate 10000 Times</h2>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r klippy"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">system.time</span>(lst &lt;-<span class="st"> </span><span class="kw">replicate</span>(<span class="dt">n =</span> <span class="dv">10000</span>, <span class="dt">expr =</span> <span class="kw">fx_fs</span>(<span class="dt">sample_size =</span> <span class="dv">50</span>, <span class="dt">alpha =</span> <span class="fl">0.05</span>), <span class="dt">simplify =</span> array))</a></code></pre></div>
-<p>user system elapsed 18.012 7.965 25.991</p>
+<p>user system elapsed 16.897 8.827 25.739</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r klippy"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1">power &lt;-<span class="st"> </span><span class="kw">mean</span>(lst)</a>
 <a class="sourceLine" id="cb8-2" title="2"><span class="kw">kable</span>(power, <span class="dt">col.names =</span> <span class="st">&quot;Power Calculated by 10000 Times Simulation&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">kable_styling</span>(<span class="dt">full_width =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
 <table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
@@ -3167,7 +3168,7 @@ Power Calculated by 10000 Times Simulation
 <tbody>
 <tr>
 <td style="text-align:right;">
-0.7107
+0.7133
 </td>
 </tr>
 </tbody>
@@ -3179,7 +3180,7 @@ Power Calculated by 10000 Times Simulation
 <a class="sourceLine" id="cb9-2" title="2"></a>
 <a class="sourceLine" id="cb9-3" title="3"></a>
 <a class="sourceLine" id="cb9-4" title="4"><span class="kw">system.time</span>(lst &lt;-<span class="st"> </span><span class="kw">unlist</span>(<span class="kw">mclapply</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10000</span>, <span class="cf">function</span>(x) <span class="kw">fx_fs</span>(<span class="dt">sample_size =</span> <span class="dv">50</span>, <span class="dt">alpha =</span> <span class="fl">0.05</span>), <span class="dt">mc.cores =</span> <span class="kw">detectCores</span>())))</a></code></pre></div>
-<p>user system elapsed 80.695 51.919 9.043</p>
+<p>user system elapsed 60.650 43.450 8.121</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r klippy"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1">power &lt;-<span class="st"> </span><span class="kw">mean</span>(lst)</a>
 <a class="sourceLine" id="cb10-2" title="2"><span class="kw">kable</span>(power, <span class="dt">col.names =</span> <span class="st">&quot;Power Calculated by Parallel Process&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">kable_styling</span>(<span class="dt">full_width =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
 <table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
@@ -3193,7 +3194,7 @@ Power Calculated by Parallel Process
 <tbody>
 <tr>
 <td style="text-align:right;">
-0.7143
+0.7163
 </td>
 </tr>
 </tbody>
@@ -3406,7 +3407,7 @@ power
 glm
 </td>
 <td style="text-align:left;">
-0.522
+0.5292
 </td>
 </tr>
 <tr>
@@ -3441,7 +3442,7 @@ glm
 glm
 </td>
 <td style="text-align:left;">
-0.7636
+0.7858
 </td>
 </tr>
 <tr>
@@ -3476,7 +3477,7 @@ glm
 glm
 </td>
 <td style="text-align:left;">
-0.9142
+0.9126
 </td>
 </tr>
 </tbody>
@@ -3558,7 +3559,7 @@ power
 chisq
 </td>
 <td style="text-align:left;">
-0.4184
+0.4358
 </td>
 </tr>
 <tr>
@@ -3593,7 +3594,7 @@ chisq
 chisq
 </td>
 <td style="text-align:left;">
-0.7032
+0.7126
 </td>
 </tr>
 <tr>
@@ -3628,7 +3629,7 @@ chisq
 chisq
 </td>
 <td style="text-align:left;">
-0.8762
+0.889
 </td>
 </tr>
 </tbody>
@@ -3710,7 +3711,7 @@ power
 fisher
 </td>
 <td style="text-align:left;">
-0.4076
+0.4298
 </td>
 </tr>
 <tr>
@@ -3745,7 +3746,7 @@ fisher
 fisher
 </td>
 <td style="text-align:left;">
-0.7096
+0.7144
 </td>
 </tr>
 <tr>
@@ -3780,7 +3781,7 @@ fisher
 fisher
 </td>
 <td style="text-align:left;">
-0.8782
+0.8948
 </td>
 </tr>
 </tbody>
@@ -3904,6 +3905,32 @@ fisher
 <a class="sourceLine" id="cb14-114" title="114">           <span class="dt">type =</span> <span class="st">&quot;two.sample&quot;</span>,  </a>
 <a class="sourceLine" id="cb14-115" title="115">           <span class="dt">alternative =</span> <span class="st">&quot;greater&quot;</span>, </a>
 <a class="sourceLine" id="cb14-116" title="116">           <span class="dt">power =</span> <span class="fl">0.8</span>)</a></code></pre></div>
+</div>
+<div id="statistics-for-stratified-systematic-sampling" class="section level1">
+<h1>Statistics for Stratified Systematic Sampling</h1>
+<ul>
+<li><span class="math inline">\(N\)</span> is the number of total houses.</li>
+<li><span class="math inline">\(L\)</span> is the number of strata (sub-districts within the survey area).</li>
+<li><span class="math inline">\(N_h\)</span> is the number of total houses within the stratum <span class="math inline">\(h\)</span>.</li>
+<li><span class="math inline">\(n_h\)</span> is the number of sampled houses within the stratum <span class="math inline">\(h\)</span>.</li>
+<li><span class="math inline">\(s^2_h\)</span> is the estimated variance of the stratum <span class="math inline">\(h\)</span>.</li>
+<li><span class="math inline">\(x_{h,i}\)</span> is the value of <span class="math inline">\(x\)</span> for the element <span class="math inline">\(i\)</span> within the stratum <span class="math inline">\(h\)</span>.</li>
+<li><span class="math inline">\(\bar{x}_h\)</span> is the mean of <span class="math inline">\(x\)</span> within the stratum <span class="math inline">\(h\)</span>.</li>
+<li><span class="math inline">\(\bar{x}_{str}\)</span> is the mean estimate for entire population.</li>
+<li><span class="math inline">\(p_{y,str}\)</span> is the proportion estimate for entire population.</li>
+</ul>
+<p>Estimated mean of the stratum <span class="math inline">\(h\)</span>: <span class="math display">\[ \bar{x}_h = \frac{\sum_{i=1}^{n_h}(x_{h,i})}{n_h}\]</span></p>
+<p>Estimated proportion of the stratum <span class="math inline">\(h\)</span>: <span class="math display">\[ P_{hy} = \frac{\sum_{i=1}^{n_h}(Y_{h,i})}{n_h}\]</span></p>
+<p>Variance estimate of the stratum <span class="math inline">\(h\)</span>:</p>
+<p><span class="math display">\[ s^2_h = \frac{\sum_{i=1}^{n_h}(x_{h,i} - \bar{x}_h)^2}{n_h - 1}\]</span> <span class="math display">\[ s^2_h = \frac{n_h}{n_h - 1}P_{py}(1 - P_{py})\]</span></p>
+<p>Design Effect <span class="math display">\[\rho=1 + \delta_x(n-1)\]</span></p>
+<p>Estimate Mean for Entire Population</p>
+<p><span class="math display">\[\bar{x}_{str} = \frac{\sum_{h=1}^LN_h\bar{x}_h}{N}\]</span></p>
+<p>Standard Error of Mean Estimate <span class="math display">\[\hat{SE}(\bar{x}_{str}) = \sqrt{\sum_{h=1}^L(\frac{N_h}{N})^2\frac{s_{hx}^2}{n_h}(\frac{N_h-n_h}{N_h})} \]</span></p>
+<p>Estimate Proportion for Entire Population</p>
+<p><span class="math display">\[p_{y,str}=\frac{\sum_{h=1}^LN_hP_h}{N}\]</span></p>
+<p>Standard Error for Proportion Estimate</p>
+<p><span class="math display">\[\hat{SE}(p_{y,str}) = \sqrt{\sum_{h=1}^L(\frac{N_h}{N})^2\frac{p_{hy}(1-p_{hy})}{n_h-1}(\frac{N_h-n_h}{N_h})} \]</span></p>
 </div>
 </div>
 

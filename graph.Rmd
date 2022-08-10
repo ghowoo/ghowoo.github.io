@@ -329,6 +329,86 @@ ggplot(data = dt) +
 
 
 ```
+
+## Arrows with Direction
+
+
+```{r}
+r <- 1
+Arrow_Angle <- 18
+Arrow_Length <- 0.2
+Line_Size <- 1.0
+Legend_Text_Size <- 20
+Legend_Title_Size <- 20
+Axis_Title_Size_x <- 20
+Axis_Title_Size_y <- 20
+Plot_Margin <- c(0.5,0.5,0.5,.5)
+
+n <- 50
+dp <- data.table(
+    x = sample(1:10, size = n, replace = TRUE)
+  , xend = sample(1:10, size = n, replace = TRUE)
+  , id = 1:n
+  , group = factor(sample(c("A", "B", "C"), size = n, replace = TRUE))
+)
+
+label(dp$group) <- "Group"
+
+p <- ggplot(dp)
+p <- p + geom_segment(aes(
+  x = x
+  , xend = xend
+  , y = id
+  , yend = id
+  , colour = as.factor(group))
+  , arrow = arrow(angle = Arrow_Angle
+                  , ends = "last"
+                  , length = unit(Arrow_Length, "inches")
+                  , type = "closed")
+  ,size = Line_Size
+)
+p <- p + labs(x = "Scale"
+              ,y="ID"
+              ,title="")
+p <- p + scale_x_continuous(breaks=seq(from=1,to=10,by=1))
+p <- p + scale_y_continuous(breaks=seq(from=0, to=50,by=10))
+p <- p + scale_color_manual(name="Group"
+                            , values = c("#e13d14"
+                                         ## ,"#c69817"
+                                         ,"#84cc33"
+                                         ## ,"#37ad7e"
+                                         ,"#0190b6")
+                            , labels = c('A'
+                                         ,'B'
+                                         ,'C'
+                                         )
+                            , guide = guide_legend(
+                              title.position = "top"
+                              ,nrow=3, byrow = FALSE))
+# p <- p + theme_bw()
+# p <- P + guides(fill=guide_legend(nrow=2,byrow=TRUE))
+p <- p + theme(legend.position = "top"
+               , plot.margin=unit(Plot_Margin,"cm")
+               , legend.text=element_text(size=Legend_Text_Size)
+               , legend.title = element_text(size=Legend_Title_Size)
+               , axis.title.x = element_text(size = Axis_Title_Size_x)
+               , axis.title.y = element_text(size = Axis_Title_Size_y)
+               )
+p_a <- p
+p
+
+library(ggpubr)
+ggarrange(p
+          , p
+          , labels = c("Figure 1a", "Figure 1b")
+          , font.label = list(size = 25)
+          , ncol = 2
+          , nrow = 1
+          , widths = c(1,1))
+
+```
+
+
 ## Cell Plot
 
  * Plot discrete daily progression states

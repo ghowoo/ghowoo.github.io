@@ -75,6 +75,28 @@ get_cronbach(dt) %>% prt(caption = "Cronbach's $\\alpha$")
 ```
 
 
+# Cohn's Kappa
+
+```{r}
+n <- 100
+dt <- data.table(
+    var1 = rnorm(n)
+  , noise = rnorm(n)
+)
+dt <- dt[, var2 := var1 * noise + noise / 10
+         ][, var3 := var1 * (noise / 10) + var1 ^ (noise)]
+
+library(psych)
+cohen <- cohen.kappa(dt[, list(var1, var2)], w = NULL, alpha = .05)
+
+print(cohen)
+
+
+## cohen <- cohen$confid[1,]
+
+## cohen %>% prt()
+```
+
 # Krippendorff's $\alpha$
 
 

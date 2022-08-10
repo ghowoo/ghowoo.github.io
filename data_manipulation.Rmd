@@ -58,6 +58,26 @@ write(csv_file, file='../csv/filename.csv')
 
 ```
 
+## Pull Data from MySQL
+
+```{r, eval = FALSE}
+
+library(RMySQL)
+con <- dbConnect(RMySQL::MySQL()
+                ,user="username"
+                ,password="password"
+                ,dbname="information_db"
+                ,host="1.1.1.1"
+                ,port=3306)
+table_columns <- dbGetQuery(con
+                           ,"select *
+                               from COLUMNS
+                               ")
+on.exit(RMySQL::dbDisconnect(con))
+
+```
+
+
 ## Read Data from SAS/SPSS
 
 
