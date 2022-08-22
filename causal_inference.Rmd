@@ -55,12 +55,16 @@ klippy::klippy(position = c('top', 'left')
  * The baseline probaiblity of outcome (death) is 0.2
 
 ```{r}
-n <- 500
-dt <- data.table(severity = rnorm(n), covar1 = rnorm(n), covar2 = rnorm(n), covar3 = rnorm(n))
+
+set.seed(123456)
+n <- 2000
+dt <- data.table(severity = rnorm(n), covar1 = rnorm(n), covar2 = rnorm(n), covar3 = rnorm(n), covar_trt = rnorm(n))
 p0 <- 0.2
 or_trt <- 1.5
 dt <- dt[, odds_trt_0 := p0 / (1 - p0)
-         ][, log_odds_trt := log(odds_trt_0) + severity * log(or_trt)
+         ][, odds2 := 1.5
+           ][, odds3 := 2.5
+             ][, log_odds_trt := log(odds_trt_0) + severity * log(or_trt) + covar_trt * log(2.5)
            ][, p_trt := exp(log_odds_trt) / (1 + exp(log_odds_trt))]
 
 vsample <- function(p){
@@ -73,18 +77,36 @@ dt <- dt[, trt := vsample(p_trt)]
 
 p <- 0.2
 dt <- dt[, odds_outcome_0 := p / (1 - p)
-         ][, log_odds_outcome := log(odds_outcome_0) + severity * log(0.5) + covar1 * log(2.5) + covar2 * log(1.5)
+         ][, log_odds_outcome := log(odds_outcome_0) + trt * log(0.5) + severity * log(2) + covar1 * log(2.5) + covar2 * log(1.5)
            ][, p_outcome := exp(log_odds_outcome) / (1 + exp(log_odds_outcome))]
 
 
 dt <- dt[, outcome := vsample(p_outcome)]
 
+
+Vars <- c("severity"
+        , "covar1"
+        , "covar2"
+        , "covar3"
+        , "covar_trt")
+
+chr <- tbl1n(data = dt
+           , vars = Vars
+           , factorVars = NULL
+           , strata = "trt"
+           , test = TRUE
+             )
+
+chr[,] %>% prt()
+
 ```
 
-# Treatment Model
+
+# Propensity Score Method
+## Treatment Model
 
 ```{r}
-m_trt <- glm(trt ~ severity + covar1 + covar2 + covar3, data = dt, family = binomial(logit))
+m_trt <- glm(trt ~ severity + covar1 + covar2 + covar3 + covar_trt, data = dt, family = binomial(logit))
 
 library(sjPlot)
 
@@ -93,7 +115,7 @@ tab_model(m_trt)
 ```
 
 
-# Distribution of Propensity Score
+## Distribution of Propensity Score
 
 ```{r}
 dt$pred <- m_trt$fitted.values
@@ -125,19 +147,237 @@ ggplot(data=dt, aes(x=pred, colour=factor(trt))) +
   scale_y_continuous(breaks=NULL,label=c("")) +
     theme(legend.position=c(0.8,0.2))
 
+
+
+font_tick_size <- 10
+font_axis_size <- 10
+size_i <- 1
+ggplot(data = dt, aes(x = pred, fill = factor(trt))) +
+  geom_histogram(position = "dodge", breaks = seq(0,1,0.1), closed = "left", alpha = 1) +
+  scale_fill_manual(values=c("#333333", "#999999")) +
+  labs(x = "Predicted Probability of Being Treated"
+     , y = "Count"
+     , fill = "Treatment") +
+  scale_x_continuous(breaks = seq(0,1,0.1), limits = c(0,1.05), expand = c(0, 0)) +
+  scale_y_continuous(breaks = seq(0,100,20), limits = c(0,100), expand = c(0, 0)) +
+        theme(
+            axis.text.x = element_text(size = font_tick_size)
+          , axis.text.y = element_text(size = font_tick_size)
+          , axis.title.x = element_text(size = font_axis_size)
+          , axis.title.y = element_text(size = font_axis_size)
+         ## ,  plot.margin = unit(0.2, "cm")
+           , axis.line = element_line(colour = "#111111")         
+         ## , axis.ticks = element_blank()
+         ## , panel.grid.major = element_line(colour = "#DDDDDD", size = size_i)
+           ## , panel.grid.minor = element_blank()
+        , panel.background = element_blank(),
+          legend.position = c(.85, .85),
+          )
+
+
 ```
 
 
-# Multivarible Outcome Model
+## Multivarible Outcome Model
 
 
 ```{r}
-m_outcome_mv <- glm(outcome ~ severity + trt + covar1 + covar2 + covar3, data = dt, family = binomial(logit))
+m_outcome_mv <- glm(outcome ~ severity + trt + covar1 + covar2 + covar3 + covar_trt, data = dt, family = binomial(logit))
 
 tab_model(m_outcome_mv)
 
 
 ```
+
+## Propensity Score Covariate-Adjusted Multivariable Model
+
+```{r}
+library(mgcv)
+
+m <- bam(outcome ~ severity + trt + covar1 + covar2 + covar3 + covar_trt + pred
+       , data = dt
+       , family = binomial(logit)
+       , discrete = TRUE
+       , nthreads = 12
+         )
+
+t <- summary(m)
+
+pt <- data.table(
+    name=names(t$p.coeff)
+  , coef=t$p.coeff
+  , se=t$se
+  , p=t$p.pv
+)
+
+pt <- pt[, lower := coef - qnorm(0.975) * se
+         ][, upper := coef + qnorm(0.975) * se
+           ][, ci := ci_to_str(exp(coef), exp(lower), exp(upper), 2)]
+pt[2:7, .(name, ci, p)] %>% prt() %>% add_footnote(label=Reduce(paste,(deparse(m$formula))))
+
+```
+
+
+## Inverse Probability of Treatment Weighting
+
+```{r}
+dt$prob <- m_trt$fitted.values
+
+dt <- dt[, weight_pre := case_when(
+             trt %in% c(1) ~ 1 / prob
+           , TRUE ~ 1 / (1 - prob)
+           )][, weight := weight_pre / mean(weight_pre)]
+
+library(mgcv)
+
+
+m0 <- bam(outcome ~ trt
+       , data = dt
+       , weights = weight
+       , family = binomial(logit)
+       , discrete = TRUE
+       , nthreads = 12
+         )
+
+m <- bam(outcome ~ severity + trt + covar1 + covar2 + covar3 + covar_trt
+       , data = dt
+       , weights = weight
+       , family = binomial(logit)
+       , discrete = TRUE
+       , nthreads = 12
+         )
+
+t <- summary(m)
+
+pt <- data.table(
+    name=names(t$p.coeff)
+  , coef=t$p.coeff
+  , se=t$se
+  , p=t$p.pv
+)
+
+pt <- pt[, lower := coef - qnorm(0.975) * se
+         ][, upper := coef + qnorm(0.975) * se
+           ][, ci := ci_to_str(exp(coef), exp(lower), exp(upper), 2)]
+pt[2:7, .(name, ci, p)] %>% prt() %>% add_footnote(label=Reduce(paste,(deparse(m$formula))))
+
+
+```
+
+## Optimal Match 1:1
+
+```{r}
+library(optmatch)
+match <- match_on(
+    trt ~ prob
+  , data = dt
+  , method = "mahalanobis"
+  )
+
+matched_1to1 <- pairmatch(match, controls = 1, data = dt)
+dt$matched_id_11 <- ifelse(is.na(matched_1to1), NA, paste0("", matched_1to1, sep = ""))
+
+dt2 <- dt[!is.na(matched_id_11)]
+
+library(RItools)
+bt <- xBalance(trt ~ severity + covar1 + covar2 + covar3 + covar_trt
+             , data = dt2
+               , strata = list(unstrat = NULL, pt = ~ matched_id_11)
+               , report = "all")
+
+t <- bt$results[,, 1]
+
+t %>% prt(digits = 4, caption = "Balance Table")
+
+
+t1 <- bt$results[,, 1][, c(1, 2, 3, 4, 7)]
+t <- t1
+t %>% prt(digits=4
+        , caption = "Balance Table after 1:1 Matching"
+        , col.names=c("Mean (0)", "Mean (1)", "Difference", "Standardized Difference", "P-value"))
+
+
+dt2 <- dt2[, matched_id_11 := factor(matched_id_11)]
+m <- bam(outcome ~ severity + trt + covar1 + covar2 + covar3 + covar_trt + s(matched_id_11, bs = "re")
+       , data = dt2
+       , family = binomial(logit)
+       , discrete = TRUE
+       , nthreads = 12
+         )
+
+t <- summary(m)
+
+pt <- data.table(
+    name=names(t$p.coeff)
+  , coef=t$p.coeff
+  , se=t$se
+  , p=t$p.pv
+)
+
+pt <- pt[, lower := coef - qnorm(0.975) * se
+         ][, upper := coef + qnorm(0.975) * se
+           ][, ci := ci_to_str(exp(coef), exp(lower), exp(upper), 2)]
+pt[2:7, .(name, ci, p)] %>% prt() %>% add_footnote(label=Reduce(paste,(deparse(m$formula))))
+
+```
+
+## Optimal Match 1:n
+
+```{r}
+library(optmatch)
+match <- match_on(
+    trt ~ prob
+  , data = dt
+  , method = "mahalanobis"
+  )
+
+matched_1ton <- fullmatch(match, data = dt)
+dt$matched_id_1n <- ifelse(is.na(matched_1ton), NA, paste0("", matched_1ton, sep = ""))
+
+dt2 <- dt[!is.na(matched_id_1n)]
+
+library(RItools)
+bt <- xBalance(trt ~ severity + covar1 + covar2 + covar3 + covar_trt
+             , data = dt2
+               , strata = list(unstrat = NULL, pt = ~ matched_id_1n)
+               , report = "all")
+
+t <- bt$results[,, 1]
+
+t %>% prt(digits = 4, caption = "Balance Table")
+
+
+t1 <- bt$results[,, 1][, c(1, 2, 3, 4, 7)]
+t <- t1
+t %>% prt(digits=4
+        , caption = "Balance Table after 1:n Matching"
+        , col.names=c("Mean (0)", "Mean (1)", "Difference", "Standardized Difference", "P-value"))
+
+
+dt2 <- dt2[, matched_id_1n := factor(matched_id_1n)]
+m <- bam(outcome ~ severity + trt + covar1 + covar2 + covar3 + covar_trt + s(matched_id_1n, bs = "re")
+       , data = dt2
+       , family = binomial(logit)
+       , discrete = TRUE
+       , nthreads = 12
+         )
+
+t <- summary(m)
+
+pt <- data.table(
+    name=names(t$p.coeff)
+  , coef=t$p.coeff
+  , se=t$se
+  , p=t$p.pv
+)
+
+pt <- pt[, lower := coef - qnorm(0.975) * se
+         ][, upper := coef + qnorm(0.975) * se
+           ][, ci := ci_to_str(exp(coef), exp(lower), exp(upper), 2)]
+pt[2:7, .(name, ci, p)] %>% prt() %>% add_footnote(label=Reduce(paste,(deparse(m$formula))))
+
+```
+
 
 
 # Causal Forest
@@ -147,7 +387,7 @@ tab_model(m_outcome_mv)
 
 ```{r}
 library(grf)
-frml <- Wu::wu_formula(outcome = "", predictors = c("covar1", "covar2", "covar3", "trt", "severity"))
+frml <- Wu::wu_formula(outcome = "", predictors = c("covar1", "covar2", "covar3", "covar_trt", "trt", "severity"))
 mmx <- model.matrix.lm(frml, data = dt)
 
 X <- subset(mmx, select=-c(trt))

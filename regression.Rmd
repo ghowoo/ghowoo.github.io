@@ -400,7 +400,7 @@ qm = apply(rb$yhat.test,2,quantile,probs=c(.025,.975)) # post quantiles
 
 ## Binary Outcome
 
-```{r}
+```{r, eval = FALSE}
 library(BART)
 
 data(ACTG175)
@@ -518,87 +518,6 @@ summary(as.vector(pnorm(ps[1:2500, 151:200])))
 
 ```
 
-
-# Propensity Score Matching
-
-
-## Optimal Matching
-
-```{r, eval=FALSE}
-
-
-library(optmatch)
-
-dt$predictor <- plogis(mp$linear.predictors)
-dt$response <- as.numeric(dt$mg_tp0.factor == "Yes")
-
-match <- match_on(
-    response ~ predictor
-  , data = dt
-)
-
-matched_1to1 <- fullmatch(match
-                   , min.controls = 1
-                   , max.controls = 1
-                   , data = dt
-                     )
-
-matched_1ton <- fullmatch(match
-                   , min.controls = 1
-                   , max.controls = Inf
-                   , data = dt
-                     )
-
-
-dt$matched_id <- matched_1to1
-
-dt2 <- dt[!is.na(matched_id)][order(as.numeric(matched_id), -mg_tp0.factor, predictor)]
-
-```
-
-
-## Balance Table
-
-```{r, eval=FALSE}
-library(optmatch)
-
-
-mo <- match_on(
-    treatment_group_n ~ prob_combo
-  , within = exactMatch(treatment_group_n ~ type_of_trauma_n, data=dt2)
-  , data = dt2
-)
-
-mf1 <- fullmatch(mo
-            , min.controls = 1
-            , max.controls = 1
-            , data = dt2)
-
-dt2$match_id <- mf1
-
-library(RItools)
-
-## mean of treatment group minus control group;
-bt <- xBalance(treatment_group_n ~ prob_combo + age +
-                   intubated.factor + midline_shift.factor +
-                   type_of_trauma.factor + initial_gcs +
-                   flag_ais_head + flag_marshall_score +
-                   flag_herniation + flag_surgery +
-                   strata(match_id)
-             , data=dt2
-             , report = "all"
-       ## , report=c("adj.mean.diffs", "std", "z")
-               )
-
-
-t1 <- bt$results[,, 1][, c(1, 2, 3)]
-t2 <- bt$results[,, 2][, c(3)]
-
-t <- cbind(t1, t2)
-t %>% prt(digits=4, col.names=c("Mean of Mono", "Mean of Combo", "Difference", "Difference after Matching"))
-## dim(t)
-
-```
 
 
 # Leave One Out Cross Validation

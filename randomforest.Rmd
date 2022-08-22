@@ -96,6 +96,7 @@ dt <- dt[, odds0 := p0 / (1 - p0)
 vsample <- function(p){
     sample(c(1, 0), size = 1, replace = TRUE, prob = c(p, 1 - p))
 }
+
 vsample <- Vectorize(vsample)
 
 dt <- dt[, outcome := vsample(p)][, outcome := factor(outcome, levels = c(0, 1))]
@@ -159,8 +160,13 @@ frml <- Wu::wu_formula(outcome = "outcome", predictors = cn[-1])
 dm <- cbind(dt[, .(outcome)], mmx[,-1])
 
 library(randomForest)
+## library(doParallel)
+
 
 set.seed(123456)
+## cl <- makePSOCKcluster(detectCores() - 2)
+## registerDoParallel(cl)
+
 rf <- randomForest(frml
                  , data = dm
                  , ntree = 2000
@@ -169,6 +175,8 @@ rf <- randomForest(frml
                  , importance = TRUE
                  , na.action = na.roughfix
                    )
+
+## stopCluster(cl)
 
 
 vi <- importance(rf, type = 1)
@@ -196,6 +204,40 @@ partialPlot(rf, pred.data = dm, x.var = "var3n", which.class = "1")
 
 ```
 
+## Partial Depende Plot with Two Variables
+
+```{r}
+library(pdp)
+
+library(doMC)
+
+
+registerDoMC(12)
+pl <- partial(rf, pred.var = c("var3n", "var5"), grid.resolution = NULL, parallel = TRUE)
+
+
+plotPartial(pl)
+
+```
+
+
+## Partial Dependent Plot with Two Continuous Variables
+
+```{r}
+## library(doParallel)
+library(pdp)
+
+
+
+## cl <- makePSOCKcluster(detectCores() - 2)
+## registerDoParallel(cl)
+registerDoMC(12)
+plc <- partial(rf, pred.var = c("var3n", "var5n"), parallel = TRUE)
+## stopCluster(cl)
+
+plotPartial(plc)
+
+```
 
 ## AUC on the Traning Data
 

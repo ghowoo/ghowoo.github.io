@@ -82,3 +82,40 @@ print(f)
 
 
 ```
+
+
+# Discretize Continuous Variables based on the Outcome
+
+
+```{r}
+
+library(FSelectorRcpp)
+
+set.seed(123456)
+n <- 300
+dt <- data.table(x = rnorm(n), noise = rnorm(n))
+dt <- dt[, outcome := x ^ 2 + noise / 5]
+
+discretization <- function(data, predictor, outcome, num = 5){
+  data <- data[!is.na(data[[predictor]])]
+  predictor_discretized <- paste0(predictor, "_discretized")
+  x <- data[[predictor]]
+  y <- data[[outcome]]
+  data[[predictor_discretized]] <- FSelectorRcpp::discretize(x, y
+                                                           , all = TRUE
+                                                           , control = list(equalsizeControl(num)))[, 2]
+  invisible(data)
+}
+
+dt2 <- discretization(data = dt, predictor = "x", outcome = "outcome", num = 5)
+
+
+crrs <- Wu::Table2_nbyc(data = dt2
+                      , group = c("x_discretized")
+                      , var = "outcome"
+                      , digits_c = 3, digits_p = 4)
+
+crrs %>% prt()
+
+```
+
