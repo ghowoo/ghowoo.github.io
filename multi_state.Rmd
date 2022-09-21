@@ -40,10 +40,26 @@ klippy::klippy(position = c('top', 'left')
 ```
 
 
+# [Back to Index](index.html)
+
+
 # Multi-state model with msm package
 
-[Multi-state modelling with R: the msm package](1 "https://cran.r-project.org/web/packages/msm/vignettes/msm-manual.pdf")
-
+ * Ref: [Multi-state modelling with R: the msm package](https://cran.r-project.org/web/packages/msm/vignettes/msm-manual.pdf)
+ * Informative sampling times
+   + Fixed: patients are observed at fixed time intervals specified in advance
+   + Random: the sampling times are independent of the current state of the disease  
+   + Doctor's care: the next sampling time is chosen on the basis of the current disease state (more severe ill patients are monitored more closely) 
+   + Patient self-selection: patients decide to see doctors when they are in poor conditions
+ * $$P(t) = Exp(tQ)$$
+   + $P$ is the probability of transition during the time $t$
+   + $Q$ is the transition intensity maxtrix
+   + $Exp$ is the matrix exponential
+ * Interval censored: in the intermittently-observed processess, the exact times of the state changes are usually interval censored, it is known to be within the bounded intervals.
+ * Sojourn Time: a single period of occupancy
+ 
+ 
+ 
 ## CAV Data
 
 Sharples et al. studied the progression of coronary allograft vasculopathy (CAV), a post-transplant deterioration of the arterial walls, using these data. Risk factors and the accuracy of the screening test were investigated using multi-state Markov and hidden Markov models.
@@ -170,6 +186,7 @@ ggplot(dt, aes(x=years, fill = state)) + geom_bar(position = "fill") +
 
 ## Simple bidirectional model
 
+ * Death is the absorbing state
  * The day of death is assumed to be recorded exactly. The state 4 is death, deathexact=4
  * If the data has two death states 4 and 5 with two competing risks, deathexact=c(4,5)
  * State transition table: from state (in row) to state (in column)

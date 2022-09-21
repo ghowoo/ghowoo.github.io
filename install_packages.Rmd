@@ -229,6 +229,186 @@ p_load(package_list, install=TRUE, update=TRUE)
 
 ```
 
+
+# pacman Package
+
+
+```{r, eval=FALSE}
+print(1:3)
+sessionInfo()
+## install.packages("devtools", repository="https://cran.r-project.org/")
+## install.packages("pacman", repository="https://cran.r-project.org/")
+library(pacman)
+
+package_list <- c(
+    "R6"
+  , "roxygen2"
+  , "pkgload"
+  , "desc"
+  , "covr"
+  , "lazyeval"
+  , "lattice"
+  , "devtools"
+  , "rms"
+  , "scales"
+  , "covr"
+  , "DT"
+  , "magrittr"
+  , "testthat"
+  , "rematch2"
+  , "stringr"
+  , "dplyr"
+  , "dtplyr"
+  , "tibble"
+  , "KernSmooth"
+  , "cli"
+  , "viridis"
+  , "munsell"
+  , "crayon"
+  , "pillar"
+  , "survival"
+  , "knitr"
+  , "lattice"
+  , "mgcv"
+  , "ggplot2"
+  , "plotly"
+  , "purrr"
+  , "rgl"
+  , "rmarkdown"
+  , "knitr"
+  , "zoo"
+  , "htmlTable"
+  , "rstan"
+  , "assertthat"
+  , "pkgbuild"
+  , "xts"
+  , "dygraphs"
+  , "sf"
+  , "memoise"
+  , "spatstat"
+  , "classInt"
+  , "Hmisc"
+  , "rmsb"
+  , "KernSmooth"
+  , "ks"
+  , "KernSmooth"
+  , "JuliaCall"
+  , "rmarkdown"
+  , "ragg"
+  , "textshaping"
+  , "lattice"
+  , "scales"
+  , "ggplot2"
+  , "munsell"
+  , "tibble"
+  , "magrittr"
+  , "tibble"
+  , "crayon"
+  , "base64enc"
+  , "latticeExtra"
+  , "RColorBrewer"
+  , "assertthat"
+  , "desc"
+  , "rprojroot"
+  , "sessioninfo"
+  , "rmarkdown"
+  , "rgl"
+  , "rgeos"
+  , "gridExtra"
+  , "purrr"
+  , "lazyeval"
+  , "covr"
+  , "testthat"
+  , "knitr"
+  , "rmarkdown"
+  , "gifski"
+  , "zoo"
+  , "sandwich"
+  , "MatrixModels"
+  , "np"
+  , "quantreg"
+  , "AER"
+  , "rugarch"
+  , "ROCR"
+  , "ks"
+  , "maxLik"
+  , "truncreg"
+  , "sampleSelection"
+  , "mlogit"
+  , "plm"
+  , "rgl"
+  , "viridisLite"
+  , "mgcv"
+  , "Hmisc"
+  , "rms"
+  , "htmlTable"
+  , "multcomp"
+  , "TH.data"
+  , "data.table"
+  , "askpass"
+  , "openssl"
+  , "labeling"
+  , "rmdformats"
+  , "visNetwork"
+  , "kableExtra"
+  , "digest"
+  , "lme4"
+  , "sjPlot"
+  , "survminer"
+  , "coxme"
+  , "ordinal"
+  , "tidyverse"
+  , "BART"
+)
+
+
+
+
+
+package_list <- unique(package_list)
+new.packages <- package_list[!(package_list %in% installed.packages()[,"Package"])]
+length(new.packages)
+print(new.packages)
+
+if(length(new.packages)) install.packages(new.packages,  repository="https://cran.r-project.org/")
+
+devtools::install_github("ghowoo/Wu", force = TRUE)
+install.packages("ordinal", repository="https://cran.r-project.org/")
+install.packages("openssl", repository="https://cran.r-project.org/")
+
+
+update.packages()
+
+
+
+p_load(package_list, install=TRUE, update=TRUE)
+
+
+
+
+
+
+
+
+
+### ??????????????
+devtools::install_github("r-spatial/sf")
+devtools::install_github("cran/rgdal")
+devtools::install_github("CRAN/rgdal")
+
+
+install.packages("digest", repository="https://cran.r-project.org/")
+
+install.packages("sf", repository="https://cran.r-project.org/")
+install.packages("rgdal", repository="https://cran.r-project.org/")
+devtools::install_version("rgdal", version = "1.3-9")
+
+
+
+install.packages("lwgeom", repository="https://cran.r-project.org/")
+
+
+```
 # Install R
 
 

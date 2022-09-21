@@ -14,9 +14,17 @@ header-includes:
     \usepackage{float}
     \usepackage{wrapfig}
     \usepackage{colortbl}
-    \usepackage{pdflscape}
     \usepackage{tabu}
     \usepackage[normalem]{ulem}
+    \usepackage{pdflscape}
+    \newcommand{\blandscape}{\begin{landscape}}
+    \newcommand{\elandscape}{\end{landscape}}
+    \usepackage{fancyhdr}
+    \pagestyle{fancy}
+    \usepackage{datetime2}
+    \usepackage{zref-totpages}
+    \fancyhead{}
+
 author: | 
     | \vspace{1cm} 
     | Wu Gong
@@ -38,13 +46,12 @@ include-before:
 ```{r setup, include=FALSE}
 rm(list=ls())
 library(Wu)
-
 knitr::opts_chunk$set(echo = FALSE
-                      ,message = FALSE
-                      ,tidy=TRUE
-                      ,results="asis"
-                      ,warning=FALSE
-                     ,out.width = "7in"
+                    , message = FALSE
+                    , tidy=TRUE
+                    , results="asis"
+                    , warning=FALSE
+                    , out.width = "7in"
                     , dpi = 300)
 theme_set(theme_get() + theme(text = element_text(family = 'Times')))
 ## opts_knit$set(eval.after='fig.cap')
@@ -65,7 +72,10 @@ theme_set(theme_get() + theme(text = element_text(family = 'Times')))
 
 
 \newpage
-
+    \fancyhead{}
+    \fancyhead[L]{\text{Wu's R Notes}\\\text{rmarkdown Template Generating PDF}}
+    \fancyhead[R]{\rightmark\\\text{Version 1.1}}
+    \fancyfoot[L]{\text{Programmer:} Wu Gong \text{  } \DTMnow}
 \listoftables
 
 
@@ -74,8 +84,12 @@ theme_set(theme_get() + theme(text = element_text(family = 'Times')))
 \listoffigures
 
 
-
 \newpage
+\fancyhead{}
+\fancyhead[L]{\text{Wu's R Notes}\\\text{rmarkdown Template Generating PDF}}
+\fancyhead[R]{\thepage\text{ of }\ztotpages\\\text{Version 1.1}}
+\fancyfoot{}
+\fancyfoot[L]{\text{Programmer:} Wu Gong \text{  } `r format(Sys.time(), "%d %b %Y %H:%M")`}
 \pagenumbering{arabic}
 
 
@@ -90,7 +104,7 @@ dt <- data.table(id = 1:n
 
 group_index <- auto_index(dt$group_id)
 kbl(dt
-    , caption = "Table I"
+    , caption = "First Table"
     , align = c("l", "r")
     , format = "latex"
     , booktabs = TRUE) %>%
@@ -128,12 +142,6 @@ plot(1:10, (1:10) ^ 2)
 
 
 
-
-
-
-\newpage
-
-
 \newpage
 # Section III
 
@@ -148,7 +156,7 @@ dt <- data.table(id = 1:n
 
 group_index <- auto_index(dt$group_id)
 kbl(dt
-    , caption = "Table II Spanning Multiple Pages"
+    , caption = "Spanning Multiple Pages"
     , align = c("l", "r")
     , format = "latex"
   , booktabs = TRUE
@@ -164,10 +172,61 @@ kbl(dt
     column_spec(2, "1.5in", latex_valign = "m") %>%
     kable_styling(latex_options = c("HOLD_position", "repeat_header")
                 , font_size = 12
-                , protect_latex = TRUE
+                ## , protect_latex = TRUE
                 , full_width = FALSE) %>%
-    add_footnote(label = "This is a Latex table output."
-                 , notation = "symbol")
+    footnote(general = "This is a Latex table output."
+           , number = "number"
+             , alphabet = "Note A")
+
 ```
 
+
+
+\newpage
+\blandscape
+
+# Landscape Table
+
+
+
+```{r}
+
+n <- 10
+dt <- data.table(id = 1:n
+               , group_id = rep(LETTERS[1:5], each = n / 5)
+               , var1 = sample(1000:3000, size = n, replace = TRUE)
+               , var2 = sample(100:300, size = n, replace = TRUE)
+               , var3 = sample(100:300, size = n, replace = TRUE)
+               , var4 = sample(100:300, size = n, replace = TRUE)
+               , var5 = sample(100:300, size = n, replace = TRUE)
+               , var6 = sample(100:300, size = n, replace = TRUE)
+                 )
+
+group_index <- auto_index(dt$group_id)
+kbl(dt
+  , caption = "Landscape Table"
+  , align = c("l", "r")
+  , format = "latex"
+  , booktabs = TRUE
+  , longtable = TRUE) %>%
+    pack_rows(index = group_index
+            , hline_before = TRUE
+            , hline_after = FALSE
+              ## , label_row_css = "border-bottom: 1px solid;"
+              ) %>%
+    column_spec(1, "1in", latex_valign = "m") %>%
+    column_spec(2, "1.5in", latex_valign = "m") %>%
+    column_spec(2, "1.5in", latex_valign = "m") %>%
+    column_spec(2, "1.5in", latex_valign = "m") %>%
+    kable_styling(latex_options = c("HOLD_position", "repeat_header")
+                , font_size = 12
+                  ## , protect_latex = TRUE
+                , full_width = FALSE) %>%
+    footnote(general = c("This is a Latex table output.", "This is the second note.")
+           , number = "Number 1"
+           , general_title = "")
+
+```
+
+\elandscape
 \newpage

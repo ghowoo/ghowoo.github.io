@@ -1,0 +1,161 @@
+---
+title: "Clinical Trial Report"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+# R clinUtils Package
+
+
+ * Ref: [Laure Cougnaud and Michela Pasetto: Introduction to the clinUtils package](https://cran.rstudio.com/web/packages/clinUtils/vignettes/clinUtils-vignette.html)
+
+
+## SDTM Data Example
+
+```{r}
+library(clinUtils)
+data(dataSDTMCDISCP01)
+
+names(dataSDTMCDISCP01) %>% prt(caption = "SDTM Tables")
+
+
+
+```
+
+### DM Table
+
+
+```{r}
+
+dm <- dataSDTMCDISCP01$DM
+
+class_dm <- lapply(dm, class)
+
+data.table(variable_name = names(class_dm)
+         , variable_type = class_dm) %>% prt(caption = "Variables on DM Table")
+
+DT(dm)
+
+```
+
+
+
+
+
+### VS Table
+
+
+```{r}
+
+vs <- dataSDTMCDISCP01$VS
+
+class_vs <- lapply(vs, class)
+
+data.table(variable_name = names(class_vs)
+         , variable_type = class_vs) %>% prt(caption = "Variables on VS Table")
+
+DT(vs)
+
+```
+
+
+
+
+
+
+### LB Table
+
+
+```{r}
+
+lb <- dataSDTMCDISCP01$LB
+
+class_lb <- lapply(lb, class)
+
+data.table(variable_name = names(class_lb)
+         , variable_type = class_lb) %>% prt(caption = "Variables on LB Table")
+
+DT(lb)
+
+```
+
+
+
+
+
+
+
+### AE Table
+
+
+```{r}
+
+ae <- dataSDTMCDISCP01$AE
+
+class_ae <- lapply(ae, class)
+
+data.table(variable_name = names(class_ae) 
+                               , variable_type = class_ae) %>%
+               prt(caption = "Variables on AE Table")
+
+
+
+
+
+
+DT(ae)
+
+```
+
+
+
+
+
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

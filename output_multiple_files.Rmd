@@ -1,0 +1,149 @@
+---
+title: "Output Multiple Files"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+
+# rmarkdown Template File
+
+
+```{r, eval = FALSE}
+
+
+<!-- --- -->
+<!-- title: "" -->
+<!-- author: "" -->
+<!-- date: "" -->
+<!-- output: -->
+<!--   pdf_document: -->
+<!--     latex_engine: xelatex -->
+<!-- header-includes: -->
+<!--   - \usepackage{fontspec} -->
+<!--   - \setmainfont{Times New Roman} -->
+<!-- --- -->
+
+<!-- ```{r setup, include=FALSE} -->
+<!-- knitr::opts_chunk$set(echo = TRUE) -->
+<!-- ``` -->
+
+
+`r paste0("**Session Number: **", id)`
+`r "    \n    \n"`
+
+`r paste0("**Title: **", title)`
+`r "    \n    \n"`
+
+`r paste0("**Brief Description: **", brief_description)`
+
+`r paste0("**Session Type: **", session_type)`
+
+`r paste0("**Track: **", track)`
+
+`r paste0("**All Roles: **")`
+
+`r all_roles`
+
+`r paste0("**Career Stage: **", career_stage)`
+
+`r paste0("**Affiliation: **", affiliation)`
+
+`r paste0("**Objectives & Goals: **")`
+
+`r objectives_goals`
+
+`r paste0("**Method & Study Population: **")`
+
+`r methods_study_population`
+
+`r paste0("**Results: **")`
+
+`r results`
+
+`r paste0("**Discussion: **")`
+
+`r discussion`
+
+`r paste0("**Funding: **", funding)`
+
+
+```
+
+# Loop to Output Files
+
+```{r, eval = FALSE}
+
+
+for(index in 1:nrow(dt)){
+    print(index)
+    id <- dt$session_number[index]
+    title <- dt$title[index]
+    brief_description <- dt$description[index]
+    session_type <- dt$session_type[index]
+    track <- dt$track[index]
+    all_roles <- dt$all_roles[index]
+    all_roles <- unlist(strsplit(all_roles, "\n", fixed = FALSE, perl = FALSE, useBytes = FALSE))
+    all_roles_index <- grepl(toupper("Submitter"), toupper(all_roles))
+    all_roles <- all_roles[!all_roles_index]
+    all_roles <- paste0(all_roles, sep = "", collapse = "      \n")
+    career_stage <- dt$career_stage[index]
+    affiliation <- dt$affiliation[index]
+    objectives_goals <- dt$objectives_goals[index]
+    methods_study_population <- dt$methods_study_population[index]
+    methods_study_population <- cleanFun(methods_study_population)
+    results <- dt$results[index]
+    results <- cleanFun(results)
+    discussion <- dt$discussion[index]
+    funding <- dt$funding[index]
+    funding <- cleanFun(funding)
+    funding <- gsub("\n", ", ", funding)
+
+    render("template.Rmd"
+         , output_file = paste0("../pdfs/", as.character(id), ".pdf")
+         , params=list(new_title = paste("Exploratory analysis -", id))
+           )
+
+}
+
+```

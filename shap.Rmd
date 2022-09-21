@@ -46,6 +46,247 @@ eval_slow <- FALSE
  * https://cran.r-project.org/web/packages/shapper/shapper.pdf
 
 
+
+# R xgboost Package
+
+
+```{r}
+library(Wu)
+library(data.table)
+library("DALEX")
+library(xgboost)
+
+titanic_train <- titanic[,c("survived", "class", "gender", "age", "sibsp", "parch", "fare", "embarked")]
+titanic_train$survived <- factor(titanic_train$survived)
+titanic_train$gender <- factor(titanic_train$gender)
+titanic_train$embarked <- factor(titanic_train$embarked)
+titanic_train <- na.omit(titanic_train)
+
+Predictors <- c("class", "gender", "age", "sibsp", "parch", "fare", "embarked")
+
+dt <- as.data.table(titanic_train)
+dt <- dt[, survived_n := as.numeric(survived %in% c("yes"))]
+label <- dt$survived_n
+
+set.seed(123456)
+frml <- Wu::wu_formula(outcome = "", predictors = Predictors)
+mmx <- model.matrix.lm(frml, data = dt[, ..Predictors], na.action = "na.pass")
+
+ind <- sample(x = c(TRUE, FALSE), size = nrow(dt), replace = TRUE, prob = c(0.8, 0.2))
+dtp <- mmx
+dtp_train <- dtp[ind,]
+dtp_test <- dtp[!ind,]
+label_train <- label[ind]
+label_test <- label[!ind]
+
+dtp_DM <- xgb.DMatrix(dtp, label=label)
+dtrain <- xgb.DMatrix(dtp_train, label = label_train)
+dtest <- xgb.DMatrix(dtp_test, label = label_test)
+
+
+
+watchlist <- list(train = dtrain, eval = dtest)
+params <- list(max_depth = 4
+             , objective = "binary:logistic"
+             , eval_metric = "auc"
+             , eta = 0.7
+             , gamma = 2
+               )
+
+
+set.seed(123456)
+bst_model <- xgb.train(params = params
+                     , data = dtrain
+                     , nrounds = 100
+                     , watchlist = watchlist
+                     , verbose = FALSE
+                     , early_stopping_rounds = 10
+                       )
+
+pred <- predict(bst_model, dtp)
+
+
+
+
+## bst_model$evaluation_log
+
+
+## cv <- xgb.cv(
+##   data = train
+## , label = label
+## , nfold = 3
+## , max_depth = 3
+## , eta = 0.1
+## , nthread = 6
+## , nrounds = 100
+## , gamma = 1
+## , eval_metric = 'auc'
+## , objective = "binary:logistic"
+## , prediction = TRUE
+## , verbose = FALSE
+## )
+
+## it <- which.max(cv$evaluation_log$test_auc_mean)
+## best.iter <- cv$evaluation_log$iter[it]
+
+
+
+set.seed(123456)
+
+m <- xgboost(
+  data = dtp
+, label = label
+, max.depth = 3
+, eta = 0.7
+, nthread = 6
+, gamma = 2
+, nrounds = 2
+, objective = "binary:logistic"
+, verbose = FALSE
+)
+
+
+
+library(pROC)
+pred <- predict(m, dtp, type = "response")
+roc_m <- roc(label, pred, ci = TRUE, direction = "<")
+plt_roc(roc_m) %>% ann("Model ROC on Train")
+
+
+xgb.plot.deepness(m)
+
+xgb.ggplot.deepness(m)
+
+
+xgb.ggplot.importance(xgb.importance(model = m))
+
+
+xgb.plot.shap(data=dtp, model=m, features = "age")
+
+xgb.plot.shap(data=dtp, model=m, top_n = 5)
+
+
+xgb.plot.shap.summary(data=dtp, model=m, top_n=5)
+
+
+
+library(SHAPforxgboost)
+shap_long <- shap.prep(xgb_model = m, X_train = dtp)
+shap.importance(shap_long) %>% prt(caption = "Variable Importance")
+
+
+
+g1 <- shap.plot.dependence(
+  data_long = shap_long
+, x = "age"
+, y = "age"
+, color_feature = "gender") +
+  ggtitle("SHAP Value of Age")
+
+g1
+
+```
+
+
+
+
+
+## Cross-Validation
+
+ * Number of iterations
+
+```{r, eval = FALSE}
+params <- list(max_depth=3
+             , eta=0.01
+             , subsample=2 / 3
+             , colsample_bytree=1 / 5
+               )
+
+cv <- xgb.cv(data=dtrain
+           , nrounds=300
+           , nfold = 20
+           , metrics = "auc"
+           , params=params
+           ## , objective="binary:logistic"
+             )
+
+print(cv)
+
+plot(cv$evaluation_log$iter, cv$evaluation_log$test_auc_mean)
+
+```
+
+## Selected Model
+
+```{r, eval = FALSE}
+params <- list(max_depth = 7
+             , objective = "binary:logistic"
+             , eval_metric = "auc"
+             , eta = 0.01
+             , lambda=1
+             , subsample=0.7
+             , colsample_bytree=0.7
+             , base_score=275 / (275 + 573)
+               )
+
+m <- xgboost(data=dtrain
+           , nrounds=100
+           , params=params
+             , early_stopping_rounds = 200
+             )
+
+pred <- predict(m, dtp)
+
+```
+
+## Grid Search
+
+```{r, eval = FALSE}
+repeats <- 10
+grd <- expand.grid(max_depth=3:15
+                 , eta=c(0.01, 0.05, 0.1, 0.2, 0.3)
+                 , lambda=c(0.0001, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1)
+                 , auc=0
+                 , nrounds=0
+                 , rep=1:repeats
+                   )
+grd <- as.data.table(grd)
+n <- nrow(grd)
+## n <- 3
+
+for(i in 1:n){
+    params <- list(max_depth=grd$max_depth[i]
+                 , eta=grd$eta[i]
+                 , lambda=grd$lambda[i]
+                   )
+    cv <- xgb.cv(data=dtrain
+           , nrounds=300
+           , nfold = 5
+           , metrics = "auc"
+           , params=params
+           , objective="binary:logistic"
+           , verbose = FALSE)
+    print(i)
+    grd$auc[i] <- max(cv$evaluation_log$test_auc_mean)
+    grd$nrounds[i] <- which.max(cv$evaluation_log$test_auc_mean)[1]
+}
+saveRDS(grd, file="xgboost_grid.RDS")
+
+
+grd[, .(mauc = mean(auc)), by = .(max_depth, eta, lambda)][order(-mauc)][1:12, ]
+
+print(grd[eta == 0.3 & lambda == 1 & max_depth == 7])
+
+
+max(cv$evaluation_log$test_auc_mean)
+
+which(max(cv$evaluation_log$test_auc_mean))
+
+which.max(cv$evaluation_log$test_auc_mean)[1]
+
+
+```
+
 # R shapper Package
 
 https://cran.r-project.org/web/packages/shapper/vignettes/shapper_regression.html
@@ -331,11 +572,11 @@ import feather
 
 import os
 print(os.getcwd())
-os.chdir("/home/gongw/Works/VICTR/Patrick Doyle/R")
+os.chdir("")
 print(os.listdir())
 print(os.getcwd())
 
-path = "2yrs_matrix_train.feather"
+path = "matrix_train.feather"
 
 df = pd.read_feather(path)
 
@@ -345,21 +586,21 @@ print(df.columns.values.tolist())
 
 print(df.columns.values.tolist())
 
-train_label = df['recurrence2yrs']
-train_features = df.drop('recurrence2yrs',1)
+train_label = df['outcome']
+train_features = df.drop('outcome',1)
 
 print(train_features.columns.values.tolist())
 
 print(train_features.shape)
 
-patht = "2yrs_matrix_test.feather"
+patht = "matrix_test.feather"
 
 dft = pd.read_feather(patht)
 
 print(dft.columns.values.tolist())
 
-test_label = dft['recurrence2yrs']
-test_features = dft.drop('recurrence2yrs',1)
+test_label = dft['outcome']
+test_features = dft.drop('outcome',1)
 
 
 
@@ -406,13 +647,168 @@ xgb_cl_best.fit(train_features,
                 )
 
 
-with open('xgb_2yrs.pkl', 'wb') as outp:
+with open('xgb.pkl', 'wb') as outp:
     pickle.dump(xgb_cl_best, outp, pickle.HIGHEST_PROTOCOL)
 
     
 
 xgb_cl_best
 
+
+```
+
+
+
+## HyperOpt
+
+* best params from 10k evaluations with auc 0.597: {'colsample_bytree': 0.8559451937195118,
+ 'gamma': 2.4014476785184327,
+ 'learning_rate': 0.06121079922414588,
+ 'max_depth': 18.0,
+ 'n_estimators': 328.47103449384826,
+ 'reg_alpha': 0.5487345673703201,
+ 'reg_lambda': 0.5602856409735258,
+ 'subsample': 0.5309213820780311}
+
+```{r, eval = FALSE}
+
+from hyperopt import fmin, tpe, hp, STATUS_OK, Trials, space_eval
+import xgboost as xgb
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import roc_auc_score
+
+clf = xgb.XGBClassifier()
+
+
+space = {
+    "n_estimators": hp.uniform('n_estimators', 30, 800),
+    "learning_rate": hp.uniform('learning_rate', 0.0001, 0.2),
+    "gamma": hp.uniform('gamma', 0.00001, 10),
+    "reg_lambda": hp.uniform('reg_lambda', 0.00001, 10),
+    "reg_alpha": hp.uniform('reg_alpha', 0.00001, 10),
+    "subsample": hp.uniform('subsample', 0.5, 1.0),
+    'max_depth' : hp.quniform('max_depth', 3, 18, 1),
+    'colsample_bytree' : hp.uniform('colsample_bytree', 0.5, 1)
+}
+
+
+
+
+def objective(space):
+    clf=xgb.XGBClassifier(
+        max_depth = int(space['max_depth']),
+        gamma = space['gamma'],
+        reg_lambda = space['reg_lambda'],
+        reg_alpha = space['reg_alpha'],
+        subsample = space['subsample'],
+        colsample_bytree = space['colsample_bytree'],
+        n_estimators = int(space['n_estimators']),
+        learning_rate = space['learning_rate'],
+        booster = "gbtree",
+        objective = "binary:logistic",
+        n_jobs = -1
+    )
+    evaluation = [(train_features, train_label), (test_features, test_label)]
+    clf.fit(train_features, train_label,
+            eval_set = evaluation,
+            eval_metric = "auc",
+            early_stopping_rounds = 20, verbose = False)
+    pred = clf.predict(test_features)
+    accuracy = -roc_auc_score(test_label, pred)
+    return_dict = {'loss': accuracy, 'status': STATUS_OK}
+    print(return_dict)
+    return return_dict
+    
+
+trials = Trials()
+
+best_hyperarams = fmin(fn = objective,
+                       space = space,
+                       algo = tpe.suggest,
+                       max_evals = 10000,
+                       trials = trials)
+
+best_hyperarams
+
+trials.__dict__
+
+
+```
+
+## Ray
+
+```{r, eval=FALSE}
+
+
+from xgboost_ray import RayDMatrix, RayParams, train
+from sklearn.datasets import load_breast_cancer
+
+num_actors = 1
+num_cpus_per_actor = 1
+
+ray_params = RayParams(
+    num_actors=num_actors, cpus_per_actor=num_cpus_per_actor)
+
+def train_model(config):
+    train_x, train_y = load_breast_cancer(return_X_y=True)
+    train_set = RayDMatrix(train_x, train_y)
+    evals_result = {}
+    bst = train(
+        params=config,
+        dtrain=train_set,
+        evals_result=evals_result,
+        evals=[(train_set, "train")],
+        verbose_eval=False,
+        ray_params=ray_params)
+    bst.save_model("model.xgb")
+
+from ray import tune
+
+# Specify the hyperparameter search space.
+config = {
+    "tree_method": "approx",
+    "objective": "binary:logistic",
+    "eval_metric": ["logloss", "error"],
+    "eta": tune.loguniform(1e-4, 1e-1),
+    "subsample": tune.uniform(0.5, 1.0),
+    "max_depth": tune.randint(1, 9)
+}
+
+# Make sure to use the `get_tune_resources` method to set the `resources_per_trial`
+analysis = tune.run(
+    train_model,
+    config=config,
+    metric="train-error",
+    mode="min",
+    num_samples=4,
+    resources_per_trial=ray_params.get_tune_resources())
+print("Best hyperparameters", analysis.best_config)
+    
+
+
+from xgboost_ray import RayDMatrix, RayParams, train
+from sklearn.datasets import load_breast_cancer
+
+train_x, train_y = load_breast_cancer(return_X_y=True)
+train_set = RayDMatrix(train_x, train_y)
+
+evals_result = {}
+bst = train(
+    {
+        "objective": "binary:logistic",
+        "eval_metric": ["logloss", "error"],
+    },
+    train_set,
+    evals_result=evals_result,
+    evals=[(train_set, "train")],
+    verbose_eval=False,
+    ray_params=RayParams(
+        num_actors=2,  # Number of remote actors
+        cpus_per_actor=1))
+
+bst.save_model("model.xgb")
+print("Final training error: {:.4f}".format(
+    evals_result["train"]["error"][-1]))
 
 ```
 
@@ -425,7 +821,7 @@ xgb_cl_best
 from sklearn import metrics
 pred_train = xgb_cl_best.predict_proba(train_features)[:,1]
 pred_train_pd = pd.DataFrame({'prob':pred_train})
-pred_train_pd.to_feather("pred_train_2yrs_xgb.feather")
+pred_train_pd.to_feather("xgb.feather")
 
 
 fpr, tpr, threshold = metrics.roc_curve(train_label, pred_train)
@@ -435,7 +831,7 @@ roc_auc
 
 pred_test = xgb_cl_best.predict_proba(test_features)[:,1]
 pred_test_pd = pd.DataFrame({'prob':pred_test})
-pred_test_pd.to_feather("pred_test_2yrs_xgb.feather")
+pred_test_pd.to_feather("pred_test_xgb.feather")
 
 
 fpr, tpr, threshold = metrics.roc_curve(test_label, pred_test)
@@ -449,20 +845,20 @@ importances_weight = xgb_cl_best.get_booster().get_score(importance_type = 'weig
 # importances = xgb_cl_best.feature_importances_
 print(importances_weight)
 
-importance_weight_xgb_2yrs = pd.DataFrame([importances_weight]).transpose()
-importance_weight_xgb_2yrs.index.name = "variable"
-importance_weight_xgb_2yrs.reset_index(inplace=True)
-importance_weight_xgb_2yrs.rename(columns={0: "importance_weight"}, inplace=True)
+importance_weight_xgb_ = pd.DataFrame([importances_weight]).transpose()
+importance_weight_xgb_.index.name = "variable"
+importance_weight_xgb_.reset_index(inplace=True)
+importance_weight_xgb_.rename(columns={0: "importance_weight"}, inplace=True)
 
 
-print(importance_weight_xgb_2yrs)
-print(importance_weight_xgb_2yrs.shape)
+print(importance_weight_xgb_)
+print(importance_weight_xgb_.shape)
 
 
 
-# importance_weight_xgb_2yrs = pd.DataFrame({'value':importances_weight, "variable":train_features.columns.values})
+# importance_weight_xgg = pd.DataFrame({'value':importances_weight, "variable":train_features.columns.values})
 
-importance_weight_xgb_2yrs.to_feather("importance_weight_xgb_2yrs.feather")
+importance_weight_xgb_.to_feather("importance_weight_xgb.feather")
 
 
 print(xgb_cl_best.feature_importances_)
@@ -473,10 +869,10 @@ from sklearn.inspection import permutation_importance
 importance_permutation = permutation_importance(xgb_cl_best, train_features, train_label)
 print(importance_permutation.importances_mean)
 
-importance_permutation_xgb_2yrs = pd.DataFrame({'value':importance_permutation.importances_mean, "variable":train_features.columns.values})
+importance_permutation_xgb_ = pd.DataFrame({'value':importance_permutation.importances_mean, "variable":train_features.columns.values})
 
 
-importance_permutation_xgb_2yrs.to_feather("importance_permutation_xgb_2yrs.feather")
+importance_permutation_xgb_.to_feather("importance_permutation.feather")
 
 
 ```

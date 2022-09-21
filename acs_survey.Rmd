@@ -1,0 +1,226 @@
+---
+title: "ACS Survey"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+# American Community Survey (ACS)
+
+* Reference Link: https://www.census.gov/programs-surveys/acs
+
+
+```{r, eval = FALSE}
+library(Wu)
+dt <- read.csv(file = "../data/csv_ptn/psam_p47.csv", stringsAsFactors = FALSE)
+dim(dt)
+## 67950   286
+object.size(dt)
+## 80861072 bytes
+colnames(dt)
+dt <- as.data.table(dt)
+dt[,.N,by=list(RT)]
+dt[,.N,by=list(SEX)]
+dt[,.N,by=list(LANX)]
+dt[,.N,by=list(PUMA)]
+## Nashville
+## 02502, Nashville North
+## 02505, Nashville Southwest
+## 02503, Nashville Center
+## 02501, Nashville East
+## 02504, Nashville Southeast
+
+puma_nashville <- c(2501, 2502, 2503, 2504, 2505)
+dtn <- dt[PUMA %in% puma_nashville]
+dim(dtn)
+## [1] 6490  286
+var_names <- colnames(dtn)
+var_names <- tolower(var_names)
+colnames(dtn) <- var_names
+
+
+
+dict <- read.csv(file = "../data/PUMS_Data_Dictionary_2018.csv", stringsAsFactors = FALSE, header = FALSE)
+dim(dict)
+## [1] 5945    7
+dict <- unique(dict)
+dim(dict)
+## 5865    7
+
+dict <- as.data.table(dict)
+colnames(dict) <- c(
+    "row_type"
+  , "var_name"
+  , "var_type"
+  , "var_length"
+  , "var_description"
+  , "value_code"
+  , "value"
+)
+
+length(unique(dict$var_name))
+
+## assign label
+var_names_dt <- unique(colnames(dtn))
+for(i in var_names_dt){
+    print(i)
+    var_desp <- dict[row_type == "NAME" & var_name == toupper(i), list(var_description)]$var_description[1]
+    print(var_desp)
+    Wu::label(dtn[[i]]) <- var_desp
+}
+
+saveRDS(dtn, file = "acs2018_nashville.RDS")
+
+
+```
+
+# Nashville Data
+
+```{r, eval=FALSE}
+library(Wu)
+
+data("acs2018_nashville")
+
+dt <- acs2018_nashville
+
+## glm
+
+colnames(dt)[1:22]
+lapply(dt[,1:133], label)
+
+dt[,.N,by=list(mar)]
+
+dt[,.N,by=list(nwav)][order(nwav)]
+dt[,.N,by=list(schl)][order(schl)]
+dt[,.N,by=list(rac1p)][order(rac1p)]
+summary(dt$agep)
+table(dt$sex)
+
+dt[, .N, by = list(eng)]
+
+## to predict the ability to work
+
+dt <- dt[
+  , available_for_work := case_when(
+        nwav %in% c(1) ~ "Yes"
+      , TRUE ~ "No"
+    )
+][, available_for_work := factor(available_for_work, levels = c("No", "Yes"))
+  ][, gender := case_when(
+          sex %in% c(1) ~ "Male"
+        , sex %in% c(2) ~ "Female"
+          , TRUE ~ as.character(NA)
+      )
+    ][, gender := factor(gender, levels = c("Female", "Male"))
+      ][, marital_status := case_when(
+              mar %in% c(1) ~ "Married"
+              , TRUE ~ "Single"
+          )][, marital_status := factor(marital_status, levels = c("Married", "Single"))
+             ][, race := case_when(
+                     rac1p %in% c(1) ~ "White"
+                   , rac1p %in% c(2) ~ "Black"
+                     , TRUE ~ "Others"
+                 )][, race := factor(race, levels = c("White", "Black", "Others"))
+                    ][]
+
+dt[,.N,by=list(race, rac1p)]
+dt[,.N,by=list(sex, gender)]
+dt[,.N,by=list(marital_status, mar)]
+m <- glm(available_for_work ~ agep + gender + marital_status + race
+       , data = dt
+       , family = binomial(link = logit)
+         )
+m1 <- glm(available_for_work ~ race + agep + gender + marital_status
+       , data = dt
+       , family = binomial(link = logit)
+         )
+summary(m)
+anova(m)
+
+library(caret)
+varImp(m)
+varImp(m, scale = FALSE)
+## ?varImp
+methods(varImp)
+
+
+caret:::varImp.glm
+
+caret:::varImpDependencies
+caret:::getModelInfo
+
+load(system.file("models", "models.RData", package = "caret"))
+models
+str(models)
+
+
+models$glm$varImp
+## ?varImp
+
+## for glm caret use its z value for variable importance;
+values <- summary(m)$coef
+varImps <-  abs(values[-1, grep("value$", colnames(values)), drop = FALSE])
+
+
+library(car)
+car::Anova(m, type = "II", test.statistics = "LR")
+car::Anova(m1, type = "II", test.statistics = "LR")
+
+drop1(m, test = "LRT")
+
+
+anova(m)
+anova(m1)
+car::Anova(m, type = "II", test.statistics = "LR")
+car::Anova(m, type = "III")
+
+
+```
+
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

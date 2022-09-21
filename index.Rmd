@@ -75,16 +75,20 @@ eval_slow <- FALSE
  * [Support Vector Machine (SVM)](support_vector_machine.html)
  * [Time to Event](time_to_event.html)
  * [Mediation Analysis](mediation_analysis.html)
+ * [Causal Inference](causal_inference.html)
  * [Factor Analysis](factor_analysis.html)
  * [Ordinal Regression](ordinal_regression.html)
  * [Deming Regression](Deming_regression.html)
  * [Bayesian Model](Bayesian_model.html)
+ * [Missing Values](missing_values.html)
 
 # Data Wrangling
  * [Data Manipulation](data_manipulation.html)
  * [Data Description](data_description.html)
  * [R Notes](r_notes.html)
  * [Discretization](discretization.html)
+ * [ACS Survey](acs_survey.html)
+
 
 # Statistics
  * [Power and Sample Size Simulation for Two Proportions](simulation_proportion.html)
@@ -101,8 +105,14 @@ eval_slow <- FALSE
  * [PDF Template](template_pdf.pdf)
  * [Notebook Template](template_notebook.html)
  * [R Markdown with Tabs](rmarkdown_with_tabs.html)
+ * [Output Multiple Files](output_multiple_files.html)
  * [R6 Object](R6.html) 
 
+# Clinical Trial Reporting
+
+ * [NCI SDTM Terminology](sdtm_terminology.html)
+ 
+ 
 # [Python](python.html)
 
  * [Run Python within rmarkdown](python.html)
