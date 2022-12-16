@@ -107,6 +107,7 @@ eval_slow <- FALSE
  * [R Markdown with Tabs](rmarkdown_with_tabs.html)
  * [Output Multiple Files](output_multiple_files.html)
  * [R6 Object](R6.html) 
+ * [Run R in SAS](run_R_in_SAS.html)
 
 # Clinical Trial Reporting
 

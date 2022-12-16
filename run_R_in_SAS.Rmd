@@ -1,0 +1,91 @@
+---
+title: "Run R in SAS"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+# Windows
+
+## Pipe R Script in SAS
+
+````
+
+data _null_;
+  r_exe = "C:\R-4.0.1\bin\Rscript.exe";
+  r_prog = "E:\projects\study\main.R"
+  prog_folder = "E:\projects\study"
+  call symputx("r_exe", r_exe);
+  call symputx("r_prog", r_prog);
+  call symputx("prog_folder", prog_folder);
+run;
+
+filename pp pipe "&r_exe. &r_prog. &prog_folder."
+data _null_;
+  file print;
+  infile pp recfm = v lrecl = 32756;
+  input;
+  put _infile_;
+  putlog _infile_;
+run;
+filename pp clear;
+
+````
+
+## R Script
+
+````
+if(!require(haven)) {install.packages("haven"); library(haven)}
+
+args <- commandArgs(trailingOnly = TRUE)
+setwd(as.character(args[1]))
+df <- read_sas('df.sas7bdat')
+
+````
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

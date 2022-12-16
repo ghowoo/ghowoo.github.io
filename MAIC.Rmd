@@ -1,0 +1,426 @@
+---
+title: "MAIC"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+# Simulate Data
+
+ * Individual Patient Data
+   + Age with mean 40, sd 10
+   + Gender with 60% female
+ * Aggregate Data
+   + Age with mean 30
+   + Gender with 50% female
+
+
+```{r}
+set.seed(20221130)
+n <- 450
+age <- rnorm(n = n, mean = 40, sd = 10)
+gender <- sample(x = c(0, 1), size = n, replace = TRUE, prob = c(0.4, 0.6))
+
+dt <- data.table(age, gender)
+
+vars <- c("age", "gender")
+factorVars <- c("gender")
+
+tbl <- Wu::tbl1n(data = dt
+    , vars = vars
+    , factorVars = factorVars)
+
+tbl %>% prt()
+
+## sweep(dt, MARGIN = 1, STATS = 1000, FUN = "+")[1:5, ]
+
+
+AB.IPD <- data.frame(
+    age = age
+  , gender = gender
+)
+
+AC.AgD <- data.frame(
+    age.mean = 30
+  , age.sd = 8
+  , gender.mean = 0.5
+)
+
+```
+
+# The Objective Function
+
+ * The objective function gives one single numeric value
+ * It sums up all covariates (X) with weights (a1)
+ * After centralizing covariates (X) (subtracting the mean), the algorithm tries to find weights to minimise its value
+ * Weights vector a1 has the number of coefficients same as the number of covariates
+ * In MAIC setting, the covariates are those variables need to be matched
+ 
+```{r}
+
+## x1 <- data.frame(age = c(1, 1.1, 1.2), weight = c(2, 2.4, 2.8))
+## x1 <- as.matrix(x1)
+## a <- c(1, 2)
+## x1 %*% a
+## exp(x1)
+
+objfn <- function(a1, X){
+    sum(exp(X %*% a1))
+}
+
+```
+
+# Gradient Function
+
+ * It is the partical derivatives of the objective function against parameters (a1)
+
+```{r}
+gradfn <- function(a1, X){
+    colSums(sweep(X, 1, exp(X %*% a1), "*"))
+}
+
+```
+
+
+# Centralized Data
+
+ * It applies the method of moments, for the first-order moment, subtracting the mean; for the second-order moment, subtracting the mean of squared.
+
+```{r}
+
+X.EM.0 <- sweep(with(AB.IPD, cbind(age
+                                 , age^2
+                                 , gender))
+              , 2
+              , with(AC.AgD, c(age.mean
+                             , age.mean^2 + age.sd^2
+                             , gender.mean))
+              , '-')
+
+```
+
+
+# Optimize the Weights
+
+```{r}
+
+opt1 <- optim(par = c(0, 0, 0)
+            , fn = objfn
+            , gr = gradfn
+            , X = X.EM.0
+            , method = "BFGS")
+
+a1 <- opt1$par
+
+wt <- exp(X.EM.0 %*% a1)
+wt.rs <- (wt / sum(wt)) * n
+
+summary(wt)
+sum(wt)
+sum(wt.rs)
+summary(wt.rs)
+
+summary(dt$age * wt.rs)
+
+
+weighted.mean(dt$age, wt.rs)
+
+mean.weighted <- mean(dt$age * wt.rs)
+sd.weighted <- sqrt( sum(wt.rs * (dt$age - mean.weighted) ^ 2)/ (sum(wt.rs) * (n - 1) / n))
+
+print(c(mean.weighted, sd.weighted))
+
+sqrt(Hmisc::wtd.var(dt$age, wt.rs))
+
+mean.weighted.gender <- mean(dt$gender * wt.rs)
+table(wt.rs > 0)
+
+```
+
+# R gmm package
+
+```{r}
+library(gmm)
+
+
+# Simulate One column data
+# Reproducible
+set.seed(123)
+
+# Generate the data from normal distribution
+n <- 200
+x <- rnorm(n, mean = 4, sd = 2)
+# set up the moment conditions for comparison
+# MM (just identified)
+g0 <- function(tet, x) {
+  m1 <- (tet[1] - x)
+  m2 <- (tet[2]^2 - (x - tet[1])^2)
+  f <- cbind(m1, m2)
+  return(f)
+}
+# GMM (over identified)
+g1 <- function(tet, x) {
+  m1 <- (tet[1] - x)
+  m2 <- (tet[2]^2 - (x - tet[1])^2)
+  m3 <- x^3 - tet[1] * (tet[1]^2 + 3 * tet[2]^2)
+  f <- cbind(m1, m2, m3)
+  return(f)
+}
+
+print(res0 <- gmm(g0, x, c(mu = 0, sig = 0)))
+print(res1 <- gmm(g1, x, c(mu = 0, sig = 0)))
+
+summary(res0)
+
+```
+
+
+# Level One
+
+
+
+* Reference Link: https://www.dfhcc.harvard.edu/events/?month=2&year=2021
+
+## Level II A
+
+This is a very long sentence to see how wide the paragraph could be the HTML file holds. And also to see if there is way to limit the text wide shown in HTML file.
+
+```{r}
+plot(1:10)
+
+```
+
+
+## Level II B
+
+```{r}
+hist(rnorm(100))
+
+```
+
+# Insert File into HTML
+
+
+```{r}
+library(Wu)
+dt <- data.table(
+  x = rnorm(100)
+, y = factor(sample(c("A", "B", "C"), size = 100, replace = TRUE), levels = c("A", "B", "C"))
+, z = rnorm(100)*5
+, sex = factor(sample(x = c("F", "M"), size = 100, replace = TRUE), levels = c("F", "M"))
+, trt = factor(sample(x = c("Case", "Control"), size = 100, replace = TRUE), levels = c("Case", "Control"))
+)
+
+
+
+label(dt$x) <- "X_Label"
+label(dt$sex) <- "Sex"
+
+Vars <- c("x", "y", "z", "sex")
+factorVars <- c("y", "sex")
+
+
+combine_list <- function(lst){
+  s <- names(lst)
+  ind <- split(seq_along(s), s)
+  ind <- unlist(lapply(ind, function(l){l[[1]]}))
+  invisible(lst[sort(ind)])
+}
+
+
+
+get_tbl1 <- function(...){
+  lst <- as.list(match.call())[-1]
+  args <- list(
+    vars = Vars
+  , factorVars = factorVars
+  , test = FALSE
+  , includeNA = TRUE
+  , smd = TRUE
+  , addOverall = FALSE
+  )
+  args <- c(lst, args, formals(CreateTableOne, envir = environment(CreateTableOne)))
+  args <- combine_list(args)
+  if (trimws(args$strata) %in% c("")){args$addOverall = FALSE} else {args$addOverall = TRUE}
+  invisible(do.call(CreateTableOne, args))
+}
+
+t <- get_tbl1(data = dt, strata = "trt", test = TRUE)
+
+
+
+fmt_tbl1 <- function(...){
+  lst <- as.list(match.call())[-1]
+  args <- list(
+    printToggle = FALSE
+  , catDigits = 1
+  , conDigits = 2
+  , pDigits = 3
+  , showAllLevels = TRUE
+  , smd = TRUE
+  , missing = TRUE
+  , varLabels = TRUE
+  )
+  args <- combine_list(c(lst, args))
+  rtn <- do.call(tableone:::print.TableOne, args)
+  rtn <- as.data.table(cbind(rownames(rtn), rtn))
+  colnames(rtn)[1] <- "Variable"
+  invisible(rtn)
+}
+
+t2 <- fmt_tbl1(t, pDigits = 5, missing = FALSE)
+
+t2 %>% prt()
+
+tbl1 <- function(...){
+  lst <- as.list(match.call())[-1]
+  args <- list(
+    vars = Vars
+  , factorVars = factorVars
+  , test = FALSE
+  , includeNA = TRUE
+  , smd = TRUE
+  , addOverall = FALSE
+  )
+  args <- c(lst, args, formals(CreateTableOne, envir = environment(CreateTableOne)))
+  args <- combine_list(args)
+  args <- args[names(args) %in% names(formals(CreateTableOne))]
+  if (trimws(args$strata) %in% c("")){args$addOverall = FALSE} else {args$addOverall = TRUE}
+  tableone_t <- do.call(CreateTableOne, args)
+  fx <- tableone:::print.TableOne 
+  args2 <- list(
+    printToggle = FALSE
+  , catDigits = 1
+  , contDigits = 2
+  , pDigits = 3
+  , showAllLevels = TRUE
+  , smd = TRUE
+  , missing = TRUE
+  , varLabels = TRUE
+  )
+  args <- combine_list(c(lst, args2))
+  args <- args[names(args) %in% names(formals(fx))]
+  rtn <- do.call(tableone:::print.TableOne, c(list(x = tableone_t), args))
+  rtn <- as.data.table(cbind(rownames(rtn), rtn))
+  colnames(rtn)[1] <- "Variable"
+  rownames(rtn) <- NULL
+  invisible(rtn)
+}
+
+
+tbl1n <- function(...){
+  lst <- as.list(match.call())[-1]
+  for (i in seq_along(Vars)){
+  var <- Vars[i]
+  if (var %in% factorVars) {
+    ti <- do.call(tbl1, c(lst, vars = var, factorVars = var))
+    }else{
+      ti_1 <- do.call(tbl1, c(lst, vars = var, factorVars = NULL))
+      ti_2 <- do.call(tbl1, c(lst, vars = var, factorVars = NULL, nonnormal = var))
+      ti_3 <- do.call(tbl1, c(lst, vars = var, factorVars = NULL, nonnormal = var, minMax = TRUE))
+      ti <- rbind(ti_1, ti_2[-1, ], ti_3[-1, ])
+      ti$level <- gsub("^(.+)( )(\\(me)(.+)(\\))$", "\\3\\4\\5", ti$Variable, perl = TRUE)
+      ti$level <- gsub("^\\((.+)\\)$", "\\1", ti$level, perl = TRUE)
+      ti$Variable <- gsub("^(.+)( )(\\(me)(.+)(\\))$", "\\1", ti$Variable, perl = TRUE)
+      ti$Variable[-c(1:2)] <- ""
+    }
+  if (i %in% c(1)) {
+    rtn <- ti
+  }else{
+    rtn <- rbind(rtn, ti[-1, ])
+  }
+  }
+  rownames(rtn) <- NULL
+  invisible(rtn)
+  }
+
+ttt <- tbl1n(data = dt, strata = "trt", test = TRUE, pDigits = 5, catDigits = 3, contDigits = 4)
+
+
+tt <- tbl1(data = dt, strata = "trt", test = TRUE, pDigits = 4, catDigits = 2, contDigits = 3)
+
+
+tn <-  tbl1(data = dt, strata = "trt", test = TRUE, vars = c("x"))
+
+ttt %>% prt()
+
+attach_docx <- function(obj, file = "table1.docx"){
+  flextable::flextable(obj) %>% flextable::save_as_docx(path = file)
+  xfun::embed_file(file)
+}
+
+attach_docx(ttt)
+
+
+attach_csv(ttt)
+
+## library(officer)
+## library(flextable)
+## flextable::set_flextable_defaults(digits = 5)
+## t2 %>% flextable() %>% save_as_docx(path = "table1.docx")
+
+## xfun::embed_file('table1.docx')
+
+
+```
+
+
+# Add a copy icon on the rmarkdown chunk
+
+
+````
+opts_chunk$set(class.source='klippy')
+klippy::klippy(position = c('top', left)
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+````
+
+
+
+# Level Four
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

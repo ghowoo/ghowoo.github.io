@@ -1,0 +1,118 @@
+---
+title: "Miettinen-Nurminen Method"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+# R DescTools package
+
+```{r}
+library(DescTools)
+
+c0 = 10
+c1 = 20
+s0 = 50
+s1 = 50
+
+mn <- BinomDiffCI(x1 = c0
+          , n1 = s0
+          , x2 = c1
+          , n2 = s2
+          , conf.level = 0.95
+          , sides = "two.sided"
+          , method = "mn"
+            )
+
+print(mn)
+
+```
+
+# R gsDesign package
+
+ * delta0 is the difference in event rates under the null hypothesis (p10-p20)
+
+```{r}
+library(gsDesign)
+
+testBinomial(
+    x1 = c0
+  , n1 = s0
+  , x2 = c1
+  , n2 = s2
+  , delta0 = -0.1
+  , chisq = 1
+  , scale = "Difference"
+  , adj = 0
+  ## , sided = 2
+)
+
+```
+
+
+
+# R ratesci package, the skewness-corrected asymptotic score (SCAS) method
+
+```{r}
+library(ratesci)
+
+ratesci::scasci(
+             x1 = c0
+           , n1 = s0
+           , x2 = c1
+           , n2 = s2
+           , level = 0.95
+           , distrib = "bin"
+           , contrast = "RD"
+         )
+
+
+```
+
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

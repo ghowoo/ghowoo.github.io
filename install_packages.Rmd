@@ -39,6 +39,33 @@ eval_slow <- FALSE
 # [Index](index.html)
 
 
+# Install R on Windows
+
+ * Install RTools for Windows with a version corresponding to the R version
+ * Install MiKTeX on Windows for Latex, change on MikTex console setting to "Always"
+ * Install tabu package from MikTex console
+
+
+```{r, eval = FALSE}
+tlb <- installed.packages()
+tlb
+
+library(devtools)
+
+install.packages("rlang")
+install.packages("lifecycle")
+
+
+install.packages("data.table")
+install.packages("rmarkdown")
+install.packages("tinytex")
+install.packages("knitr")
+install.packages("kableExtra")
+install.packages("ggplot2")
+
+```
+
+
 # Basic R Packages
 
 ```{r, eval=FALSE}
@@ -409,7 +436,8 @@ install.packages("lwgeom", repository="https://cran.r-project.org/")
 
 
 ```
-# Install R
+
+# Install R on Ubuntu
 
 
 ```{r, eval=FALSE}
