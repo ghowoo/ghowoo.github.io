@@ -75,15 +75,15 @@ tbl %>% prt()
 ## sweep(dt, MARGIN = 1, STATS = 1000, FUN = "+")[1:5, ]
 
 
-AB.IPD <- data.frame(
+ipd <- data.table(
     age = age
   , gender = gender
 )
 
-AC.AgD <- data.frame(
-    age.mean = 30
-  , age.sd = 8
-  , gender.mean = 0.5
+agd <- data.table(
+    age_mean = 30
+  , age_sd = 8
+  , gender_mean = 0.5
 )
 
 ```
@@ -91,8 +91,8 @@ AC.AgD <- data.frame(
 # The Objective Function
 
  * The objective function gives one single numeric value
- * It sums up all covariates (X) with weights (a1)
- * After centralizing covariates (X) (subtracting the mean), the algorithm tries to find weights to minimise its value
+ * It sums up all covariates (X) with weights (a1) where covariates are matching variables
+ * After centralizing covariates (X) (subtracting the mean), the algorithm tries to find weights to minimise the objective function's value (toward zero)
  * Weights vector a1 has the number of coefficients same as the number of covariates
  * In MAIC setting, the covariates are those variables need to be matched
  
@@ -112,7 +112,7 @@ objfn <- function(a1, X){
 
 # Gradient Function
 
- * It is the partical derivatives of the objective function against parameters (a1)
+ * It is the partial derivatives of the objective function against parameters (a1)
 
 ```{r}
 gradfn <- function(a1, X){
@@ -122,20 +122,28 @@ gradfn <- function(a1, X){
 ```
 
 
-# Centralized Data
+# Centralized Individual Data
 
  * It applies the method of moments, for the first-order moment, subtracting the mean; for the second-order moment, subtracting the mean of squared.
 
 ```{r}
+ipd <- ipd[, age_squared := age ^ 2]
+agd <- agd[, age_squared := age_mean ^ 2 + age_sd ^ 2
+                 ][, age := age_mean
+                   ][, gender := gender_mean]
 
-X.EM.0 <- sweep(with(AB.IPD, cbind(age
-                                 , age^2
-                                 , gender))
-              , 2
-              , with(AC.AgD, c(age.mean
-                             , age.mean^2 + age.sd^2
-                             , gender.mean))
-              , '-')
+Vars <- c("age", "age_squared", "gender")
+
+ipd_centralized <- ipd[, ..Vars] - agd[rep(1, nrow(ipd)), ..Vars]
+
+## X.EM.0 <- sweep(with(AB.IPD, cbind(age
+##                                  , age^2
+##                                  , gender))
+##               , 2
+##               , with(AC.AgD, c(age.mean
+##                              , age.mean^2 + age.sd^2
+##                              , gender.mean))
+##               , '-')
 
 ```
 
@@ -147,277 +155,93 @@ X.EM.0 <- sweep(with(AB.IPD, cbind(age
 opt1 <- optim(par = c(0, 0, 0)
             , fn = objfn
             , gr = gradfn
-            , X = X.EM.0
+            , X = as.matrix(ipd_centralized)
             , method = "BFGS")
 
 a1 <- opt1$par
 
-wt <- exp(X.EM.0 %*% a1)
-wt.rs <- (wt / sum(wt)) * n
+wt <- exp(as.matrix(ipd_centralized) %*% a1)
+wt_std <- (wt / sum(wt)) * n
 
-summary(wt)
-sum(wt)
-sum(wt.rs)
-summary(wt.rs)
+ipd$wts <- wt_std
 
-summary(dt$age * wt.rs)
+plt_hist(wt_std, xmin = 0, xmax = 10, xint = 0.2)
 
 
-weighted.mean(dt$age, wt.rs)
-
-mean.weighted <- mean(dt$age * wt.rs)
-sd.weighted <- sqrt( sum(wt.rs * (dt$age - mean.weighted) ^ 2)/ (sum(wt.rs) * (n - 1) / n))
-
-print(c(mean.weighted, sd.weighted))
-
-sqrt(Hmisc::wtd.var(dt$age, wt.rs))
-
-mean.weighted.gender <- mean(dt$gender * wt.rs)
-table(wt.rs > 0)
 
 ```
 
-# R gmm package
+# Effective Sample Size
+
+ * Kish's method
+ 
+ $$Effective \, Sample \, Size = [\sum \omega_i]^2/[\sum \omega_i^2]$$
 
 ```{r}
-library(gmm)
+
+sample_size <- data.table(
+    n_original = nrow(ipd)
+    , n_effective_sample_size = (sum(wt_std)) ^ 2 / sum(wt_std ^ 2)
+)
+
+sample_size %>% prt()
 
 
-# Simulate One column data
-# Reproducible
-set.seed(123)
 
-# Generate the data from normal distribution
-n <- 200
-x <- rnorm(n, mean = 4, sd = 2)
-# set up the moment conditions for comparison
-# MM (just identified)
-g0 <- function(tet, x) {
-  m1 <- (tet[1] - x)
-  m2 <- (tet[2]^2 - (x - tet[1])^2)
-  f <- cbind(m1, m2)
-  return(f)
-}
-# GMM (over identified)
-g1 <- function(tet, x) {
-  m1 <- (tet[1] - x)
-  m2 <- (tet[2]^2 - (x - tet[1])^2)
-  m3 <- x^3 - tet[1] * (tet[1]^2 + 3 * tet[2]^2)
-  f <- cbind(m1, m2, m3)
-  return(f)
+
+```
+
+# Balance Table
+
+```{r}
+prs_agd <- agd[, c("age_mean", "age_sd", "gender")]
+
+wmean <- function(x, wt){sum(x * wt) / sum(wt)}
+wsd <- function(x, wt){
+    wm <- wmean(x, wt)
+    n <- length(x)
+    sqrt( sum(wt * (x - wm) ^ 2)/ (sum(wt) * (n - 1) / n))
 }
 
-print(res0 <- gmm(g0, x, c(mu = 0, sig = 0)))
-print(res1 <- gmm(g1, x, c(mu = 0, sig = 0)))
 
-summary(res0)
-
-```
-
-
-# Level One
-
-
-
-* Reference Link: https://www.dfhcc.harvard.edu/events/?month=2&year=2021
-
-## Level II A
-
-This is a very long sentence to see how wide the paragraph could be the HTML file holds. And also to see if there is way to limit the text wide shown in HTML file.
-
-```{r}
-plot(1:10)
-
-```
-
-
-## Level II B
-
-```{r}
-hist(rnorm(100))
-
-```
-
-# Insert File into HTML
-
-
-```{r}
-library(Wu)
-dt <- data.table(
-  x = rnorm(100)
-, y = factor(sample(c("A", "B", "C"), size = 100, replace = TRUE), levels = c("A", "B", "C"))
-, z = rnorm(100)*5
-, sex = factor(sample(x = c("F", "M"), size = 100, replace = TRUE), levels = c("F", "M"))
-, trt = factor(sample(x = c("Case", "Control"), size = 100, replace = TRUE), levels = c("Case", "Control"))
+parameters_ipd <- c(
+    age_mean = mean(ipd$age)
+  , age_sd = sd(ipd$age)
+  , gender_mean = mean(ipd$gender)
 )
 
 
-
-label(dt$x) <- "X_Label"
-label(dt$sex) <- "Sex"
-
-Vars <- c("x", "y", "z", "sex")
-factorVars <- c("y", "sex")
-
-
-combine_list <- function(lst){
-  s <- names(lst)
-  ind <- split(seq_along(s), s)
-  ind <- unlist(lapply(ind, function(l){l[[1]]}))
-  invisible(lst[sort(ind)])
-}
+parameters_ipd_weighted <- c(
+    age_mean = wmean(ipd$age, ipd$wts)
+  , age_sd = wsd(ipd$age, ipd$wts)
+  , gender_mean = wmean(ipd$gender, ipd$wts)
+)
 
 
+bt <- data.table(
+    moment = names(prs_agd)
+  , aggregate = as.numeric(prs_agd[1, ])
+  , ipd = parameters_ipd
+  , ipd_weighted = parameters_ipd_weighted
+)
 
-get_tbl1 <- function(...){
-  lst <- as.list(match.call())[-1]
-  args <- list(
-    vars = Vars
-  , factorVars = factorVars
-  , test = FALSE
-  , includeNA = TRUE
-  , smd = TRUE
-  , addOverall = FALSE
-  )
-  args <- c(lst, args, formals(CreateTableOne, envir = environment(CreateTableOne)))
-  args <- combine_list(args)
-  if (trimws(args$strata) %in% c("")){args$addOverall = FALSE} else {args$addOverall = TRUE}
-  invisible(do.call(CreateTableOne, args))
-}
-
-t <- get_tbl1(data = dt, strata = "trt", test = TRUE)
+bt <- bt[, diff := ipd - aggregate
+         ][, diff_weighted := ipd_weighted - aggregate]
 
 
-
-fmt_tbl1 <- function(...){
-  lst <- as.list(match.call())[-1]
-  args <- list(
-    printToggle = FALSE
-  , catDigits = 1
-  , conDigits = 2
-  , pDigits = 3
-  , showAllLevels = TRUE
-  , smd = TRUE
-  , missing = TRUE
-  , varLabels = TRUE
-  )
-  args <- combine_list(c(lst, args))
-  rtn <- do.call(tableone:::print.TableOne, args)
-  rtn <- as.data.table(cbind(rownames(rtn), rtn))
-  colnames(rtn)[1] <- "Variable"
-  invisible(rtn)
-}
-
-t2 <- fmt_tbl1(t, pDigits = 5, missing = FALSE)
-
-t2 %>% prt()
-
-tbl1 <- function(...){
-  lst <- as.list(match.call())[-1]
-  args <- list(
-    vars = Vars
-  , factorVars = factorVars
-  , test = FALSE
-  , includeNA = TRUE
-  , smd = TRUE
-  , addOverall = FALSE
-  )
-  args <- c(lst, args, formals(CreateTableOne, envir = environment(CreateTableOne)))
-  args <- combine_list(args)
-  args <- args[names(args) %in% names(formals(CreateTableOne))]
-  if (trimws(args$strata) %in% c("")){args$addOverall = FALSE} else {args$addOverall = TRUE}
-  tableone_t <- do.call(CreateTableOne, args)
-  fx <- tableone:::print.TableOne 
-  args2 <- list(
-    printToggle = FALSE
-  , catDigits = 1
-  , contDigits = 2
-  , pDigits = 3
-  , showAllLevels = TRUE
-  , smd = TRUE
-  , missing = TRUE
-  , varLabels = TRUE
-  )
-  args <- combine_list(c(lst, args2))
-  args <- args[names(args) %in% names(formals(fx))]
-  rtn <- do.call(tableone:::print.TableOne, c(list(x = tableone_t), args))
-  rtn <- as.data.table(cbind(rownames(rtn), rtn))
-  colnames(rtn)[1] <- "Variable"
-  rownames(rtn) <- NULL
-  invisible(rtn)
-}
-
-
-tbl1n <- function(...){
-  lst <- as.list(match.call())[-1]
-  for (i in seq_along(Vars)){
-  var <- Vars[i]
-  if (var %in% factorVars) {
-    ti <- do.call(tbl1, c(lst, vars = var, factorVars = var))
-    }else{
-      ti_1 <- do.call(tbl1, c(lst, vars = var, factorVars = NULL))
-      ti_2 <- do.call(tbl1, c(lst, vars = var, factorVars = NULL, nonnormal = var))
-      ti_3 <- do.call(tbl1, c(lst, vars = var, factorVars = NULL, nonnormal = var, minMax = TRUE))
-      ti <- rbind(ti_1, ti_2[-1, ], ti_3[-1, ])
-      ti$level <- gsub("^(.+)( )(\\(me)(.+)(\\))$", "\\3\\4\\5", ti$Variable, perl = TRUE)
-      ti$level <- gsub("^\\((.+)\\)$", "\\1", ti$level, perl = TRUE)
-      ti$Variable <- gsub("^(.+)( )(\\(me)(.+)(\\))$", "\\1", ti$Variable, perl = TRUE)
-      ti$Variable[-c(1:2)] <- ""
-    }
-  if (i %in% c(1)) {
-    rtn <- ti
-  }else{
-    rtn <- rbind(rtn, ti[-1, ])
-  }
-  }
-  rownames(rtn) <- NULL
-  invisible(rtn)
-  }
-
-ttt <- tbl1n(data = dt, strata = "trt", test = TRUE, pDigits = 5, catDigits = 3, contDigits = 4)
-
-
-tt <- tbl1(data = dt, strata = "trt", test = TRUE, pDigits = 4, catDigits = 2, contDigits = 3)
-
-
-tn <-  tbl1(data = dt, strata = "trt", test = TRUE, vars = c("x"))
-
-ttt %>% prt()
-
-attach_docx <- function(obj, file = "table1.docx"){
-  flextable::flextable(obj) %>% flextable::save_as_docx(path = file)
-  xfun::embed_file(file)
-}
-
-attach_docx(ttt)
-
-
-attach_csv(ttt)
-
-## library(officer)
-## library(flextable)
-## flextable::set_flextable_defaults(digits = 5)
-## t2 %>% flextable() %>% save_as_docx(path = "table1.docx")
-
-## xfun::embed_file('table1.docx')
-
+bt[, .(moment, aggregate, ipd, diff, ipd_weighted, diff_weighted)] %>% prt()
 
 ```
 
 
-# Add a copy icon on the rmarkdown chunk
+# References
 
 
-````
-opts_chunk$set(class.source='klippy')
-klippy::klippy(position = c('top', left)
-             , tooltip_message = 'Click to copy'
-             , tooltip_success = 'Done')
-````
-
-
-
-# Level Four
+ * NICE MAIC: https://www.sheffield.ac.uk/nice-dsu/tsds/population-adjusted
+ 
+ * R "maic" Package: https://cran.r-project.org/web/packages/maic/maic.pdf
+ 
+ 
 # R sessionInfo
 
 ```{r}

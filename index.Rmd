@@ -64,7 +64,7 @@ eval_slow <- FALSE
 
 # Modeling
 
-
+ * [MAIC: Matching Adjusted Indirect Comparision](MAIC.html)
  * [LASSO: Least Absolute Shrinkage and Selection Operation](lasso.html)
  * [CART: Classification And Regression Trees](cart.html)
  * [Random Forest with R & Python](randomforest.html)
