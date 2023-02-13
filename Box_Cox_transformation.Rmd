@@ -1,0 +1,117 @@
+---
+title: "Box Cox Transformation"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+
+# Simulate Data
+
+
+
+```{r}
+n <- 250
+x <- rgamma(n = n, shape = 3, rate = 2)
+summary(x)
+plt_hist(x)
+
+
+```
+
+# Transformation
+
+$$Y = \frac{X^{\lambda} - 1}{\lambda}$$
+
+
+
+ * The boxcox function gives lambda values and their corresponding log-Likelihood which follow a chi-squared distribution.
+
+```{r}
+library(MASS)
+out <- boxcox(lm(x ~ 1), plotit = T, lambda = seq(-10, 10, by = 0.1), optimize = TRUE)
+
+lambda_highest_likelihood <- out$x[which.max(out$y)]
+
+lambda_range <- range(out$x[out$y > max(out$y)-qchisq(0.95,1)/2])
+
+lambda <- mean(lambda_range)
+
+y <- (x ^ lambda - 1) / lambda
+
+plt_hist(y)
+
+summary(y)
+sd(y)
+
+```
+
+# Shapiro-Wilk Test
+
+```{r}
+shapiro.test(x)
+shapiro.test(y)
+
+```
+
+# Q-Q Plot
+
+```{r}
+qqnorm(x, frame = FALSE)
+qqline(x)
+
+car::qqPlot(x)
+
+qqnorm(y, frame = FALSE)
+qqline(y)
+
+car::qqPlot(y)
+
+```
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

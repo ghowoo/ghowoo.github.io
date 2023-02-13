@@ -1,0 +1,353 @@
+---
+title: "Regression from Scratch in R"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+# Linear Regression
+
+## Simulate Data
+
+```{r}
+n <- 30
+set.seed(123456)
+x1 <- rnorm(n = n, mean = 1, sd = 2)
+x2 <- rnorm(n = n, mean = 3, sd = 4)
+e <- rnorm(n = n, mean = 0, sd = 6)
+w <- runif(n = n, min = 0, max = 1)
+y <- 3 + x1 * 2 + x2 * 0.5 + e
+
+
+dt <- data.table(y, x1, x2, w)
+
+X <- as.matrix(cbind(x0 = rep(1, times = n), x1, x2))
+
+p <- dim(X)[2]
+
+
+dim(X) %>% prt(caption = "Dimensions of X")
+
+Y <- as.matrix(dt$y)
+
+m <- lm(y ~ x1 + x2, data = dt)
+ms <- summary(m)
+
+```
+
+## Matrix Algebra
+
+
+ * Sum of squares
+
+```{r}
+
+t(X) %*% X %>% prt(caption = "Covariance of Matrix X")
+
+```
+
+## Estimate Beta
+
+ $$y = X \beta$$
+ $$X^T y = (X^T X) \beta$$
+ $$\beta = (X^TX)^{-1}X^Ty$$
+
+
+```{r}
+
+beta <- solve(t(X) %*% X) %*% t(X) %*% y
+
+cbind(beta, coef(m)) %>%
+    prt(caption = "Betas", col.names = c("Matrix Algebra", "lm"))
+
+```
+
+
+## Estimate Variance (Sigma)
+
+ * Ref: https://www.stat.purdue.edu/~boli/stat512/lectures/topic3.pdf
+ * $Y$ is a multivariate normal distribution
+ $$Y \sim N(X\beta, \sigma^2 I)$$
+ $$s^2 = \frac{e^{\prime}e}{n - p} = \frac{(Y - X\beta)^{\prime}(Y - X\beta)}{n - p}$$
+ $$s^2 = \frac{SSE}{df_E} = MSE$$
+
+
+
+```{r}
+res <- y - X %*% beta
+
+cbind(res, m$residuals) %>%
+    prt(caption = "Residuals", col.names = (c("Matrix Algebra", "lm")))
+
+sse <- (t(res) %*% res) / (n - p)
+
+cbind(sqrt(sse), sigma(m)) %>%
+    prt(caption = "Residual Mean Squared Errors (Sigma)", col.names = c("Matrix Algebra", "lm"))
+
+
+```
+
+
+
+## Estimate Variance-Covariance of Coefficients
+ 
+ * Ref: https://timeseriesreasoning.com/contents/deep-dive-into-variance-covariance-matrices/
+ * Variance-covariance matrix of coefficients
+ $$Var(\hat{\beta}) = \sigma^2 (X^{\prime}X)^{-1} = s^2  (X^{\prime}X)^{-1}$$
+ $$V[\hat{\beta}] = E[\hat{\beta}^2] - E[\hat{\beta}^{\prime}] E[\hat{\beta}]$$
+
+$$V[\hat{\beta}] = V[(X^TX)^{-1}X^Ty]$$
+
+$$V[\hat{\beta}] = V[(X^TX)^{-1}X^T (X\hat{\beta} + \epsilon)] $$
+$$V[\hat{\beta}] = V[(X^TX)^{-1}X^T \epsilon]$$
+$$A = (X^TX)^{-1}X^{T}$$
+$$V[\hat{\beta}] = A V[\epsilon] A^T$$
+
+
+```{r}
+
+A <- solve(t(X) %*% X) %*% t(X)
+myCov <- A %*% diag(x = as.numeric(sse), nrow = n) %*% t(A)
+
+cbind(myCov, vcov(m)) %>% prt(caption = "Variance-Covariance Matrix of Coefficients")
+
+
+
+
+
+```
+
+## t-test on a single coeffient
+
+ * Test statistic $$t^* = (\hat{\beta} - 0)/ s(\beta)$$ with degree of freedom $n-p$
+
+```{r}
+t_values <- (beta - 0) / sqrt(diag(myCov))
+p_values <- pt(t_values, df = n - p, lower.tail = FALSE) * 2
+
+ses <- sqrt(diag(myCov))
+
+cbind(Beta = beta, SE = ses, t_ = t_values, p_ = p_values, ms$coefficients) %>%
+    prt(caption = "t-test on Coefficients")
+
+```
+
+## Wald Statistic
+
+ * Ref: https://www.statisticshowto.com/wp-content/uploads/2016/09/2101f12WaldWithR.pdf
+ * Ref: https://cran.r-project.org/web/packages/clubSandwich/vignettes/Wald-tests-in-clubSandwich.html
+ * Ref: https://www.stat.umn.edu/geyer/8112/notes/tests.pdf
+ * Ref: http://home.cc.umanitoba.ca/~godwinrt/4042/material/part12.pdf
+ * Ref: https://bookdown.org/mike/data_analysis/wald-test.html
+ * This is Wald test statistic in a simple form
+ $$W = (\hat{\theta} - \theta_0)^{\prime}[cov(\hat{\theta})]^{-1}(\hat{\theta} - \theta_0)$$
+ $$W \sim \chi^2_q$$ 
+ where $q = rank(cov(\hat{\theta}))$
+ * A linear restriction uses a set of values that make possible restrictions on $\beta$ values
+ * $$R \beta = q$$ is a restriction with dimensions $(j \times k)(k \times 1) = (j \times 1)$
+ * If $R = |1, 0, 0|$, then the restriction is that the first $\beta_1 == q$
+ * If $R = |0, 1, 1|$, then the restriction is that the $\beta_2 + \beta_3 == q$
+ * Set $$m = R\beta - q$$, then the null hypothesis is $E[m] = 0$
+ * And, $V[m] = V[R\beta - q] = V[R\beta] = R V[\beta] R^{\prime}$
+ * So, $m \sim N[0, RV[\beta]R^{\prime}]$
+ * The Wald test statistic
+ $$W = m^{\prime} V[m]^{-1} m$$
+
+```{r}
+R <- matrix(c(0, 1, 0, 0, 0, 1), nrow = 2, byrow = TRUE)
+q <- matrix(c(0, 0), ncol = 1)
+ctr <- R %*% beta - q
+Vm <- R %*% myCov %*% t(R)
+W <- t(ctr) %*% solve(Vm) %*% ctr
+
+pchisq(q = W, df = dim(q)[1], lower.tail = FALSE)
+
+library(aod)
+print(aod::wald.test(Sigma = myCov
+                   , b = beta
+                   , Terms = c(2:3)
+                   , verbose = TRUE)
+    , digits = 5)
+
+```
+
+
+## 95% Confidence Intervals for Coefficients
+
+ * $$CI = \hat{\beta} \pm t^c s(\beta)$$ 
+ * where $$t^c = t_{n-p}(0.975)$$
+
+```{r}
+ci_lower <- beta - qt(0.975, df = n - p) * ses
+ci_upper <- beta + qt(0.975, df = n - p) * ses
+cbind(ci_lower, ci_upper, confint(m))
+
+```
+
+
+## Predicted Value
+
+ * Predict a subpopulation mean corresponding to a set of explanatory variables
+  $$E(Y_i) = \mu_i = X_i^{\prime}\beta$$
+  $$\hat{\mu_i} = X_i^{\prime} \hat{\beta}$$
+  $$s^2(\hat{\mu}) = X^{\prime} s^2 (\beta) X = s^2 X^{\prime}(X^{\prime}X)^{-1}X$$
+ * 95% CI:
+ $$\hat{\mu}_i \pm s(\hat{\mu}_i) t_{n-p}(0.975)$$
+
+```{r}
+
+muhat <- X %*% beta
+
+
+
+pred <- predict(m, newdata = dt, se.fit = TRUE, interval = "confidence")
+
+semu <- diag(sqrt(diag(sse[1, 1, drop = TRUE], nrow = n) %*% X %*% solve(t(X) %*% X) %*% t(X)))
+
+cbind(semu, pred$se.fit) %>% prt()
+
+
+```
+
+
+## Predicted Mean
+
+ * Ref: http://www.math.kent.edu/~reichel/courses/monte.carlo/alt4.7d.pdf
+
+$$E[\hat{y}] = E[X\hat{\beta}] = \sum (X\hat{\beta})/N$$
+$$V[E(\hat{y})] = V[\sum (X\hat{\beta})/N]$$
+$$V[E(\hat{y})] = \frac{1}{N^2} \sum(V[X\hat{\beta}])$$
+$$V[E(\hat{y})] = \frac{1}{N^2} \sum(XV[\hat{\beta}]X^T)$$
+
+```{r}
+wt <- matrix(rep(1 / n, n), nrow = 1)
+beta <- matrix(beta, ncol = 1)
+
+mpred <- wt %*% (X %*% beta)
+
+vpm <- diag(X %*% myCov %*% t(X))
+wvpm <- wt %*% vpm
+
+sqrt(sum(diag(vpm)))
+
+
+library(emmeans)
+emm <- emmeans(object = m, specs = ~ 1)
+
+print(emm, digits = 5)
+```
+
+
+## Weighted Predicted Mean
+
+$$E[w\hat{y}] = E[wX\beta] = \sum (wX\beta)/N$$
+$$V[w\hat{y}] = V[wX\beta] = V[\sum (wX\beta)/N]$$
+$$V[w\hat{y}] = \frac{1}{N^2} \sum(V[wX\beta])$$
+$$V[w\hat{y}] = \frac{1}{N^2} \sum(w^2V[X\beta])$$
+
+```{r}
+wt <- matrix(dt$w, nrow = 1)
+beta <- matrix(beta, ncol = 1)
+
+wpred <- wt %*% (X %*% beta)
+
+
+```
+
+## Robust Standard Error
+
+
+ * The errors terms have constant variance and are uncorrelated
+ $$E[uu^T] = \sigma^2 I_n$$
+ * When variance is not constant
+ $$V[\hat{\beta}_{OLS}] = V[(X^TX)^{-1}X^Ty] = (X^TX)^{-1}X^T \sum X(X^TX)^{-1}$$
+where $\sum = V[u]$
+ * White's method, or HCE (heteroskedasticity-consistent estimator), or HC0
+ $$\hat{V}_{HCE}[\hat{\beta}_{OLS}] = (X^TX)^{-1}(X^T diag(\hat{\epsilon}_1^2, ..., \hat{\epsilon}_n^2) X)(X^TX)^{-1}$$
+
+
+
+```{r}
+sgm <- res ^ 2
+sgm <- diag(as.vector(sgm), nrow = dim(sgm)[1])
+
+vhce <- solve(t(X) %*% X) %*% (t(X) %*% sgm %*% X) %*% solve(t(X) %*% X)
+
+
+
+library(sandwich)
+rbind(vhce, vcovHC(m, type = "HC0")) %>% prt()
+
+```
+
+
+
+
+# Linear Mixed Model
+
+ * The mixed model
+
+$$y = X\beta + Z\gamma + \epsilon$$
+
+Where $Z$ is the random-effects design matrix
+and $\gamma$ is a vector of random-effects parameters
+
+ * Two key assumptions
+ $$E \left[\begin{array} & \gamma \\ & \epsilon \end{array} \right] = \left[\begin{array} & 0 \\ & 0 \end{array} \right] $$
+ 
+ $$Var \left[\begin{matrix} \gamma \\ & \epsilon \end{matrix} \right] = \left[\begin{matrix} G & 0 \\ 0 & R \end{matrix} \right] $$
+ 
+ * Therefore the variance of %y% is
+ $$V (Y) = ZGZ^{\prime} + R$$
+ * A general linear model is a special case with $Z = 0$ and $R = \sigma^2 I_n$ (without random effects and with independent homoscedastic errors)
+ * The generalized least squares (GLS) minimizing
+ $$(y - X\beta)^{\prime} V^{-1} (y - X\beta)$$
+ * In case of weighted regression (SAS PROC MIXED, REPEATED), replace $X^{\prime}X$ with $X^{\prime}WX$, $Z^{\prime}Z$ with $Z^{\prime}WZ$, and replace $R$ with $W^{-1/2}RW^{-1/2}$ where $W$ is a diagonal weight matrix. Therefore the covariance matrix $V$ for the observations is
+ $$V = ZGZ^{\prime} + W^{-1/2}RW^{-1/2}$$
+ 
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```
