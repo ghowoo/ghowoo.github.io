@@ -102,6 +102,7 @@ eval_slow <- FALSE
 
 
 # R Programming
+ * [Symbolic Algebra with R](symbolic_algebra.html)
  * [Intall R Packages](install_packages.html)
  * [R Markdown HTML Output Style](style.html) 
  * [flexdashboard Template](template_flexdashboard.html)

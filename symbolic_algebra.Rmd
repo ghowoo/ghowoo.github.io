@@ -1,0 +1,138 @@
+---
+title: "Symbolic Algebra with R"
+author: "Wu Gong"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    code_folding: hide
+    toc_depth: 6
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+    css: Wu.css
+---
+
+
+	
+```{r setup, echo=FALSE, cache=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(rmdformats)
+library(Wu)
+opts_chunk$set(echo=TRUE
+             , cache=FALSE
+             , eval=TRUE
+             , prompt=FALSE
+             , results="asis"
+             , tidy=FALSE
+             , comment=NA
+             , message=FALSE
+             , warning=FALSE
+             , out.width = '80%'
+             , class.source='klippy'
+               )
+eval_fast <- TRUE
+eval_slow <- FALSE
+klippy::klippy(position = c('top', 'left')
+             , tooltip_message = 'Click to copy'
+             , tooltip_success = 'Done')
+```
+
+
+
+
+# [Back to Index](index.html)
+
+
+# R Ryacas Package
+
+
+
+* Ref: https://cran.r-project.org/web/packages/Ryacas/Ryacas.pdf
+* Ref: https://blog.ephorie.de/doing-maths-symbolically-r-as-a-computer-algebra-system-cas
+
+
+## Simplify a mathmatical function
+
+
+```{r}
+
+library(Ryacas)
+
+
+mf0 <- "2*a*b*a^2/b-a^3"
+mf0_s <- paste0("Simplify(", mf0, ")")
+mf1_e <- as_r(yac_str(mf0_s))
+mf1_s <- paste0("Simplify(", as.character(mf1_e), ")")
+mf2_e <- as_r(yac_str(mf1_s))
+
+fml0 <- paste0("$$", mf0, "$$")
+fml1 <- paste0("$$", as.character(mf1_e), "$$")
+fml2 <- paste0("$$", as.character(mf2_e), "$$")
+
+```
+
+`r fml0`
+`r fml1`
+`r fml2`
+
+
+## Solve an equation
+
+```{r}
+eq <- "y == a + b*x, x"
+sv <- as_r(yac_str(paste0("Solve(", eq, ")")))
+
+fml_eq <- paste0("$$", eq, "$$")
+fml_sv <- paste0("$$", as.character(sv), "$$")
+
+```
+
+`r fml_eq`
+`r fml_sv`
+
+
+## Expand an expression
+
+```{r}
+
+ep0 <- "(x - y)^3"
+ep1 <- as_r(yac_str(paste0("Expand(", ep0, ")")))
+
+fml_ep0 <- paste0("$$", ep0, "$$")
+fml_ep1 <- paste0("$$", ep1, "$$")
+```
+
+`r fml_ep0`
+`r fml_ep1`
+
+## Derivative of a function
+
+```{r}
+eq <- "Pi*x^4 + 2*x^3 - 3*x^2 + 4*x - 5 + x^(1/2) + Ln(x) + Exp(x)"
+eq1 <- as_r(yac_str(paste0("D(x, 1)", eq)))
+as_latex <- function(str){paste0("$$", str, "$$")}
+```
+`r as_latex(eq)`
+`r as_latex(as.character(eq1))`
+
+
+## Integration
+
+```{r}
+str <- "Integrate(x, 1.96, 100) Exp(x^2/2)/sqrt(2*3.14)"
+
+str <- "Integrate(x, 0, 1) a*x^2"
+ep <- as_r(yac_str(str))
+as.character(ep)
+
+
+```
+
+# R sessionInfo
+
+```{r}
+sessionInfo()
+
+```

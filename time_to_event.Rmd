@@ -550,6 +550,45 @@ simulWeib <- function(N, lambda, rho, beta, rateC)
 
 
 ```{r}
+library(survival)
+
+library(survival)
+library(KMsurv)
+library(SurvRegCensCov)
+library(sjPlot)
+data(larynx)
+
+wr <- WeibullReg(Surv(time, death) ~ factor(stage) + age
+            , data=larynx)
+summary(wr)
+wr$HR
+wr$coef
+wr$ETR
+
+wb <- survreg(Surv(time, death) ~ factor(stage) + age
+            , data=larynx, dist = "weibull")
+
+summary(wb)
+tab_model(wb)
+
+scale <- wb$scale
+shape <- 1 / scale
+exp(coef(wb)) ^ shape
+
+str(wb)
+
+
+
+wb$scale * coef(wb)
+
+coef(wb)
+
+
+survreg(Surv(time, censor) ~ 1,
+  data = first_test_fit_tbl,
+  dist = "weibull"
+)
+
 survreg(Surv(futime, fustat) ~ ecog.ps + rx
       , ovarian
       , dist='weibull'

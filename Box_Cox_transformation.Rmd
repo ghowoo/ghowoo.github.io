@@ -64,12 +64,14 @@ plt_hist(x)
 $$Y = \frac{X^{\lambda} - 1}{\lambda}$$
 
 
-
- * The boxcox function gives lambda values and their corresponding log-Likelihood which follow a chi-squared distribution.
+ * The boxcox function gives lambda values and their corresponding log-Likelihood which follows a chi-squared distribution.
+ * The confidence interval for lambda
+ $$L(\hat{\lambda}) - L(\lambda) < \frac{1}{2}\chi^2(1-\alpha, 1))$$
 
 ```{r}
 library(MASS)
 out <- boxcox(lm(x ~ 1), plotit = T, lambda = seq(-10, 10, by = 0.1), optimize = TRUE)
+summary(out$y)
 
 lambda_highest_likelihood <- out$x[which.max(out$y)]
 

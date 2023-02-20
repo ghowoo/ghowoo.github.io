@@ -45,7 +45,35 @@ klippy::klippy(position = c('top', 'left')
 # [Back to Index](index.html)
 
 
+# ANOVA and ICC
 
+
+```{r}
+library(psych)
+sai <- psychTools::sai
+tl <- as.data.table(sai)[, .(time, id, anxious)]
+tl[, .N, by = time]
+tl <- tl[order(id, time, anxious)
+         ][, seq := 1:.N, by = .(id, time)
+           ][seq == 1]
+tw <- dcast(tl, id ~ time, value.var = "anxious")
+colnames(tw)
+dim(tl)
+dim(tw)
+head(tw)
+summary(tl$anxious)
+
+ICC(tw[, 2:5])
+
+dt[, .N, by = time]
+
+aov(anxious ~ as.factor(id) + as.factor(time), data = tl)
+
+
+m <- lmer(formula = anxious ~ 0 + (1 | id) + (1 | time), data = tl)
+summary(m)
+
+```
 
 # Cronbach's $\alpha$
 
