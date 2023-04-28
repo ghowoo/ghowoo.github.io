@@ -45,6 +45,65 @@ klippy::klippy(position = c('top', 'left')
 # [Back to Index](index.html)
 
 
+# R Base
+
+ * ref: https://www.youtube.com/watch?v=TL3NRHI9yNo
+ 
+## The D Function
+
+```{r}
+
+ep1 <- D(expression(a * x ^ 2), "x")
+ep1 <- paste0("$$", deparse(ep1), "$$")
+
+```
+
+`r ep1`
+
+## The DD Function
+
+
+```{r}
+DD <- function(expr, name, order = 1){
+    if(order < 1) stop("'order' must be >= 1")
+    if (order == 1) {return(invisible(D(expr, name)))}
+    else {DD(D(expr, name), name, order = order - 1)}
+}
+
+ep3 <- DD(expression(x ^ 4 + a * x ^ 3 + b * x ^ 2 + c * x + d), "x", order = 2)
+ep3 <- paste0("$$", deparse(ep3), "$$")
+
+
+```
+
+`r ep3`
+
+
+## Evaluate a Derivative Function
+
+
+```{r}
+expr <- expression(x^2)
+expr_d1 <- D(expr, "x")
+
+eval_expr <- function(expr, b = 5, ...){
+    args <- list(...)
+    list2env(args, environment())
+    eval(expr)
+}
+
+
+
+ep4 <- paste0("Evaluating ", "$", deparse(expr_d1), "$"
+            , " at x = 3 "
+            , "has a value of "
+            , eval_expr(expr_d1, x = 3)
+              )
+```
+
+`r ep4`
+
+
 # R Ryacas Package
 
 

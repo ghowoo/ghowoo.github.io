@@ -252,6 +252,131 @@ p
 ```
 
 
+
+## Forest Plot with Annotation
+
+```{r}
+
+clrs <- c("#2EAEE6"
+        ## , "#2EE6CA"
+        ## , "#2EE677"
+        , "#37E62E"
+        ## , "#8AE62E"
+        ## , "#DCE62E"
+        ## , "#E69C2E"
+        ## , "#E6492E"
+          , "#aaaaaa"
+          )
+## clrs <- rev(clrs)
+
+font_tick_size <- 10
+font_axis_size_x <- 20
+font_axis_size <- 10
+font_size_annotate <- font_axis_size / .pt
+
+dt <- data.table(
+    name = (3:1)
+  , name_color = clrs
+  , coef_value = c(-1, -2, -3) / 10
+  , coef_value_lower = (c(-1, -2, -3) - 0.5) / 10
+  , coef_value_upper = (c(-1, -2, -3)+ 0.5) / 10
+)
+
+dt <- dt[, name_label := factor(paste0(name, "  ", "CI"))]
+dt <- dt[, num_rep := 22 - nchar(round(coef_value, 4)) ]
+
+
+tit1 <- as.expression(bquote(atop(bold('Active Arm Weighted')
+                                  , ~'-0.3 (-0.25, -0.35)')))
+tit2 <- as.expression(bquote(atop(bold('Active Arm')
+                                  , ~'-0.2 (-0.15, -0.25)')))
+tit3 <- as.expression(bquote(atop(bold('Comparator')
+                                  , ~'-0.1 (-0.05, -0.15)')))
+
+
+
+p <- ggplot(dt
+          , aes(x = name
+              , y = coef_value
+              , ymin = coef_value_lower
+              , ymax = coef_value_upper
+                )) +
+    geom_bar(aes(fill = name_label)
+          ,  show.legend = FALSE
+          , stat = "identity"
+          , just = 0.5
+          , size = .9) +
+    geom_errorbar(aes(ymin=coef_value_lower, ymax=coef_value_upper)
+                , size = 1
+                , width = .05
+                , color = "#333333"
+                  ) +
+    scale_fill_manual(values = clrs) + 
+    geom_segment(aes(x = 1, xend = 3, y = -0.4, yend = -0.4)
+               , color = "black"
+               , size = 0.2) +
+    geom_segment(aes(x = 1, xend = 1, y = -0.4, yend = -0.385)
+               , color = "black"
+               , size = 0.2) +
+    geom_segment(aes(x = 3, xend = 3, y = -0.4, yend = -0.385)
+               , color = "black"
+               , size = 0.2) +
+    annotate("text", x = 2, y = -0.42
+           , label = "p < 0.001"
+           , size = font_size_annotate
+             , fontface = "italic") + 
+    ## geom_segment(aes(x = 0, xend = 0, y = -0.5, yend = 0)
+    ##            , color = "black"
+    ##            , size = 1) +
+    scale_x_continuous(expand = c(0, 0)
+                     , limits = c(0.4, 4.2)
+                     , breaks = c(1, 2, 3)
+                     , labels = c(tit1
+                                , tit2
+                                , tit3)
+                     , position = "top") +
+    scale_y_continuous(expand = c(0, 0)
+                     , limits=c(-0.5, 0)
+                     , breaks = seq(-0.5, 0, .1)
+                     , labels = c("-50%", "-40%", "-30%", "-20%", "-10%", "0")
+                     , name='Mean') +
+    ylab("") +
+    xlab("") + 
+    theme_bw() +
+    theme(axis.ticks.x = element_blank()
+        , axis.text.x = element_text(hjust = 0.5
+                                   , vjust = 0
+                                   , size = font_axis_size
+                                   , family = "TT Arial"
+                                     ## , face = "bold"
+                                     )
+        , axis.text.y = element_text(hjust = 0.5
+                                   , vjust = 0
+                                   , size = font_axis_size
+                                   , family = "TT Arial")
+        , axis.title.y = element_text(size = font_axis_size
+                                    , family = "Times New Roman"
+                                    , face = "bold")
+        , panel.grid.major = element_blank()
+        , panel.grid.minor = element_blank()
+        , panel.border = element_blank()
+        , axis.line.y = element_line(color="black", size = 0.5)
+          ) +
+    coord_cartesian(xlim=c(0, 4.5))
+p
+
+
+## png(file="forestplot.png", width = 2400, height = 1200, res = 300)
+## p
+## dev.off()
+
+
+
+
+```
+
+
+
 ## Export Plot
 
 ```{r, eval = FALSE}

@@ -262,7 +262,59 @@ dt %>% prt()
 
 ```
 
+## Weighted Rolling Average
+
+
+```{r}
+dt <- data.table(series = c(1:10, NA, 11:21))
+
+n <- 2
+wts <- (1:n) / sum(1:n)
+wm <- function(x){
+    invisible(weighted.mean(x = x, w = wts))
+}
+
+dt <- dt[, mvw2 := frollapply(seq_len(.N)
+                            , FUN = function(ind) wm(series[ind])
+                            , n = 2
+                            , align = "left"
+                              )]
+
+dt %>% prt()
+
+```
+
+
+## Weighted Rolling Median
+
+
+```{r}
+dt <- data.table(var1 = c(1:10, NA, 11:21))
+
+library(matrixStats)
+n <- 4
+wts <- c(0.1, 1, 1, 1)
+wts <- wts / sum(wts)
+wmd <- function(x){
+    invisible(matrixStats::weightedMedian(x = x, w = wts))
+}
+
+dt <- dt[, mvwmd3 := frollapply(seq_len(.N)
+                            , FUN = function(ind) wmd(var1[ind])
+                            , n = 4
+                            , align = "left"
+                              )]
+
+dt %>% prt()
+
+```
+
+
+
+
+
 ## Concatenate Multiple Rows by Group
+
 
 ```{r}
 

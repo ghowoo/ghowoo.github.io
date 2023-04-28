@@ -94,6 +94,43 @@ unique(dt[, .(or1, or2, or3, or4, or5, or6, or7)]) %>% prt(caption = "Variables 
 
 ```
 
+
+# GLM logistic regression on aggregated data
+
+ * The cbind method formula gives glm the numbers in each categories
+
+```{r}
+dt1 <- data.table(
+    disease = c(55,42)
+  , healthy = c(67,34)
+  , treatment = c(1,0)
+)
+
+
+m1 <- glm(cbind(disease,healthy) ~ treatment
+        , family = binomial, data = dt1)
+
+
+
+library(sjPlot)
+tab_model(m1)
+
+dt2 <- data.table(
+    disease = c(1, 1, 0, 0)
+  , treatment = c(1, 0, 1, 0)
+  , weight = c(55, 42, 67, 34)
+)
+
+m2 <- glm(disease ~ treatment
+        , family = binomial
+        , data = dt2
+        , weights = weight)
+
+library(sjPlot)
+tab_model(m2)
+
+```
+
 # GLM
 
 ```{r}
@@ -255,6 +292,8 @@ cfs <- lapply(cvfit$lambda, function(x){
 ls <- do.call(c, cfs)
 ls <- unique(ls, fromLast = FALSE)[-1]
 
+
+
 ls %>% prt(caption = "Order of Variables Selected", col.name = "Variable Name")
 
 
@@ -271,6 +310,186 @@ betas %>% prt(digits = c(0, 6, 6, 6), caption = "Beta Coefficients from Adaptive
 
 ```
 
+
+
+# Mixed-Effect Model
+
+ * Ref: https://davidabugaber.com/blog/f/find-the-optimal-mixed-model-for-your-data-with-glmmlasso
+ 
+
+
+
+## Cross-Validation with glmnet
+
+```{r}
+
+library(glmmLasso)
+data(knee)
+kn <- as.data.table(knee)
+kn <- kn[, age_log2 := log2(age)
+         ][, pain.start_log2 := log2(pain.start)
+           ][, time_log2 := log2(time)]
+
+mx <- kn[, .(time, age, sex, pain.start, age_log2, pain.start_log2, time_log2)]
+mx <- as.matrix(mx)
+
+t1 <- Sys.time()
+library(doParallel)
+cl <- makePSOCKcluster(6)
+registerDoParallel(cl)
+set.seed(123456)
+cvfit <- cv.glmnet(x = mx
+                 , y = kn$pain
+                 , lambda = seq(0.001, 1, length = 1000)
+                 , gamma = 1
+                 , nfolds = 5
+                 , keep = TRUE
+                 , type.measure = "mse"
+                 , standardize = TRUE
+                 , parallel = TRUE
+                   )
+stopCluster(cl)
+t2 <- Sys.time()
+print(t2 - t1)
+
+
+
+bts <- as.data.table(t(as.matrix(cvfit$glmnet.fit$beta)))
+bts$lambda <- cvfit$glmnet.fit$lambda
+
+vars <- names(bts)
+vars <- vars[!(vars %in% c("lambda"))]
+
+btw <- melt(bts
+          , id.vars="lambda"
+          , measure.vars = vars)
+
+
+ggplot(data = btw, aes(x = lambda, y = value, group = variable, color = variable)) + geom_line() + scale_x_continuous(trans = 'log', breaks = c(0.001, 0.002, 0.005, 0.01, 0.1, 1)) +
+    coord_cartesian(xlim = c(0.001, 1))
+
+
+rst <- data.table(lambda = cvfit$lambda
+                , cvm = cvfit$cvm
+                , cvsd = cvfit$cvsd
+                , cvup = cvfit$cvup
+                , cvlo = cvfit$cvlo
+                  )
+
+varsr <- names(rst)
+varsr <- varsr[!(varsr %in% c("lambda"))]
+
+rstw <- melt(rst
+          , id.vars="lambda"
+          , measure.vars = varsr)
+
+ggplot(data = rst, aes(x = lambda, y = cvm)) + geom_line() + scale_x_continuous(trans = "log") +
+    coord_cartesian(xlim = c(0.0001, 1)) 
+
+
+plot(cvfit)
+varImp(Lasso)
+
+as.numeric(Lasso$bestTune[2])
+
+bts[lambda == as.numeric(Lasso$bestTune[2]), ]
+
+plot(cvfit)
+
+str(cvfit)
+
+```
+
+
+## Five-Fold Cross-Validation LASSO
+
+```{r}
+
+library(glmmLasso)
+data(knee)
+kn <- as.data.table(knee)
+kn <- kn[, age_log2 := log2(age)
+         ][, pain.start_log2 := log2(pain.start)
+           ][, time_log2 := log2(time)]
+
+
+m1 <- lm(pain ~ time + age + sex + th + pain.start, data = kn)
+
+library(caret)
+
+train.control.CV5 <- trainControl(method = "cv", number = 10)
+
+Lambda.Range = seq(0.0001, 1.2, length=10000)
+
+
+Lasso <- train(pain ~ time + age + sex + th + pain.start + time_log2 + age_log2 + pain.start_log2
+             , data = kn
+             , method = "glmnet"
+             , metric="RMSE"
+             , trControl = train.control.CV5
+             , lambda = Lambda.Range
+             , preProcess = c("center", "scale")
+             , tuneGrid = expand.grid(alpha = 1, lambda = Lambda.Range)
+               )
+
+str(Lasso$bestTune)
+str(Lasso$finalModel)
+
+
+bts <- as.data.table(as.matrix(t(Lasso$finalModel$beta)))
+bts$lambda <- rev(Lasso$results$lambda)
+
+vars <- names(bts)
+vars <- vars[!(vars %in% c("lambda"))]
+
+btw <- melt(bts
+          , id.vars="lambda"
+          , measure.vars = vars)
+
+
+ggplot(data = btw, aes(x = lambda, y = value, group = variable, color = variable)) + geom_line() + scale_y_continuous() +
+    coord_cartesian(xlim = c(0, 0.3))
+
+
+rst <- as.data.table(Lasso$results)[, alpha := NULL]
+varsr <- names(rst)
+varsr <- varsr[!(varsr %in% c("lambda"))]
+
+rstw <- melt(rst
+          , id.vars="lambda"
+          , measure.vars = varsr)
+
+ggplot(data = rstw, aes(x = lambda, y = value, group = variable, color = variable)) + geom_line() + scale_y_continuous() +
+    coord_cartesian(xlim = c(0, 0.02)) 
+
+varImp(Lasso)
+
+as.numeric(Lasso$bestTune[2])
+
+bts[lambda == as.numeric(Lasso$bestTune[2]), ]
+
+```
+
+## glmmlasso
+
+```{r}
+library(glmmLasso)
+data(knee)
+kn <- as.data.table(knee)
+kn <- kn[, age_log2 := log2(age)
+         ][, pain.start_log2 := log2(pain.start)
+           ][, time_log2 := log2(time)]
+
+mm <- glmmLasso(pain ~ time + age + sex + th + pain.start + time_log2 + age_log2 + pain.start_log2
+                , rnd = list(id = ~ 1)
+                , family = gaussian()
+                , data = kn
+                , lambda = 0.001
+                , control=list(print.iter=FALSE))
+
+lambda_range <- exp(seq(log(0.0001), log(1), length = 100))
+
+```
 
 # R sessionInfo
 
