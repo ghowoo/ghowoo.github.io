@@ -504,6 +504,15 @@ shinyApp(ui = ui, server = server)
 
 ```
 
+
+# Set up Shiny server
+
+
+```{r, eval = FALSE}
+
+
+```
+
 # R sessionInfo
 
 ```{r}

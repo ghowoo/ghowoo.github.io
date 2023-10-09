@@ -79,7 +79,35 @@ $$\frac{P(y=1|x)}{P(y=0|x)} \ge C ; C \ge 1$$
 
 
 
+# R kernlab package
 
+ * https://cran.r-project.org/web/packages/kernlab/vignettes/kernlab.pdf
+ * Polynomial kernel
+ 
+ $$k(x, x^{\prime}) = (scale < x, x^{\prime} > + offset)^{degree}$$
+ 
+
+
+```{r}
+library(kernlab)
+
+
+v1 <- vanilladot()
+v1(1:2, c(1, 1))
+
+
+p1 <- polydot(degree = 1, scale = 1, offset = 1)
+
+p1(1:2, 1:2)
+
+p2 <- polydot(degree = 2, scale = 1, offset = 1)
+p2(1:2, 1:2)
+
+
+kx <- kernelMatrix(p2, 1:3, 1:3)
+kx
+
+```
 
 
 # R CARET package
@@ -162,7 +190,8 @@ res3
 
 # R e1071 package
 
-[TechVidvan: SVM in R for Data Classification using e1071 Package](https://techvidvan.com/tutorials/svm-in-r/)
+
+ * [TechVidvan: SVM in R for Data Classification using e1071 Package](https://techvidvan.com/tutorials/svm-in-r/)
 
 ## Generate a two-dimension data
 
@@ -185,6 +214,9 @@ data = data.frame(x, y = as.factor(y))
 data.svm = svm(y ~ ., data = data, kernel = "linear", cost = 10, scale = FALSE)
 print(data.svm)
 plot(data.svm, data)
+
+str(data.svm)
+
 ```
 
 

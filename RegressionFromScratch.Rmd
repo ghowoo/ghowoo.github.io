@@ -53,7 +53,7 @@ klippy::klippy(position = c('top', 'left')
  * Ref: https://www.stat.cmu.edu/~cshalizi/mreg/15/lectures/06/lecture-06.pdf
  * Conditional pdf of $Y$ for each $x$ is $p(y|X = x; \beta_0, \beta_1, \sigma^2)$
  * Probability density under the model
- $$\prod_{i=1}^{n} p(y_i|x_i;\beta_0,\beta_1,\sigma^2) = \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi \sigma^2}} e ^{-\frac{(y_i - (\beta_0 + \bata_1 x_i))^2}{2\sigma^2}}$$
+ $$\prod_{i=1}^{n} p(y_i|x_i;\beta_0,\beta_1,\sigma^2) = \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi \sigma^2}} e ^{-\frac{(y_i - (\beta_0 + \beta_1 x_i))^2}{2\sigma^2}}$$
 
  * Likelihood given parameters $b_0, b_1, s^2$
  $$\prod_{i=1}^{n} p(y_i|x_i;b_0,b_1,s^2) = \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi s^2}} e ^{-\frac{(y_i - (b_0 + b_1 x_i))^2}{2s^2}}$$
@@ -359,7 +359,7 @@ and $\gamma$ is a vector of random-effects parameters
  
  $$Var \left[\begin{matrix} \gamma \\ & \epsilon \end{matrix} \right] = \left[\begin{matrix} G & 0 \\ 0 & R \end{matrix} \right] $$
  
- * Therefore the variance of %y% is
+ * Therefore the variance of $Y$ is
  $$V (Y) = ZGZ^{\prime} + R$$
  * A general linear model is a special case with $Z = 0$ and $R = \sigma^2 I_n$ (without random effects and with independent homoscedastic errors)
  * The generalized least squares (GLS) minimizing
@@ -367,6 +367,133 @@ and $\gamma$ is a vector of random-effects parameters
  * In case of weighted regression (SAS PROC MIXED, REPEATED), replace $X^{\prime}X$ with $X^{\prime}WX$, $Z^{\prime}Z$ with $Z^{\prime}WZ$, and replace $R$ with $W^{-1/2}RW^{-1/2}$ where $W$ is a diagonal weight matrix. Therefore the covariance matrix $V$ for the observations is
  $$V = ZGZ^{\prime} + W^{-1/2}RW^{-1/2}$$
  
+
+## Model Matrix
+
+```{r}
+set.seed(123)
+mydata <- data.frame(
+  response = rnorm(10, mean = 50, sd = 10),
+  predictor = rnorm(10, mean = 50, sd = 10),
+  group = as.factor(rep(1:2, each = 5))
+)
+
+fm1 <- lm(response ~ predictor + group, data = mydata)
+fm2 <- lme4::lmer(response ~ predictor + (1|group), data = mydata)
+fm3 <- nlme::lme(response ~ predictor, random = ~1|group, data = mydata)
+
+summary(fm1)
+summary(fm2)
+
+dim(model.matrix(fm1))
+model.matrix(fm1)[1:3, ]
+getME(fm2, "X")[, ]
+getME(fm2, "Z")[, ]
+
+model.matrix(terms(fm3), data = mydata)
+
+model.matrix(terms(fm3, random = TRUE), data = mydata)
+
+model.matrix(attr(fm3$modelStruct$reStr$group, "formula"), data = mydata)
+
+model.matrix(formula(fm3$modelStruct$reStr)[[1]], data = mydata)
+
+```
+
+
+## Compound-Symmetry Structure
+
+
+ * In an example to model slope over multiple times on same individual
+ * Introducing a common correlation among the observations from a single individual
+ * In additiona to $\sigma^2$, one CS covariance $\sigma_1^2$ is added
+ 
+ * CS sturcture in R matrix without setting Z and G
+ * This is the covariance structure for one person assuming three repeated measurements
+ 
+$$\left[\begin{matrix} \sigma_1^2 + \sigma^2 & \sigma_1^2 & \sigma_1^2 
+\\ \sigma_1^2 & \sigma_1^2 + \sigma^2 & \sigma_1^2 
+\\ \sigma_1^2 & \sigma_1^2 & \sigma_1^2 + \sigma^2 
+\end{matrix}\right]$$
+
+
+* This is coded in SAS as
+
+````
+proc mixed;
+class indiv;
+model y = time;
+repeated / type=cs subject=indiv;
+run;
+
+````
+
+* This could also be coded in SAS with G and Z matrix
+
+````
+proc mixed;
+class indiv;
+model y = time;
+random indiv;
+run;
+````
+
+* Another way of coding in SAS with G and Z matrix
+
+````
+proc mixed;
+class indiv;
+model y = time;
+random intercept / subject=indiv;
+run;
+````
+
+
+## Two Random Effects
+
+ * This is SAS coding
+
+
+````
+proc mixed;
+class a block;
+model y = a;
+random block a*block;
+run;
+
+````
+
+ * Alternative SAS coding
+ 
+````
+random int a / subject=block;
+````
+
+ * Assume a has two levels and block has 3 levels, then each individual has 6 repeated measurements
+ * This is an example of random effect on the block level
+ * Z matrix, the first two columns are of a levels, and the last three columns are of block levels
+ 
+ $$\left[\begin{matrix} 
+ 1 & 0 & 1 & 0 & 0
+ \\ 1 & 0 & 0 & 1 & 0
+ \\ 1 & 0 & 0 & 0 & 1
+ \\ 0 & 1 & 1 & 0 & 0
+ \\ 0 & 1 & 0 & 1 & 0
+ \\ 0 & 1 & 0 & 0 & 1   
+\end{matrix}\right]$$ 
+
+ * G matrix where $\sigma_B^2$ is the variance component for block, this is the default VC (variance components) for random statement in SAS by adding one variance for each random effect 
+ 
+ $$\left[\begin{matrix} 
+ \sigma_B^2 &  &  &  &  &
+ \\  &  \sigma_B^2 &  &  &  &
+ \\  &  & \sigma_B^2 &  &  &
+ \\  &  &  &  \sigma_{AB}^2 &  &
+ \\  &  &  &  & \sigma_{AB}^2 &
+ \\  &  &  &  &  & \sigma_{AB}^2 
+\end{matrix}\right]$$ 
+
+
 # R sessionInfo
 
 ```{r}
